@@ -3,7 +3,6 @@ import {
   Get,
   Patch,
   Param,
-  Body,
   UseGuards,
   Query,
 } from '@nestjs/common';
@@ -19,10 +18,9 @@ import {
   ApiInternalServerErrorResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { GetUser } from 'src/auth/get-user.decorator';
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
-import { RoleEnum } from './enum/role.enum';
+import { RoleEnum } from '../role/enum/role.enum';
 
 @UseGuards(JwtGuard)
 @ApiTags('User')
@@ -63,6 +61,21 @@ export class UserController {
   @Get(':email')
   getUserByEmail(@Param('email') email: string): Promise<User> {
     return this.userService.getUserByEmail(email);
+  }
+
+  @ApiOperation({ summary: 'Search user who have email contain searchEmail' })
+  @ApiOkResponse({
+    description: 'The list user has been successfully retrieved.',
+    type: [User],
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Get('/search/:searchEmail')
+  searchUserByEmail(
+    @Query('searchEmail') searchEmail: string,
+  ): Promise<User[]> {
+    return this.userService.searchUserByEmailString(searchEmail);
   }
 
   @ApiOperation({ summary: 'Change User Name' })

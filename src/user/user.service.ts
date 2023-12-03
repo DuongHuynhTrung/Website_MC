@@ -5,8 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { RoleEnum } from '../role/enum/role.enum';
 
 @Injectable()
 export class UserService {
@@ -37,11 +38,31 @@ export class UserService {
         email,
       });
       if (!user) {
-        throw new Error(`User ${email} not found`);
+        throw new Error(`Người dùng với email ${email} không tồn tại`);
       }
       return user;
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+  async searchUserByEmailString(searchEmail: string): Promise<User[]> {
+    try {
+      let users: User[] = await this.userRepository.find({
+        where: {
+          email: Like(`%${searchEmail}%`),
+        },
+        relations: ['role'],
+      });
+      if (!users || users.length === 0) {
+        return [];
+      }
+      users = users.filter((user) => user.role.role_name === RoleEnum.STUDENT);
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Something went wrong when searching for user by email`,
+      );
     }
   }
 
@@ -53,14 +74,18 @@ export class UserService {
       throw new InternalServerErrorException(error.message);
     }
     if (!user) {
-      throw new NotFoundException(`User ${email} not found`);
+      throw new NotFoundException(
+        `Người dùng với email ${email} không tồn tại`,
+      );
     }
     if (!user.status) {
       throw new BadRequestException(`User status is ${user.status}`);
     }
     const USERNAME_REGEX = /^[a-zA-Z0-9_]{4,15}$/;
     if (!USERNAME_REGEX.test(userName)) {
-      throw new BadRequestException(`UserName is not following regex pattern`);
+      throw new BadRequestException(
+        `Tên người dùng phải tuân theo nguyên tắc!`,
+      );
     }
     user.userName = userName;
     try {

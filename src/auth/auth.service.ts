@@ -62,7 +62,7 @@ export class AuthService {
         });
         if (!user) {
           throw new BadRequestException(
-            'Something went wrong when creating the user',
+            'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
           );
         }
 
@@ -86,9 +86,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<string> {
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?!.*\s).{8,}$/;
     if (!PASSWORD_REGEX.test(signUpDto.password)) {
-      throw new BadRequestException(
-        'Password is not following the regex pattern',
-      );
+      throw new BadRequestException('Mật khẩu phải tuân thủ theo nguyên tắc');
     }
     try {
       const isExist = await this.userRepository.findOneBy({
@@ -96,7 +94,7 @@ export class AuthService {
       });
       if (isExist) {
         throw new BadRequestException(
-          `User with email ${signUpDto.email} already exists`,
+          `Người dùng với email ${signUpDto.email} đã tồn tại trong hệ thống`,
         );
       }
     } catch (error) {
@@ -104,7 +102,9 @@ export class AuthService {
     }
     const user = this.userRepository.create(signUpDto);
     if (!user) {
-      throw new BadRequestException('Something went wrong when creating user');
+      throw new BadRequestException(
+        'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+      );
     }
     user.status = false;
     const role = await this.roleRepository.findOneByOrFail({ id: 2 });
@@ -114,10 +114,10 @@ export class AuthService {
       user.password = await bcrypt.hash(signUpDto.password, salt);
 
       await this.userRepository.save(user);
-      return 'Sign up successfully';
+      return 'Đăng ký thành công!';
     } catch (error) {
       if (error.code === 11000) {
-        throw new ConflictException('Email has already existed');
+        throw new ConflictException('Email đã được sử dụng!');
       } else {
         throw new InternalServerErrorException(error.message);
       }
@@ -135,10 +135,12 @@ export class AuthService {
       throw new InternalServerErrorException(error.message);
     }
     if (!user) {
-      throw new NotFoundException(`User ${signInDto.email} does not exist`);
+      throw new NotFoundException(
+        `Người dùng với email ${signInDto.email} không tồn tại!`,
+      );
     }
     if (!user.status) {
-      throw new BadRequestException(`User status is ${user.status}`);
+      throw new BadRequestException(`Người dùng đang bị khóa tài khoản!`);
     }
     try {
       const checkPassword = await bcrypt.compare(
@@ -146,7 +148,7 @@ export class AuthService {
         user.password,
       );
       if (!checkPassword) {
-        throw new Error('Invalid password');
+        throw new Error('Sai mật khẩu!');
       }
     } catch (error) {
       throw new BadRequestException(error.message);

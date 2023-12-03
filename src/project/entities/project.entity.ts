@@ -2,11 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ProjectStatus } from '../enum/project-status.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from 'src/user/entities/user.entity';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 
 @Entity()
 export class Project {
@@ -127,4 +130,13 @@ export class Project {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.projects)
+  business: User;
+
+  @ManyToOne(
+    () => ResponsiblePerson,
+    (responsible_person) => responsible_person.projects,
+  )
+  responsible_person: ResponsiblePerson;
 }

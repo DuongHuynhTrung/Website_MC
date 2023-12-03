@@ -36,13 +36,11 @@ export class EmailService {
     }
     if (!userEmailAvailable) {
       throw new NotFoundException(
-        `User ${registerOtpDto.email} does not exist`,
+        `Người dùng với email ${registerOtpDto.email} không tồn tại!`,
       );
     }
     if (userEmailAvailable.status) {
-      throw new BadRequestException(
-        `User with email ${registerOtpDto.email} is already available`,
-      );
+      throw new BadRequestException(`Tài khoản đã được kích hoạt!`);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -131,12 +129,12 @@ export class EmailService {
     }
     if (!userEmailAvailable) {
       throw new NotFoundException(
-        `User ${registerOtpDto.email} does not exist`,
+        `Người dùng với email ${registerOtpDto.email} không tồn tại`,
       );
     }
     if (!userEmailAvailable.status) {
       throw new BadRequestException(
-        `User with email ${registerOtpDto.email} status is false`,
+        `Tài khoản đã bị khóa hoặc chưa kích hoạt!`,
       );
     }
 
@@ -220,13 +218,13 @@ export class EmailService {
   ): Promise<{ accessToken: string }> {
     const { otp, otpExpired, otpStored, email } = verifyOtpDto;
     if (otpStored !== otp) {
-      throw new BadRequestException('Wrong OTP! Please try again');
+      throw new BadRequestException('Sai OTP! Vui lòng thử lại!');
     }
     const currentTime = moment(new Date());
     const otpExpires = moment(otpExpired);
     const isExpired = currentTime.diff(otpExpires, 'minutes');
     if (isExpired > 10) {
-      throw new BadRequestException('OTP is expired! Please try again');
+      throw new BadRequestException('OTP đã hết hạn! Vui lòng thử lại!');
     }
     let user: User = null;
     try {
@@ -238,7 +236,9 @@ export class EmailService {
       throw new InternalServerErrorException(error.message);
     }
     if (!user) {
-      throw new BadRequestException('User not found! Please try again');
+      throw new BadRequestException(
+        'Người dùng không tìm thấy! Vui lòng thử lại!',
+      );
     }
     user.status = true;
     let updateUserStatus: User = null;

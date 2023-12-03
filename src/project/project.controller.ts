@@ -1,34 +1,161 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/user/entities/user.entity';
+import { JwtGuard } from 'src/auth/jwt.guard';
+import { RolesGuard } from 'src/auth/role.guard';
+import { Roles } from 'src/auth/role.decorator';
+import { RoleEnum } from 'src/role/enum/role.enum';
+import { Project } from './entities/project.entity';
 
-@Controller('project')
+@ApiTags('Project')
+@UseGuards(JwtGuard)
+@ApiBearerAuth()
+@Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
+  @ApiOperation({
+    summary: 'Create a new project',
+  })
+  @ApiOkResponse({
+    description: 'Project created successfully!',
+    type: Project,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Có lỗi khi tạo Người chịu trách nhiệm. Vui lòng kiểm tra lại thông tin!',
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy Người chịu trách nhiệm!',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
+  })
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS)
+  createProject(
+    @Body() createProjectDto: CreateProjectDto,
+    @GetUser() business: User,
+  ): Promise<Project> {
+    return this.projectService.createProject(business, createProjectDto);
   }
 
+  @ApiOperation({
+    summary: 'Get all projects for administration',
+  })
+  @ApiOkResponse({
+    description: 'All projects have been retrieved',
+    type: [Project],
+  })
   @Get()
-  findAll() {
-    return this.projectService.findAll();
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  getProjects(): Promise<Project[]> {
+    return this.projectService.getProjects();
   }
 
+  @ApiOperation({
+    summary: 'Get all projects for business',
+  })
+  @ApiOkResponse({
+    description: 'All projects have been retrieved',
+    type: [Project],
+  })
+  @ApiNotFoundResponse({
+    description: 'Hệ thống không có dự án nào!',
+  })
+  @Get('business')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS)
+  getProjectsOfBusiness(@GetUser() business: User) {
+    return this.projectService.getProjectsOfBusiness(business);
+  }
+
+  @ApiOperation({
+    summary: 'Get project By Project ID',
+  })
+  @ApiOkResponse({
+    description: 'Project with ID have been retrieved',
+    type: Project,
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy dự án với mã số ${id} ',
+  })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
+  getProjectByID(@Param('id') id: number) {
+    return this.projectService.getProjectById(id);
   }
 
+  @ApiOperation({
+    summary: 'Admin Confirm Project',
+  })
+  @ApiOkResponse({
+    description: 'Project Confirm have been retrieved',
+    type: Project,
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy dự án với mã số ${id} ',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi công bố dự án',
+  })
+  @Patch('confirm-project/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  confirmProject(@Param('id') id: number) {
+    return this.projectService.confirmProject(id);
+  }
+
+  @ApiOperation({
+    summary: 'Admin Update Project Before Confirm',
+  })
+  @ApiOkResponse({
+    description: 'Project Confirm have been retrieved',
+    type: Project,
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy dự án với mã số ${id} ',
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy Người chịu trách nhiệm!',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi công bố dự án',
+  })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  updateProjectById(
+    @Param('id') id: number,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.projectService.updateProjectById(id, updateProjectDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.projectService.remove(+id);
+  // }
 }

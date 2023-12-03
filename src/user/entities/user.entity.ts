@@ -5,9 +5,12 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/role/entities/role.entity';
+import { Project } from 'src/project/entities/project.entity';
+import { UserGroup } from 'src/user-group/entities/user-group.entity';
 
 @Entity()
 export class User {
@@ -127,4 +130,10 @@ export class User {
   })
   @ManyToOne(() => Role, (role) => role.users)
   role: Role;
+
+  @OneToMany(() => Project, (project) => project.business)
+  projects: Project[];
+
+  @OneToMany(() => UserGroup, (user_group) => user_group.user)
+  user_groups: UserGroup[];
 }

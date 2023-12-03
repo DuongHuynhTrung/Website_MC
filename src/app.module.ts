@@ -7,6 +7,9 @@ import { RoleModule } from './role/role.module';
 import { ProjectModule } from './project/project.module';
 import { EmailModule } from './email/email.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ResponsiblePersonModule } from './responsible_person/responsible_person.module';
+import { GroupModule } from './group/group.module';
+import { UserGroupModule } from './user-group/user-group.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,6 +55,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
     RoleModule,
     ProjectModule,
     EmailModule,
+    ResponsiblePersonModule,
+    GroupModule,
+    UserGroupModule,
     // TransactionModule,
     // ShareImageModule,
     // MessageModule,
