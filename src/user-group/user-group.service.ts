@@ -86,43 +86,40 @@ export class UserGroupService {
     }
   }
 
-  async findAllUserGroupByGroupId(id: number): Promise<UserGroup[]> {
+  async findAllUserGroupByGroupId(groupId: number): Promise<UserGroup[]> {
     try {
-      let user_group = await this.userGroupRepository.find({
+      const user_group: UserGroup[] = await this.userGroupRepository.find({
         relations: ['user', 'group'],
       });
-      user_group = user_group.filter(
-        (user_group) => user_group.group.id === id,
+      const userGroup = user_group.filter(
+        (user_group) => user_group.group.id == groupId,
       );
-      if (!user_group) {
+      if (!userGroup) {
         throw new NotFoundException(
-          `Không tìm thấy user_group với group id ${id}`,
+          `Nhóm với id ${groupId} không có thành viên`,
         );
       }
-      return user_group;
+      return userGroup;
     } catch (error) {
       throw new NotFoundException(error.message);
     }
   }
 
-  async checkUserInGroup(
-    userId: number,
-    groupId: number,
-  ): Promise<UserGroup[]> {
+  async checkUserInGroup(userId: number, groupId: number): Promise<UserGroup> {
     try {
-      let user_group = await this.userGroupRepository.find({
+      const user_group: UserGroup[] = await this.userGroupRepository.find({
         relations: ['user', 'group'],
       });
-      user_group = user_group.filter(
+      const userGroup = user_group.find(
         (user_group) =>
-          user_group.group.id === groupId && user_group.user._id === userId,
+          user_group.group.id == groupId && user_group.user._id == userId,
       );
-      if (!user_group) {
+      if (!userGroup) {
         throw new NotFoundException(
           `Không tìm thấy user_group với group id ${groupId} và user id ${userId}`,
         );
       }
-      return user_group;
+      return userGroup;
     } catch (error) {
       throw new NotFoundException(error.message);
     }

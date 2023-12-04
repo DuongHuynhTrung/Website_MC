@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -10,6 +11,7 @@ import { ProjectStatus } from '../enum/project-status.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from 'src/user/entities/user.entity';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 
 @Entity()
 export class Project {
@@ -139,4 +141,10 @@ export class Project {
     (responsible_person) => responsible_person.projects,
   )
   responsible_person: ResponsiblePerson;
+
+  @OneToMany(
+    () => RegisterPitching,
+    (registerPitching) => registerPitching.group,
+  )
+  register_pitchings: RegisterPitching[];
 }

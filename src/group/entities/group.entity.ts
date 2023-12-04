@@ -1,3 +1,4 @@
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import {
   Column,
@@ -21,6 +22,12 @@ export class Group {
 
   @OneToMany(() => UserGroup, (user_group) => user_group.group)
   user_groups: UserGroup[];
+
+  @OneToMany(
+    () => RegisterPitching,
+    (register_pitching) => register_pitching.group,
+  )
+  register_pitchings: RegisterPitching[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -15,6 +15,7 @@ import { CreateUserGroupDto } from 'src/user-group/dto/create-user-group.dto';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserService } from 'src/user/user.service';
+import { RoleEnum } from 'src/role/enum/role.enum';
 
 @Injectable()
 export class GroupService {
@@ -74,9 +75,9 @@ export class GroupService {
     }
   }
 
-  async getGroupsByGroupId(id: number): Promise<Group> {
+  async getGroupByGroupId(id: number): Promise<Group> {
     try {
-      const group = await this.groupRepository.findOneBy({ id });
+      const group: Group = await this.groupRepository.findOneBy({ id });
       if (!group) {
         throw new NotFoundException(`Nhóm với id ${id} không tồn tại`);
       }
@@ -91,23 +92,33 @@ export class GroupService {
     userEmail: string,
     user: User,
   ): Promise<string> {
-    const member = await this.userService.getUserByEmail(userEmail);
-    const group = await this.getGroupsByGroupId(groupId);
-    const checkUserInGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
-      group.id,
-    );
-    if (checkUserInGroup.length === 0) {
+    const member: User = await this.userService.getUserByEmail(userEmail);
+    if (
+      member.role.role_name !== RoleEnum.STUDENT &&
+      member.role.role_name !== RoleEnum.LECTURER
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể gửi lời mời cho sinh viên hoặc giảng viên',
+      );
+    }
+    const group: Group = await this.getGroupByGroupId(groupId);
+    const checkUserInGroup: UserGroup =
+      await this.userGroupService.checkUserInGroup(user._id, group.id);
+    if (!checkUserInGroup) {
       throw new ForbiddenException(
         `Học sinh ngoài nhóm không có quyền mời thành viên`,
       );
     } else {
-      const checkLeader = checkUserInGroup.filter(
-        (leader) => leader.is_leader === true,
-      );
-      if (checkLeader.length === 0) {
+      if (!checkUserInGroup.is_leader) {
         throw new ForbiddenException('Chỉ có leader mới được mời thành viên');
       }
+    }
+    const checkMemberInGroup: UserGroup =
+      await this.userGroupService.checkUserInGroup(member._id, group.id);
+    if (checkMemberInGroup) {
+      throw new BadRequestException(
+        'Sinh viên hoặc giảng viên đã trong nhóm hoặc đang chờ phản hồi',
+      );
     }
     const createUserGroupDto = new CreateUserGroupDto({
       is_leader: false,
@@ -128,16 +139,69 @@ export class GroupService {
     relationStatus: RelationshipStatusEnum,
     user: User,
   ): Promise<UserGroup> {
-    const userGroup =
+    const userGroup: UserGroup =
       await this.userGroupService.findUserGroupById(userGroupId);
     if (userGroup.user._id !== user._id) {
       throw new ForbiddenException(
         'Học sinh không thể trả lời lời mời của người khác!',
       );
     }
+    if (userGroup.relationship_status !== RelationshipStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Chỉ có lời mời đang chờ phản hồi mới thực hiện được chức năng này',
+      );
+    }
     userGroup.relationship_status = relationStatus;
     await this.userGroupService.saveUserGroup(userGroup);
+
+    if (relationStatus === RelationshipStatusEnum.JOINED) {
+      const group = await this.getGroupByGroupId(userGroup.group.id);
+      group.group_quantity += 1;
+      try {
+        await this.groupRepository.save(group);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi khi tăng số lượng thành viên trong nhóm',
+        );
+      }
+    }
     return await this.userGroupService.findUserGroupById(userGroupId);
+  }
+
+  async kickMember(
+    groupId: number,
+    userId: number,
+    user: User,
+  ): Promise<string> {
+    const lecturer: User = await this.userService.getUserByEmail(user.email);
+    if (lecturer.role.role_name !== RoleEnum.LECTURER) {
+      throw new ForbiddenException(
+        'Chỉ có giảng viên mới có thể kick thành viên',
+      );
+    }
+    const userInGroup: UserGroup = await this.userGroupService.checkUserInGroup(
+      userId,
+      groupId,
+    );
+    if (!userInGroup) {
+      throw new BadRequestException('Không thể kick thành viên của nhóm khác');
+    }
+    if (userInGroup.relationship_status !== RelationshipStatusEnum.JOINED) {
+      throw new BadRequestException(
+        'Không thể kick thành viên không trong nhóm',
+      );
+    }
+    userInGroup.relationship_status = RelationshipStatusEnum.OUTED;
+    await this.userGroupService.saveUserGroup(userInGroup);
+    return 'Thành viên đã bị kick khỏi nhóm';
+  }
+
+  async getMembersOfGroup(groupId: number): Promise<UserGroup[]> {
+    const group: Group = await this.getGroupByGroupId(groupId);
+    if (!group) {
+      throw new BadRequestException(`Nhóm với id ${groupId} không tồn tại`);
+    }
+    return await this.userGroupService.findAllUserGroupByGroupId(groupId);
   }
 
   // async getGroupByID(id: number): Promise<Group> {

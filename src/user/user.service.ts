@@ -21,7 +21,7 @@ export class UserService {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     try {
-      let users = await this.userRepository.find();
+      let users = await this.userRepository.find({ relations: ['role'] });
       if (!users || users.length === 0) {
         return [];
       }
@@ -34,8 +34,9 @@ export class UserService {
 
   async getUserByEmail(email: string): Promise<User> {
     try {
-      const user = await this.userRepository.findOneBy({
-        email,
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
       });
       if (!user) {
         throw new Error(`Người dùng với email ${email} không tồn tại`);

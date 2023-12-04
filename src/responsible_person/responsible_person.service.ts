@@ -101,7 +101,7 @@ export class ResponsiblePersonService {
         );
       if (!updatedResponsiblePerson) {
         throw new InternalServerErrorException(
-          'Something went wrong when updating the Responsible Person',
+          'Có lỗi xảy ra khi cập nhật thông tin của người chịu trách nhiệm',
         );
       }
       return await this.getResponsiblePersonByEmail(responsiblePerson.email);

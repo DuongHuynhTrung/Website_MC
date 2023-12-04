@@ -10,6 +10,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ResponsiblePersonModule } from './responsible_person/responsible_person.module';
 import { GroupModule } from './group/group.module';
 import { UserGroupModule } from './user-group/user-group.module';
+import { RegisterPitchingModule } from './register-pitching/register-pitching.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +59,7 @@ import { UserGroupModule } from './user-group/user-group.module';
     ResponsiblePersonModule,
     GroupModule,
     UserGroupModule,
+    RegisterPitchingModule,
     // TransactionModule,
     // ShareImageModule,
     // MessageModule,
