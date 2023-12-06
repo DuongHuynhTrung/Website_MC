@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { GroupStatusEnum } from '../enum/group-status.enum';
 
 @Entity()
 export class Group {
@@ -19,6 +20,9 @@ export class Group {
 
   @Column({ nullable: false })
   group_quantity: number;
+
+  @Column({ nullable: false, default: GroupStatusEnum.FREE })
+  group_status: GroupStatusEnum;
 
   @OneToMany(() => UserGroup, (user_group) => user_group.group)
   user_groups: UserGroup[];

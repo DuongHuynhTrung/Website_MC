@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupService } from 'src/group/group.service';
 import { ProjectService } from 'src/project/project.service';
-import { ProjectStatus } from 'src/project/enum/project-status.enum';
+import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { Project } from 'src/project/entities/project.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -39,7 +39,7 @@ export class RegisterPitchingService {
     const project: Project = await this.projectService.getProjectById(
       createRegisterPitchingDto.projectId,
     );
-    if (project.project_status !== ProjectStatus.PUBLIC) {
+    if (project.project_status !== ProjectStatusEnum.PUBLIC) {
       throw new BadRequestException(
         'Chỉ có dự án đang được công bố mới có thể đăng kí pitching',
       );
@@ -75,11 +75,22 @@ export class RegisterPitchingService {
         'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
       );
     }
+    await this.groupService.changeGroupStatusToActive(group.id);
     return await this.getRegisterPitchingById(result.id);
   }
 
-  findAll() {
-    return `This action returns all registerPitching`;
+  async getAllRegisterPitching(): Promise<RegisterPitching[]> {
+    try {
+      const registerPitchings: RegisterPitching[] =
+        await this.registerPitchingRepository.find({
+          relations: ['project', 'group'],
+        });
+      return registerPitchings;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
+      );
+    }
   }
 
   async getRegisterPitchingById(id: number): Promise<RegisterPitching> {
@@ -113,6 +124,29 @@ export class RegisterPitchingService {
       }
       registerPitchings = registerPitchings.filter(
         (registerPitching) => registerPitching.project.id == projectId,
+      );
+      if (!registerPitchings || registerPitchings.length === 0) {
+        throw new NotFoundException('Dự án không có đăng ký pitching nào');
+      }
+      return registerPitchings;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async getAllRegisterPitchingByGroupId(
+    groupId: number,
+  ): Promise<RegisterPitching[]> {
+    try {
+      let registerPitchings: RegisterPitching[] =
+        await this.registerPitchingRepository.find({
+          relations: ['group', 'project'],
+        });
+      if (!registerPitchings || registerPitchings.length === 0) {
+        throw new NotFoundException('Không có một đăng ký pitching nào');
+      }
+      registerPitchings = registerPitchings.filter(
+        (registerPitching) => registerPitching.group.id == groupId,
       );
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Dự án không có đăng ký pitching nào');
@@ -163,7 +197,7 @@ export class RegisterPitchingService {
         'Chỉ có doanh nghiệp của dự án mới có thể chọn nhóm',
       );
     }
-    if (project.project_status !== ProjectStatus.PUBLIC) {
+    if (project.project_status !== ProjectStatusEnum.PUBLIC) {
       throw new BadRequestException(
         'Chỉ có dự án đang được công bố mới cần chọn nhóm làm',
       );
@@ -185,6 +219,11 @@ export class RegisterPitchingService {
         await this.registerPitchingRepository.save(registerPitching);
       }
     });
+
+    await this.projectService.changeProjectStatus(
+      project.id,
+      ProjectStatusEnum.PROCESSING,
+    );
 
     return this.getRegisterPitchingById(result.id);
   }

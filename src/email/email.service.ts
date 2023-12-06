@@ -257,6 +257,7 @@ export class EmailService {
       email: updateUserStatus.email,
       status: updateUserStatus.status,
       role_name: user.role.role_name,
+      avatar_url: user.avatar_url,
       isNewUser: false,
     };
     const accessToken = this.jwtService.sign(payload);

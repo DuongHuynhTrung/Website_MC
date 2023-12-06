@@ -7,11 +7,12 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ProjectStatus } from '../enum/project-status.enum';
+import { ProjectStatusEnum } from '../enum/project-status.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from 'src/user/entities/user.entity';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { Phase } from 'src/phase/entities/phase.entity';
 
 @Entity()
 export class Project {
@@ -121,11 +122,11 @@ export class Project {
 
   @ApiProperty({
     description: 'Project Status',
-    example: ProjectStatus.PENDING,
+    example: ProjectStatusEnum.PENDING,
     nullable: false,
   })
-  @Column({ nullable: false, default: ProjectStatus.PENDING })
-  project_status: ProjectStatus;
+  @Column({ nullable: false, default: ProjectStatusEnum.PENDING })
+  project_status: ProjectStatusEnum;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -147,4 +148,7 @@ export class Project {
     (registerPitching) => registerPitching.group,
   )
   register_pitchings: RegisterPitching[];
+
+  @OneToMany(() => Phase, (phase) => phase.projects)
+  phase: Phase;
 }

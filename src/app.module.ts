@@ -11,6 +11,7 @@ import { ResponsiblePersonModule } from './responsible_person/responsible_person
 import { GroupModule } from './group/group.module';
 import { UserGroupModule } from './user-group/user-group.module';
 import { RegisterPitchingModule } from './register-pitching/register-pitching.module';
+import { PhaseModule } from './phase/phase.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,6 +61,7 @@ import { RegisterPitchingModule } from './register-pitching/register-pitching.mo
     GroupModule,
     UserGroupModule,
     RegisterPitchingModule,
+    PhaseModule,
     // TransactionModule,
     // ShareImageModule,
     // MessageModule,

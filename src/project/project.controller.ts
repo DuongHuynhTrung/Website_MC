@@ -28,7 +28,6 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { Project } from './entities/project.entity';
 
 @ApiTags('Project')
-@UseGuards(JwtGuard)
 @ApiBearerAuth()
 @Controller('projects')
 export class ProjectController {
@@ -54,6 +53,7 @@ export class ProjectController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS)
+  @UseGuards(JwtGuard)
   createProject(
     @Body() createProjectDto: CreateProjectDto,
     @GetUser() business: User,
@@ -69,8 +69,6 @@ export class ProjectController {
     type: [Project],
   })
   @Get()
-  @UseGuards(RolesGuard)
-  @Roles(RoleEnum.ADMIN)
   getProjects(): Promise<Project[]> {
     return this.projectService.getProjects();
   }
@@ -88,6 +86,7 @@ export class ProjectController {
   @Get('business')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS)
+  @UseGuards(JwtGuard)
   getProjectsOfBusiness(@GetUser() business: User) {
     return this.projectService.getProjectsOfBusiness(business);
   }
@@ -123,6 +122,7 @@ export class ProjectController {
   @Patch('confirm-project/:id')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
   confirmProject(@Param('id') id: number) {
     return this.projectService.confirmProject(id);
   }
@@ -146,6 +146,7 @@ export class ProjectController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
   updateProjectById(
     @Param('id') id: number,
     @Body() updateProjectDto: UpdateProjectDto,

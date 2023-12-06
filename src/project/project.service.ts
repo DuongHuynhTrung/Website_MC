@@ -14,7 +14,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { UserService } from 'src/user/user.service';
 import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-responsible_person.dto';
-import { ProjectStatus } from './enum/project-status.enum';
+import { ProjectStatusEnum } from './enum/project-status.enum';
 
 @Injectable()
 export class ProjectService {
@@ -177,7 +177,7 @@ export class ProjectService {
       project.project_registration_expired_date =
         updateProjectDto.project_registration_expired_date;
       project.project_start_date = updateProjectDto.project_start_date;
-      project.project_status = ProjectStatus.PUBLIC;
+      project.project_status = ProjectStatusEnum.PUBLIC;
       await this.projectRepository.save(project);
       return await this.getProjectById(id);
     } catch (error) {
@@ -187,7 +187,7 @@ export class ProjectService {
 
   async confirmProject(id: number): Promise<Project> {
     const project: Project = await this.getProjectById(id);
-    project.project_status = ProjectStatus.PUBLIC;
+    project.project_status = ProjectStatusEnum.PUBLIC;
     try {
       const result: Project = await this.projectRepository.save(project);
       if (!result) {
@@ -201,5 +201,20 @@ export class ProjectService {
 
   remove(id: number) {
     return `This action removes a #${id} project`;
+  }
+
+  async changeProjectStatus(
+    projectId: number,
+    projectStatus: ProjectStatusEnum,
+  ): Promise<void> {
+    const project: Project = await this.getProjectById(projectId);
+    project.project_status = projectStatus;
+    try {
+      await this.projectRepository.save(project);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thay đổi trạng thái dự án',
+      );
+    }
   }
 }

@@ -15,6 +15,10 @@ export class PayloadJwtDto {
   @IsNotEmpty()
   role_name: string;
 
+  @IsNotEmpty()
+  @IsString()
+  avatar_url: string;
+
   @IsBoolean()
   isNewUser: boolean;
 }

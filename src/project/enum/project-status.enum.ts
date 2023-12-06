@@ -1,4 +1,4 @@
-export enum ProjectStatus {
+export enum ProjectStatusEnum {
   PENDING = 'Pending',
   PUBLIC = 'Public',
   PROCESSING = 'Processing',

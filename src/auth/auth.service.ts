@@ -49,6 +49,7 @@ export class AuthService {
           email: user.email,
           status: user.status,
           role_name: user.role.role_name,
+          avatar_url: user.avatar_url,
           isNewUser: false,
         };
         const accessToken = this.jwtService.sign(payload);
@@ -73,6 +74,7 @@ export class AuthService {
           email: user.email,
           status: user.status,
           role_name: user.role.role_name,
+          avatar_url: user.avatar_url,
           isNewUser: true,
         };
         const accessToken = this.jwtService.sign(payload);
@@ -158,6 +160,7 @@ export class AuthService {
       email: user.email,
       status: user.status,
       role_name: user.role.role_name,
+      avatar_url: user.avatar_url,
       isNewUser: false,
     };
     const accessToken = this.jwtService.sign(payload);
@@ -177,6 +180,7 @@ export class AuthService {
           email: isExist.email,
           status: isExist.status,
           role_name: isExist.role.role_name,
+          avatar_url: isExist.avatar_url,
           isNewUser: false,
         };
         const accessToken = this.jwtService.sign(payload);
@@ -197,6 +201,7 @@ export class AuthService {
           email: isExist.email,
           status: isExist.status,
           role_name: isExist.role.role_name,
+          avatar_url: isExist.avatar_url,
           isNewUser: false,
         };
         const accessToken = this.jwtService.sign(payload);

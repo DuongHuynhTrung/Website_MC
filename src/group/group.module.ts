@@ -1,3 +1,4 @@
+import { Project } from 'src/project/entities/project.entity';
 import { Module } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { GroupController } from './group.controller';
@@ -7,10 +8,33 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { ProjectService } from 'src/project/project.service';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Group, UserGroup, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Group,
+      UserGroup,
+      User,
+      RegisterPitching,
+      Group,
+      Project,
+      ResponsiblePerson,
+    ]),
+  ],
   controllers: [GroupController],
-  providers: [GroupService, UserGroupService, UserService],
+  providers: [
+    GroupService,
+    UserGroupService,
+    UserService,
+    RegisterPitchingService,
+    ProjectService,
+    GroupService,
+    ResponsiblePersonService,
+  ],
 })
 export class GroupModule {}

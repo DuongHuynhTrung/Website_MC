@@ -16,6 +16,7 @@ import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { GroupStatusEnum } from './enum/group-status.enum';
 
 @Injectable()
 export class GroupService {
@@ -203,6 +204,39 @@ export class GroupService {
     }
     return await this.userGroupService.findAllUserGroupByGroupId(groupId);
   }
+
+  async changeGroupStatusToActive(groupId: number): Promise<void> {
+    const group: Group = await this.getGroupByGroupId(groupId);
+    if (group.group_status === GroupStatusEnum.INACTIVE) {
+      throw new BadRequestException(
+        `Nhóm ${group.group_name} đã dừng hoạt động`,
+      );
+    } else if (group.group_status === GroupStatusEnum.FREE) {
+      group.group_status = GroupStatusEnum.ACTIVE;
+      try {
+        await this.groupRepository.save(group);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thay đổi trạng thái của nhóm sang đang làm việc',
+        );
+      }
+    }
+  }
+
+  // async changeGroupStatusToFree(groupId: number): Promise<Group> {
+  //   const group: Group = await this.getGroupByGroupId(groupId);
+  //   const registerPitchings: RegisterPitching[] = await this.registerPitchingService.getAllRegisterPitchingByGroupId(groupId);
+  //   let count = 0;
+  //   registerPitchings.forEach(registerPitching => {
+  //     if (registerPitching.register_pitching_status === RegisterPitchingStatusEnum.PENDING) {
+  //       return null;
+  //     } else if (registerPitching.register_pitching_status === RegisterPitchingStatusEnum.SELECTED) {
+  //       if (registerPitching.project.project_status === ProjectStatusEnum.PROCESSING) {
+  //         count++;
+  //       }
+  //     }
+  //   })
+  // }
 
   // async getGroupByID(id: number): Promise<Group> {
   //   try {

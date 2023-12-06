@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
 } from '@nestjs/common';
 import { RegisterPitchingService } from './register-pitching.service';
@@ -70,11 +69,25 @@ export class RegisterPitchingController {
     );
   }
 
+  @ApiOperation({ summary: 'Get All Register Pitching' })
+  @ApiOkResponse({
+    description: 'All Register Pitching are Retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
+  })
   @Get()
-  findAll() {
-    return this.registerPitchingService.findAll();
+  findAll(): Promise<RegisterPitching[]> {
+    return this.registerPitchingService.getAllRegisterPitching();
   }
 
+  @ApiOperation({ summary: 'Get Register Pitching By Id' })
+  @ApiOkResponse({
+    description: 'Register Pitching with Id is retrieved',
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy lịch đăng ký pitching với id ${id}',
+  })
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.registerPitchingService.getRegisterPitchingById(id);
@@ -108,10 +121,5 @@ export class RegisterPitchingController {
     @GetUser() user: User,
   ) {
     return this.registerPitchingService.chooseGroup(groupId, projectId, user);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.registerPitchingService.remove(+id);
   }
 }
