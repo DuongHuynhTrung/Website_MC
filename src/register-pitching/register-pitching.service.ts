@@ -192,7 +192,8 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching> {
     const project: Project =
       await this.projectService.getProjectById(projectId);
-    if (project.business._id !== user._id) {
+    console.log(project);
+    if (project.business._id != user._id) {
       throw new ForbiddenException(
         'Chỉ có doanh nghiệp của dự án mới có thể chọn nhóm',
       );

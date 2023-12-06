@@ -13,15 +13,18 @@ export class Phase {
   @Column({ nullable: false })
   phase_expected_end_date: Date;
 
-  @Column()
+  @Column({ nullable: true })
   phase_actual_end_date: Date;
 
-  @Column()
+  @Column({ nullable: true })
   cost_total: number;
 
-  @Column({ nullable: false, default: PhaseStatusEnum.PENDING })
+  @Column({ nullable: false, default: 1 })
+  phase_number: number;
+
+  @Column({ nullable: false, default: PhaseStatusEnum.PROCESSING })
   phase_status: PhaseStatusEnum;
 
-  @ManyToOne(() => Project, (project) => project.phase)
-  projects: Project[];
+  @ManyToOne(() => Project, (project) => project.phases)
+  project: Project;
 }

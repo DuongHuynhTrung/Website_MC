@@ -15,6 +15,7 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { UserService } from 'src/user/user.service';
 import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-responsible_person.dto';
 import { ProjectStatusEnum } from './enum/project-status.enum';
+import * as moment from 'moment';
 
 @Injectable()
 export class ProjectService {
@@ -30,6 +31,15 @@ export class ProjectService {
     business: User,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
+    const start_date = moment(createProjectDto.project_start_date);
+    const expected_end_date = moment(
+      createProjectDto.project_expected_end_date,
+    );
+    if (start_date.isAfter(expected_end_date)) {
+      throw new BadRequestException(
+        'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
+      );
+    }
     let responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
         createProjectDto.email_responsible_person,

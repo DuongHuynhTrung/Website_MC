@@ -116,7 +116,7 @@ export class UserGroupService {
       );
       if (!userGroup) {
         throw new NotFoundException(
-          `Không tìm thấy user_group với group id ${groupId} và user id ${userId}`,
+          `Sinh viên không phải là thành viên của nhóm`,
         );
       }
       return userGroup;

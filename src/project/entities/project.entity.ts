@@ -149,6 +149,6 @@ export class Project {
   )
   register_pitchings: RegisterPitching[];
 
-  @OneToMany(() => Phase, (phase) => phase.projects)
-  phase: Phase;
+  @OneToMany(() => Phase, (phase) => phase.project)
+  phases: Phase[];
 }
