@@ -11,7 +11,7 @@ import {
 import { PhaseService } from './phase.service';
 import { CreatePhaseDto } from './dto/create-phase.dto';
 import { UpdatePhaseDto } from './dto/update-phase.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { Phase } from './entities/phase.entity';
 import { JwtGuard } from 'src/auth/jwt.guard';
@@ -27,6 +27,7 @@ import { PhaseStatusEnum } from './enum/phase-status.enum';
 export class PhaseController {
   constructor(private readonly phaseService: PhaseService) {}
 
+  @ApiOperation({ summary: 'Create new Phase' })
   @Post()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
@@ -37,11 +38,13 @@ export class PhaseController {
     return this.phaseService.createPhase(createPhaseDto, user);
   }
 
+  @ApiOperation({ summary: 'Get All Phase Of Project' })
   @Get(':projectId')
   getAllPhaseOfProject(@Param('projectId') projectId: number) {
     return this.phaseService.getAllPhaseOfProject(projectId);
   }
 
+  @ApiOperation({ summary: 'Get Phase Of Project At Phase Number' })
   @Get(':projectId/:phaseNumber')
   getPhaseOfProjectAtPhaseNumber(
     @Param('projectId') projectId: number,
@@ -53,6 +56,7 @@ export class PhaseController {
     );
   }
 
+  @ApiOperation({ summary: 'Update Phase Information In Status Processing' })
   @Patch(':id')
   updatePhase(
     @Param('id') id: number,
@@ -62,6 +66,7 @@ export class PhaseController {
     return this.phaseService.updatePhase(id, updatePhaseDto, user);
   }
 
+  @ApiOperation({ summary: 'Change Phase Status' })
   @Patch('changeStatus/:phaseId/:phaseStatus')
   changePhaseStatus(
     @Param('phaseId') phaseId: number,

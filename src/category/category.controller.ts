@@ -12,7 +12,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/jwt.guard';
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
@@ -27,6 +27,7 @@ import { CategoryStatusEnum } from './enum/category-status.enum';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @ApiOperation({ summary: 'Create new Category' })
   @Post()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
@@ -34,16 +35,19 @@ export class CategoryController {
     return this.categoryService.createCategory(createCategoryDto, user);
   }
 
+  @ApiOperation({ summary: 'Get All Categories of Phase' })
   @Get('all/:phaseId')
   getAllCategoryOfPhase(@Param('phaseId') phaseId: number) {
     return this.categoryService.getAllCategoryOfPhase(phaseId);
   }
 
+  @ApiOperation({ summary: 'Get Category By Category Id' })
   @Get(':id')
   getCategoryById(@Param('id') id: number) {
     return this.categoryService.getCategoryById(id);
   }
 
+  @ApiOperation({ summary: 'Update Category Information' })
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
@@ -55,6 +59,7 @@ export class CategoryController {
     return this.categoryService.updateCategory(id, updateCategoryDto, user);
   }
 
+  @ApiOperation({ summary: 'Change Category Status' })
   @Patch('changeStatus/:categoryId/:categoryStatus')
   changeCategoryStatus(
     @Param('categoryId') categoryId: number,

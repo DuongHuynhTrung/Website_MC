@@ -8,6 +8,7 @@ import { CreateUserGroupDto } from './dto/create-user-group.dto';
 import { Repository } from 'typeorm';
 import { UserGroup } from './entities/user-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class UserGroupService {
@@ -67,15 +68,17 @@ export class UserGroupService {
     }
   }
 
-  async findAllUserGroupByUserId(id: number): Promise<UserGroup[]> {
+  async findAllUserGroupByUserId(user: User): Promise<UserGroup[]> {
     try {
       let user_group = await this.userGroupRepository.find({
         relations: ['user', 'group'],
       });
-      user_group = user_group.filter((user_group) => user_group.user._id == id);
+      user_group = user_group.filter(
+        (user_group) => user_group.user._id == user._id,
+      );
       if (!user_group) {
         throw new NotFoundException(
-          `Không tìm thấy user_group với user id ${id}`,
+          `Không tìm thấy user_group với user id ${user._id}`,
         );
       }
       return user_group;

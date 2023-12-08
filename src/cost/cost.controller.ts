@@ -10,7 +10,7 @@ import {
 import { CostService } from './cost.service';
 import { CreateCostDto } from './dto/create-cost.dto';
 import { UpdateCostDto } from './dto/update-cost.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/jwt.guard';
 import { Cost } from './entities/cost.entity';
 import { RolesGuard } from 'src/auth/role.guard';
@@ -27,6 +27,7 @@ import { User } from 'src/user/entities/user.entity';
 export class CostController {
   constructor(private readonly costService: CostService) {}
 
+  @ApiOperation({ summary: 'Create new Cost' })
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
   @Post()
@@ -34,6 +35,7 @@ export class CostController {
     return this.costService.createCost(createCostDto);
   }
 
+  @ApiOperation({ summary: 'Get All Costs Of Category' })
   @Get('all/:categoryId')
   getAllCostOfCategory(
     @Param('categoryId') categoryId: number,
@@ -41,11 +43,13 @@ export class CostController {
     return this.costService.getAllCostOfCategory(categoryId);
   }
 
+  @ApiOperation({ summary: 'Get Cost By CostID' })
   @Get(':id')
   getCostByID(@Param('id') id: number): Promise<Cost> {
     return this.costService.getCostByID(id);
   }
 
+  @ApiOperation({ summary: 'Update Cost Information' })
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
   @Patch(':id')
@@ -56,6 +60,7 @@ export class CostController {
     return this.costService.updateCost(id, updateCostDto);
   }
 
+  @ApiOperation({ summary: 'Change Cost Status' })
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT, RoleEnum.BUSINESS)
   @Patch('changeStatus/:id/:costStatus')
