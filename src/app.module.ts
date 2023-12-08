@@ -12,6 +12,9 @@ import { GroupModule } from './group/group.module';
 import { UserGroupModule } from './user-group/user-group.module';
 import { RegisterPitchingModule } from './register-pitching/register-pitching.module';
 import { PhaseModule } from './phase/phase.module';
+import { CategoryModule } from './category/category.module';
+import { CostModule } from './cost/cost.module';
+import { EvidenceModule } from './evidence/evidence.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -62,6 +65,9 @@ import { PhaseModule } from './phase/phase.module';
     UserGroupModule,
     RegisterPitchingModule,
     PhaseModule,
+    CategoryModule,
+    CostModule,
+    EvidenceModule,
     // TransactionModule,
     // ShareImageModule,
     // MessageModule,

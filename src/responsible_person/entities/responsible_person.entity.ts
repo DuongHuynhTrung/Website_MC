@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Project } from 'src/project/entities/project.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class ResponsiblePerson {
@@ -43,6 +50,12 @@ export class ResponsiblePerson {
   })
   @Column({ nullable: false, unique: true })
   phone_number: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @OneToMany(() => Project, (project) => project.responsible_person)
   projects: Project[];

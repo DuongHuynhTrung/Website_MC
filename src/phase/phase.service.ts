@@ -33,7 +33,6 @@ export class PhaseService {
   async createPhase(
     createPhaseDto: CreatePhaseDto,
     user: User,
-    groupId: number,
   ): Promise<Phase> {
     const start_date = moment(createPhaseDto.phase_start_date);
     const expected_end_date = moment(createPhaseDto.phase_expected_end_date);
@@ -44,7 +43,7 @@ export class PhaseService {
     }
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
       user._id,
-      groupId,
+      createPhaseDto.groupId,
     );
     if (!userGroup.is_leader) {
       throw new ForbiddenException(
@@ -137,7 +136,9 @@ export class PhaseService {
         relations: ['project'],
       });
       if (!phase) {
-        throw new NotFoundException('Giai đoạn không được tìm thấy');
+        throw new NotFoundException(
+          `Giai đoạn với mã số ${id} không được tìm thấy`,
+        );
       }
       return phase;
     } catch (error) {
@@ -170,11 +171,62 @@ export class PhaseService {
     return result;
   }
 
-  update(id: number, updatePhaseDto: UpdatePhaseDto) {
-    return `This action updates a #${id} phase`;
+  async updatePhase(
+    id: number,
+    updatePhaseDto: UpdatePhaseDto,
+    user: User,
+  ): Promise<Phase> {
+    const start_date = moment(updatePhaseDto.phase_start_date);
+    const expected_end_date = moment(updatePhaseDto.phase_expected_end_date);
+    if (start_date.isAfter(expected_end_date)) {
+      throw new BadRequestException(
+        'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
+      );
+    }
+    const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
+      user._id,
+      updatePhaseDto.groupId,
+    );
+    if (!userGroup.is_leader) {
+      throw new ForbiddenException(
+        'Chỉ có trưởng nhóm có quyền thay đổi thông tin của giai đoạn',
+      );
+    }
+    const phase: Phase = await this.getPhaseById(id);
+
+    if (phase.phase_status != PhaseStatusEnum.PROCESSING) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật thông tin giai đoạn trong khi đang thực hiện',
+      );
+    }
+    phase.phase_start_date = updatePhaseDto.phase_start_date;
+    phase.phase_expected_end_date = updatePhaseDto.phase_expected_end_date;
+    try {
+      const result: Phase = await this.phaseRepository.save(phase);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi lưu dự liệu giai đoạn mới',
+        );
+      }
+      return await this.getPhaseById(result.id);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} phase`;
+  async changePhaseStatus(
+    phaseId: number,
+    phaseStatus: PhaseStatusEnum,
+  ): Promise<Phase> {
+    const phase: Phase = await this.getPhaseById(phaseId);
+    phase.phase_status = phaseStatus;
+    try {
+      const result: Phase = await this.phaseRepository.save(phase);
+      return await this.getPhaseById(result.id);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thay đổi trạng thái giai đoạn',
+      );
+    }
   }
 }

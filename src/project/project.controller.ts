@@ -26,6 +26,7 @@ import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { Project } from './entities/project.entity';
+import { ProjectStatusEnum } from './enum/project-status.enum';
 
 @ApiTags('Project')
 @ApiBearerAuth()
@@ -152,6 +153,30 @@ export class ProjectController {
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
     return this.projectService.updateProjectById(id, updateProjectDto);
+  }
+
+  @ApiOperation({
+    summary: 'Business change Project Status',
+  })
+  @ApiOkResponse({
+    description: 'Project after change status have been retrieved',
+    type: Project,
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy dự án với mã số ${id} ',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi thay đổi trạng thái của dự án',
+  })
+  @Patch('changeStatus/:projectId/:projectStatus')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS)
+  @UseGuards(JwtGuard)
+  async changeProjectStatus(
+    @Param('projectId') projectId: number,
+    @Param('projectStatus') projectStatus: ProjectStatusEnum,
+  ): Promise<Project> {
+    return this.projectService.changeProjectStatus(projectId, projectStatus);
   }
 
   // @Delete(':id')

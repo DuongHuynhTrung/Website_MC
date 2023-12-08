@@ -114,6 +114,7 @@ export class RegisterPitchingService {
   async getAllRegisterPitchingByProjectId(
     projectId: number,
   ): Promise<RegisterPitching[]> {
+    await this.projectService.getProjectById(projectId);
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
@@ -137,6 +138,7 @@ export class RegisterPitchingService {
   async getAllRegisterPitchingByGroupId(
     groupId: number,
   ): Promise<RegisterPitching[]> {
+    await this.groupService.getGroupByGroupId(groupId);
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
@@ -206,30 +208,25 @@ export class RegisterPitchingService {
     const registerPitchings: RegisterPitching[] =
       await this.getAllRegisterPitchingByProjectId(projectId);
     // check Group Register Pitching Project
-    await this.checkGroupRegisterPitchingProject(projectId, groupId);
+    const registerPitching: RegisterPitching =
+      await this.checkGroupRegisterPitchingProject(projectId, groupId);
 
-    let result: RegisterPitching = null;
     registerPitchings.forEach(async (registerPitching) => {
       if (registerPitching.group.id == groupId) {
         registerPitching.register_pitching_status =
           RegisterPitchingStatusEnum.SELECTED;
-        result = await this.registerPitchingRepository.save(registerPitching);
+        await this.registerPitchingRepository.save(registerPitching);
       } else {
         registerPitching.register_pitching_status =
           RegisterPitchingStatusEnum.REJECTED;
         await this.registerPitchingRepository.save(registerPitching);
       }
     });
-
     await this.projectService.changeProjectStatus(
       project.id,
       ProjectStatusEnum.PROCESSING,
     );
 
-    return this.getRegisterPitchingById(result.id);
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} registerPitching`;
+    return registerPitching;
   }
 }

@@ -216,11 +216,25 @@ export class ProjectService {
   async changeProjectStatus(
     projectId: number,
     projectStatus: ProjectStatusEnum,
-  ): Promise<void> {
+  ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
+    if (project.project_status != ProjectStatusEnum.PROCESSING) {
+      throw new BadRequestException(
+        'Chỉ có thể trạng thái dự án khi dự án đang tiến hành',
+      );
+    }
+    if (
+      projectStatus !== ProjectStatusEnum.DONE &&
+      projectStatus !== ProjectStatusEnum.END
+    ) {
+      throw new BadRequestException(
+        'Doanh nghiệp chỉ có thể chuyển trạng thái dự án sang hoàn thành hoặc kết thúc',
+      );
+    }
     project.project_status = projectStatus;
     try {
-      await this.projectRepository.save(project);
+      const result: Project = await this.projectRepository.save(project);
+      return await this.getProjectById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi thay đổi trạng thái dự án',

@@ -25,4 +25,12 @@ export class CreatePhaseDto {
   @IsNotEmpty()
   @IsNumber()
   projectId: number;
+
+  @ApiProperty({
+    description: 'Group ID',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number;
 }

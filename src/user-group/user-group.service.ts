@@ -72,9 +72,7 @@ export class UserGroupService {
       let user_group = await this.userGroupRepository.find({
         relations: ['user', 'group'],
       });
-      user_group = user_group.filter(
-        (user_group) => user_group.user._id === id,
-      );
+      user_group = user_group.filter((user_group) => user_group.user._id == id);
       if (!user_group) {
         throw new NotFoundException(
           `Không tìm thấy user_group với user id ${id}`,

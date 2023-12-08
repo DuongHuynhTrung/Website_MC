@@ -6,7 +6,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
 } from '@nestjs/common';
 import { PhaseService } from './phase.service';
@@ -19,6 +18,7 @@ import { JwtGuard } from 'src/auth/jwt.guard';
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { PhaseStatusEnum } from './enum/phase-status.enum';
 
 @ApiTags('Phase')
 @UseGuards(JwtGuard)
@@ -27,15 +27,14 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 export class PhaseController {
   constructor(private readonly phaseService: PhaseService) {}
 
-  @Post(':groupId')
+  @Post()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
   createPhase(
     @Body() createPhaseDto: CreatePhaseDto,
     @GetUser() user: User,
-    @Param('groupId') groupId: number,
   ): Promise<Phase> {
-    return this.phaseService.createPhase(createPhaseDto, user, groupId);
+    return this.phaseService.createPhase(createPhaseDto, user);
   }
 
   @Get(':projectId')
@@ -44,7 +43,7 @@ export class PhaseController {
   }
 
   @Get(':projectId/:phaseNumber')
-  findOne(
+  getPhaseOfProjectAtPhaseNumber(
     @Param('projectId') projectId: number,
     @Param('phaseNumber') phaseNumber: number,
   ) {
@@ -55,12 +54,19 @@ export class PhaseController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePhaseDto: UpdatePhaseDto) {
-    return this.phaseService.update(+id, updatePhaseDto);
+  updatePhase(
+    @Param('id') id: number,
+    @Body() updatePhaseDto: UpdatePhaseDto,
+    @GetUser() user: User,
+  ) {
+    return this.phaseService.updatePhase(id, updatePhaseDto, user);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.phaseService.remove(+id);
+  @Patch('changeStatus/:phaseId/:phaseStatus')
+  changePhaseStatus(
+    @Param('phaseId') phaseId: number,
+    @Param('phaseStatus') phaseStatus: PhaseStatusEnum,
+  ): Promise<Phase> {
+    return this.phaseService.changePhaseStatus(phaseId, phaseStatus);
   }
 }

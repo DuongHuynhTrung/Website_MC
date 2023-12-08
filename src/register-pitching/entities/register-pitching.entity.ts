@@ -1,4 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { RegisterPitchingStatusEnum } from '../enum/register-pitching.enum';
 import { Group } from 'src/group/entities/group.entity';
 import { Project } from 'src/project/entities/project.entity';
@@ -10,6 +17,12 @@ export class RegisterPitching {
 
   @Column({ nullable: false, default: RegisterPitchingStatusEnum.PENDING })
   register_pitching_status: RegisterPitchingStatusEnum;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @ManyToOne(() => Group, (group) => group.register_pitchings)
   group: Group;
