@@ -23,7 +23,7 @@ export class UserGroupController {
   @ApiOperation({ summary: 'Get All User Group of User' })
   @Get('users')
   findAllUserGroupByUserId(@GetUser() user: User) {
-    return this.userGroupService.findAllUserGroupByUserId(id);
+    return this.userGroupService.findAllUserGroupByUserId(user);
   }
 
   @ApiOperation({ summary: 'Get All User Group By GroupID' })
