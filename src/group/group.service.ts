@@ -95,8 +95,8 @@ export class GroupService {
   ): Promise<string> {
     const member: User = await this.userService.getUserByEmail(userEmail);
     if (
-      member.role.role_name !== RoleEnum.STUDENT &&
-      member.role.role_name !== RoleEnum.LECTURER
+      member.role.role_name != RoleEnum.STUDENT &&
+      member.role.role_name != RoleEnum.LECTURER
     ) {
       throw new BadRequestException(
         'Chỉ có thể gửi lời mời cho sinh viên hoặc giảng viên',

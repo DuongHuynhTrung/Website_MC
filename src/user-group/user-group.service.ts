@@ -115,11 +115,6 @@ export class UserGroupService {
         (user_group) =>
           user_group.group.id == groupId && user_group.user._id == userId,
       );
-      if (!userGroup) {
-        throw new NotFoundException(
-          `Sinh viên không phải là thành viên của nhóm`,
-        );
-      }
       return userGroup;
     } catch (error) {
       throw new NotFoundException(error.message);

@@ -1,3 +1,4 @@
+import { User } from './../user/entities/user.entity';
 import {
   Controller,
   Get,
@@ -10,7 +11,6 @@ import {
 import { RegisterPitchingService } from './register-pitching.service';
 import { CreateRegisterPitchingDto } from './dto/create-register-pitching.dto';
 import { GetUser } from 'src/auth/get-user.decorator';
-import { User } from 'src/user/entities/user.entity';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -69,7 +69,7 @@ export class RegisterPitchingController {
     );
   }
 
-  @ApiOperation({ summary: 'Get All Register Pitching' })
+  @ApiOperation({ summary: 'Get All Register Pitching Of User' })
   @ApiOkResponse({
     description: 'All Register Pitching are Retrieved',
   })
@@ -77,8 +77,30 @@ export class RegisterPitchingController {
     description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
   })
   @Get()
-  findAll(): Promise<RegisterPitching[]> {
-    return this.registerPitchingService.getAllRegisterPitching();
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  getAllRegisterPitchingOfUser(
+    @GetUser() user: User,
+  ): Promise<RegisterPitching[]> {
+    return this.registerPitchingService.getAllRegisterPitchingOfUser(user);
+  }
+
+  @ApiOperation({ summary: 'Get All Register Pitching Of Business' })
+  @ApiOkResponse({
+    description: 'All Register Pitching are Retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
+  })
+  @Get(':projectId')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS)
+  getAllRegisterPitchingOfBusiness(
+    @Param('projectId') projectId: number,
+  ): Promise<RegisterPitching[]> {
+    return this.registerPitchingService.getAllRegisterPitchingOfBusiness(
+      projectId,
+    );
   }
 
   @ApiOperation({ summary: 'Get Register Pitching By Id' })

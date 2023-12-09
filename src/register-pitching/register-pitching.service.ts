@@ -79,18 +79,41 @@ export class RegisterPitchingService {
     return await this.getRegisterPitchingById(result.id);
   }
 
-  async getAllRegisterPitching(): Promise<RegisterPitching[]> {
-    try {
-      const registerPitchings: RegisterPitching[] =
-        await this.registerPitchingRepository.find({
-          relations: ['project', 'group'],
-        });
-      return registerPitchings;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
-      );
+  async getAllRegisterPitchingOfUser(user: User): Promise<RegisterPitching[]> {
+    const registerPitchings: RegisterPitching[] =
+      await this.registerPitchingRepository.find({
+        relations: ['project', 'group'],
+      });
+    if (registerPitchings.length === 0) {
+      return [];
     }
+    const result: RegisterPitching[] = [];
+    const userGroups: UserGroup[] =
+      await this.userGroupService.findAllUserGroupByUserId(user);
+    userGroups.forEach((userGroup) => {
+      registerPitchings.forEach((registerPitching) => {
+        if (registerPitching.group.id == userGroup.group.id) {
+          result.push(registerPitching);
+        }
+      });
+    });
+    return result;
+  }
+
+  async getAllRegisterPitchingOfBusiness(
+    projectId: number,
+  ): Promise<RegisterPitching[]> {
+    const registerPitchings: RegisterPitching[] =
+      await this.registerPitchingRepository.find({
+        relations: ['project', 'group'],
+      });
+    if (registerPitchings.length === 0) {
+      return [];
+    }
+    const result: RegisterPitching[] = registerPitchings.filter(
+      (registerPitching) => registerPitching.project.id == projectId,
+    );
+    return result;
   }
 
   async getRegisterPitchingById(id: number): Promise<RegisterPitching> {
