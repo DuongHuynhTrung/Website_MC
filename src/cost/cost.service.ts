@@ -47,15 +47,6 @@ export class CostService {
       throw new BadRequestException('Có lỗi xảy ra khi tạo chi phí');
     }
     cost.category = category;
-    // Query to get PhaseId
-    // const queryBuilder = this.costRepository.createQueryBuilder('cost')
-    // .innerJoin('cost.category', 'category')
-    // .innerJoin('category.phase', 'phase')
-    // .where('cost.id = :costId', { costId })
-    // .select([
-    //   'cost',
-    //   'group.id as groupId',
-    // ]);
     try {
       const result: Cost = await this.costRepository.save(cost);
       return await this.getCostByID(result.id);

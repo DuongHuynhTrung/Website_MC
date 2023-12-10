@@ -34,13 +34,14 @@ export class EvidenceService {
       );
     }
     const evidence: Evidence =
-      await this.evidenceRepository.create(createEvidenceDto);
+      this.evidenceRepository.create(createEvidenceDto);
     if (!evidence) {
       throw new BadGatewayException('Có lỗi xảy ra khi tạo bằng chứng mới');
     }
     evidence.cost = cost;
+    console.log(evidence);
     try {
-      const result: Evidence = await this.evidenceRepository.save(cost);
+      const result: Evidence = await this.evidenceRepository.save(evidence);
       return await this.getEvidenceById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -53,7 +54,7 @@ export class EvidenceService {
     await this.costService.getCostByID(costId);
     try {
       const evidences: Evidence[] = await this.evidenceRepository.find({
-        relations: ['category'],
+        relations: ['cost'],
       });
       if (evidences.length === 0) {
         throw new NotFoundException(
