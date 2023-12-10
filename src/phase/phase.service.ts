@@ -98,6 +98,7 @@ export class PhaseService {
         throw new BadRequestException('Có lỗi xảy ra khi tạo phase mới');
       }
       phase.phase_number = phase_number + 1;
+      phase.project = project;
       try {
         const result: Phase = await this.phaseRepository.save(phase);
         if (!result) {
