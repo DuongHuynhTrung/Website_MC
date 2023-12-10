@@ -19,6 +19,7 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { CostStatusEnum } from './enum/cost-status.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { UpdateActualCostDto } from './dto/update-actual-cost.dto';
 
 @ApiTags('Cost')
 @ApiBearerAuth()
@@ -45,6 +46,16 @@ export class CostController {
   @Get(':id')
   getCostByID(@Param('id') id: number): Promise<Cost> {
     return this.costService.getCostByID(id);
+  }
+
+  @ApiOperation({ summary: 'Update Actual Cost' })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  @Patch('update-actual-cost')
+  updateActualCost(
+    @Body() updateActualCostDto: UpdateActualCostDto,
+  ): Promise<Cost> {
+    return this.costService.updateActualCost(updateActualCostDto);
   }
 
   @ApiOperation({ summary: 'Update Cost Information' })

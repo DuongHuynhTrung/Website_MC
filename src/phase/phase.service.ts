@@ -259,4 +259,14 @@ export class PhaseService {
       );
     }
   }
+
+  async savePhase(phase: Phase): Promise<void> {
+    try {
+      await this.phaseRepository.save(phase);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi lưu giai đoạn bằng hàm',
+      );
+    }
+  }
 }

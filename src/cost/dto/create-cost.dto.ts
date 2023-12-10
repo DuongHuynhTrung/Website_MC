@@ -17,4 +17,12 @@ export class CreateCostDto {
   @IsNotEmpty()
   @IsNumber()
   categoryId: number;
+
+  @ApiProperty({
+    description: 'Phase ID',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  phaseId: number;
 }

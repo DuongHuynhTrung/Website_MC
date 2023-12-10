@@ -17,6 +17,9 @@ import { CostStatusEnum } from './enum/cost-status.enum';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { PhaseService } from 'src/phase/phase.service';
+import { Phase } from 'src/phase/entities/phase.entity';
+import { UpdateActualCostDto } from './dto/update-actual-cost.dto';
 
 @Injectable()
 export class CostService {
@@ -27,6 +30,8 @@ export class CostService {
     private readonly categorySErvice: CategoryService,
 
     private readonly userService: UserService,
+
+    private readonly phaseService: PhaseService,
   ) {}
 
   async createCost(createCostDto: CreateCostDto): Promise<Cost> {
@@ -38,7 +43,17 @@ export class CostService {
         'Chỉ có thể tạo chi phí khi hạng mục đang ở trạng thái cần làm',
       );
     }
-    const isExistCost = this.checkCategoryHasCost(createCostDto.categoryId);
+    const phase: Phase = await this.phaseService.getPhaseById(
+      createCostDto.phaseId,
+    );
+    if (category.phase.id != phase.id) {
+      throw new BadRequestException(
+        `Hạng mục này không thuộc về giai đoạn ${phase.id}`,
+      );
+    }
+    const isExistCost = await this.checkCategoryHasCost(
+      createCostDto.categoryId,
+    );
     if (isExistCost) {
       throw new BadRequestException('Hạng mục này đã tồn tại chi phí');
     }
@@ -48,11 +63,15 @@ export class CostService {
     }
     cost.category = category;
     try {
-      const result: Cost = await this.costRepository.save(cost);
-      return await this.getCostByID(result.id);
+      await this.costRepository.save(cost);
     } catch (error) {
       throw new InternalServerErrorException('Có lỗi xảy ra khi lưu chi phí');
     }
+    // Update Expected Cost in Phase
+    phase.expected_cost_total += cost.expected_cost;
+    await this.phaseService.savePhase(phase);
+
+    return await this.getCostByID(cost.id);
   }
 
   async checkCategoryHasCost(categoryId: number) {
@@ -67,6 +86,7 @@ export class CostService {
         return true;
       }
     });
+    return false;
   }
 
   async getCostByID(costId: number): Promise<Cost> {
@@ -164,5 +184,43 @@ export class CostService {
     } else {
       throw new BadRequestException('Trạng thái không hợp lệ');
     }
+  }
+
+  async updateActualCost(
+    updateActualCostDto: UpdateActualCostDto,
+  ): Promise<Cost> {
+    const cost: Cost = await this.getCostByID(updateActualCostDto.costId);
+    const category: Category = await this.categorySErvice.getCategoryById(
+      updateActualCostDto.categoryId,
+    );
+    const phase: Phase = await this.phaseService.getPhaseById(
+      updateActualCostDto.phaseId,
+    );
+    if (category.category_status != CategoryStatusEnum.DONE) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật chi phí thực tế khi hạng mục đã hoàn thành',
+      );
+    }
+    if (cost.category.id != category.id) {
+      throw new BadRequestException('Chi phí không thuộc về hạng mục');
+    }
+    if (category.phase.id != phase.id) {
+      throw new BadRequestException(
+        `Hạng mục không thuộc về giai đoạn ${phase.id}`,
+      );
+    }
+    cost.actual_cost = updateActualCostDto.actual_cost;
+    try {
+      await this.costRepository.save(cost);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi cập nhật chi phí thực tế',
+      );
+    }
+    // Update Actual Cost Of Phase
+    phase.actual_cost_total += updateActualCostDto.actual_cost;
+    await this.phaseService.savePhase(phase);
+
+    return await this.getCostByID(cost.id);
   }
 }

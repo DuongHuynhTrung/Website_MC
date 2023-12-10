@@ -45,7 +45,7 @@ export class UserGroupService {
       await this.userGroupRepository.save(userGroup);
     } catch (error) {
       throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi lưu user-group',
+        'Có lỗi xảy ra khi lưu user-group bằng hàm',
       );
     }
   }
