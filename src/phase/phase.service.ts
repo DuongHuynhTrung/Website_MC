@@ -233,5 +233,30 @@ export class PhaseService {
     }
   }
 
-  async updateExpectedCost(costId): Promise<void> {}
+  async updateExpectedCost(
+    phaseId: number,
+    expected_cost: number,
+  ): Promise<void> {
+    try {
+      const phase: Phase = await this.getPhaseById(phaseId);
+      phase.expected_cost_total += expected_cost;
+      await this.phaseRepository.save(phase);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi cập nhật chi phí mong muốn',
+      );
+    }
+  }
+
+  async updateActualCost(phaseId: number, actual_cost: number): Promise<void> {
+    try {
+      const phase: Phase = await this.getPhaseById(phaseId);
+      phase.actual_cost_total += actual_cost;
+      await this.phaseRepository.save(phase);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi cập nhật chi phí thực tế',
+      );
+    }
+  }
 }

@@ -47,6 +47,15 @@ export class CostService {
       throw new BadRequestException('Có lỗi xảy ra khi tạo chi phí');
     }
     cost.category = category;
+    // Query to get PhaseId
+    // const queryBuilder = this.costRepository.createQueryBuilder('cost')
+    // .innerJoin('cost.category', 'category')
+    // .innerJoin('category.phase', 'phase')
+    // .where('cost.id = :costId', { costId })
+    // .select([
+    //   'cost',
+    //   'group.id as groupId',
+    // ]);
     try {
       const result: Cost = await this.costRepository.save(cost);
       return await this.getCostByID(result.id);
@@ -104,7 +113,7 @@ export class CostService {
     const cost: Cost = await this.getCostByID(id);
     if (cost.cost_status != CostStatusEnum.NOT_TRANSFERRED) {
       throw new BadRequestException(
-        'Chỉ có thể sửa thi phí khi doanh nghiệp chưa chuyển tiền',
+        'Chỉ có thể sửa chi phí khi doanh nghiệp chưa chuyển tiền',
       );
     }
     cost.expected_cost = updateCostDto.expected_cost;

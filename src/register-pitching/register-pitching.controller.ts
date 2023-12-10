@@ -93,8 +93,6 @@ export class RegisterPitchingController {
     description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
   })
   @Get(':projectId')
-  @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS)
   getAllRegisterPitchingOfBusiness(
     @Param('projectId') projectId: number,
   ): Promise<RegisterPitching[]> {

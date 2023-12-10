@@ -231,29 +231,49 @@ export class ProjectService {
     projectStatus: ProjectStatusEnum,
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
-    if (project.project_status != ProjectStatusEnum.PROCESSING) {
-      throw new BadRequestException(
-        'Chỉ có thể chuyển trạng thái dự án khi dự án đang tiến hành',
-      );
-    }
     if (
       projectStatus !== ProjectStatusEnum.DONE &&
-      projectStatus !== ProjectStatusEnum.END
+      projectStatus !== ProjectStatusEnum.END &&
+      projectStatus !== ProjectStatusEnum.PROCESSING
     ) {
-      throw new BadRequestException(
-        'Doanh nghiệp chỉ có thể chuyển trạng thái dự án sang hoàn thành hoặc kết thúc',
-      );
+      throw new BadRequestException('Trạng thái của dự án không hợp lệ');
+    }
+    //Business Update Project Status To Processing------------------------------------
+    if (
+      projectStatus === ProjectStatusEnum.PROCESSING &&
+      project.project_status == ProjectStatusEnum.PUBLIC
+    ) {
+      project.project_status = projectStatus;
+      try {
+        const result: Project = await this.projectRepository.save(project);
+        return await this.getProjectById(result.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thay đổi trạng thái dự án sang triển khai',
+        );
+      }
     }
 
-    project.project_status = projectStatus;
-    project.project_actual_end_date = new Date();
+    //Business Update Project Status To End/Done------------------------------------
+    if (
+      (projectStatus === ProjectStatusEnum.DONE ||
+        projectStatus === ProjectStatusEnum.END) &&
+      project.project_status == ProjectStatusEnum.PROCESSING
+    ) {
+      project.project_status = projectStatus;
+      project.project_actual_end_date = new Date();
 
-    try {
-      const result: Project = await this.projectRepository.save(project);
-      return await this.getProjectById(result.id);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi thay đổi trạng thái dự án',
+      try {
+        const result: Project = await this.projectRepository.save(project);
+        return await this.getProjectById(result.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thay đổi trạng thái dự án sang hoàn thành/kết thúc',
+        );
+      }
+    } else {
+      throw new BadRequestException(
+        'Chỉ có thể chuyển trạng thái dự án sang hoàn thành/kết thúc khi dự án đang tiến hành',
       );
     }
   }
