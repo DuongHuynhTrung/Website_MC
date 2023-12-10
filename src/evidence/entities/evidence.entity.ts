@@ -3,7 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -25,6 +25,6 @@ export class Evidence {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => Cost, (cost) => cost.evidence)
+  @ManyToOne(() => Cost, (cost) => cost.evidences)
   cost: Cost;
 }

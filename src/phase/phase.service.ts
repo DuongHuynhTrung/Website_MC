@@ -220,6 +220,9 @@ export class PhaseService {
   ): Promise<Phase> {
     const phase: Phase = await this.getPhaseById(phaseId);
     phase.phase_status = phaseStatus;
+    if (phaseStatus === PhaseStatusEnum.DONE) {
+      phase.phase_actual_end_date = new Date();
+    }
     try {
       const result: Phase = await this.phaseRepository.save(phase);
       return await this.getPhaseById(result.id);
@@ -229,4 +232,6 @@ export class PhaseService {
       );
     }
   }
+
+  async updateExpectedCost(costId): Promise<void> {}
 }

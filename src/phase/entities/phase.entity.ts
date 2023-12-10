@@ -26,7 +26,10 @@ export class Phase {
   phase_actual_end_date: Date;
 
   @Column({ nullable: true })
-  cost_total: number;
+  expected_cost_total: number;
+
+  @Column({ nullable: true })
+  actual_cost_total: number;
 
   @Column({ nullable: false, default: 1 })
   phase_number: number;

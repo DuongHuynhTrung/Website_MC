@@ -154,6 +154,9 @@ export class CategoryService {
   ): Promise<Category> {
     const category: Category = await this.getCategoryById(categoryId);
     category.category_status = categoryStatus;
+    if (categoryStatus === CategoryStatusEnum.DONE) {
+      category.category_actual_end_date = new Date();
+    }
     try {
       const result: Category = await this.categoryRepository.save(category);
       return await this.getCategoryById(result.id);

@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -35,6 +36,6 @@ export class Cost {
   @JoinColumn()
   category: Category;
 
-  @OneToOne(() => Evidence, (evidence) => evidence.cost)
-  evidence: Evidence;
+  @OneToMany(() => Evidence, (evidence) => evidence.cost)
+  evidences: Evidence[];
 }

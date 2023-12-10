@@ -209,18 +209,31 @@ export class ProjectService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
+  async changeProjectStatus(
+    projectId: number,
+    projectStatus: ProjectStatusEnum,
+  ): Promise<Project> {
+    const project: Project = await this.getProjectById(projectId);
+
+    project.project_status = projectStatus;
+    try {
+      const result: Project = await this.projectRepository.save(project);
+      return await this.getProjectById(result.id);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thay đổi trạng thái dự án',
+      );
+    }
   }
 
-  async changeProjectStatus(
+  async businessChangeProjectStatus(
     projectId: number,
     projectStatus: ProjectStatusEnum,
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
     if (project.project_status != ProjectStatusEnum.PROCESSING) {
       throw new BadRequestException(
-        'Chỉ có thể trạng thái dự án khi dự án đang tiến hành',
+        'Chỉ có thể chuyển trạng thái dự án khi dự án đang tiến hành',
       );
     }
     if (
@@ -231,7 +244,10 @@ export class ProjectService {
         'Doanh nghiệp chỉ có thể chuyển trạng thái dự án sang hoàn thành hoặc kết thúc',
       );
     }
+
     project.project_status = projectStatus;
+    project.project_actual_end_date = new Date();
+
     try {
       const result: Project = await this.projectRepository.save(project);
       return await this.getProjectById(result.id);

@@ -44,14 +44,14 @@ export class CostService {
     }
     const cost: Cost = this.costRepository.create(createCostDto);
     if (!cost) {
-      throw new BadRequestException('Có lỗi xảy ra khi tạo Cost');
+      throw new BadRequestException('Có lỗi xảy ra khi tạo chi phí');
     }
     cost.category = category;
     try {
       const result: Cost = await this.costRepository.save(cost);
       return await this.getCostByID(result.id);
     } catch (error) {
-      throw new InternalServerErrorException('Có lỗi xảy ra khi tạo chi phí');
+      throw new InternalServerErrorException('Có lỗi xảy ra khi lưu chi phí');
     }
   }
 
@@ -84,7 +84,7 @@ export class CostService {
     }
   }
 
-  async getAllCostOfCategory(categoryId: number): Promise<Cost[]> {
+  async getCostOfCategory(categoryId: number): Promise<Cost> {
     await this.categorySErvice.getCategoryById(categoryId);
     try {
       const costs: Cost[] = await this.costRepository.find({
@@ -93,9 +93,7 @@ export class CostService {
       if (costs.length === 0) {
         throw new NotFoundException('Không có một chi phí nào trong hệ thống');
       }
-      const result: Cost[] = costs.filter(
-        (cost) => cost.category.id == categoryId,
-      );
+      const result: Cost = costs.find((cost) => cost.category.id == categoryId);
       return result;
     } catch (error) {
       throw new NotFoundException(error.message);

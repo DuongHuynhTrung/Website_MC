@@ -35,12 +35,10 @@ export class CostController {
     return this.costService.createCost(createCostDto);
   }
 
-  @ApiOperation({ summary: 'Get All Costs Of Category' })
+  @ApiOperation({ summary: 'Get Cost Of Category' })
   @Get('all/:categoryId')
-  getAllCostOfCategory(
-    @Param('categoryId') categoryId: number,
-  ): Promise<Cost[]> {
-    return this.costService.getAllCostOfCategory(categoryId);
+  getCostOfCategory(@Param('categoryId') categoryId: number): Promise<Cost> {
+    return this.costService.getCostOfCategory(categoryId);
   }
 
   @ApiOperation({ summary: 'Get Cost By CostID' })
