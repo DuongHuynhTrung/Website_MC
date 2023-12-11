@@ -97,6 +97,7 @@ export class ProjectService {
       if (!projects || projects.length === 0) {
         return [];
       }
+      projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       return projects;
     } catch (error) {
       throw new NotFoundException(error.message);
