@@ -28,18 +28,17 @@ export class EvidenceService {
     const cost: Cost = await this.costService.getCostByID(
       createEvidenceDto.costId,
     );
-    if (cost.cost_status != CostStatusEnum.RECEIVED) {
-      throw new BadGatewayException(
-        'Không thể tải bằng chứng khi chưa nhận được tiền',
-      );
-    }
+    // if (cost.cost_status != CostStatusEnum.RECEIVED) {
+    //   throw new BadGatewayException(
+    //     'Không thể tải bằng chứng khi chưa nhận được tiền',
+    //   );
+    // }
     const evidence: Evidence =
       this.evidenceRepository.create(createEvidenceDto);
     if (!evidence) {
       throw new BadGatewayException('Có lỗi xảy ra khi tạo bằng chứng mới');
     }
     evidence.cost = cost;
-    console.log(evidence);
     try {
       const result: Evidence = await this.evidenceRepository.save(evidence);
       return await this.getEvidenceById(result.id);
