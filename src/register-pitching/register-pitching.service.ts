@@ -18,6 +18,8 @@ import { User } from 'src/user/entities/user.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { RegisterPitchingStatusEnum } from './enum/register-pitching.enum';
+import { UserService } from 'src/user/user.service';
+import { RoleEnum } from 'src/role/enum/role.enum';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -30,6 +32,8 @@ export class RegisterPitchingService {
     private readonly projectService: ProjectService,
 
     private readonly userGroupService: UserGroupService,
+
+    private readonly userService: UserService,
   ) {}
 
   async registerPitching(
@@ -61,12 +65,19 @@ export class RegisterPitchingService {
         'Chỉ có trưởng nhóm mới có thế đăng ký pitching',
       );
     }
+    // const lecturer: User = await this.userService.getUserByEmail(
+    //   createRegisterPitchingDto.lecturer_email,
+    // );
+    // if (lecturer.role.role_name != RoleEnum.LECTURER) {
+    //   throw new BadRequestException('Chỉ có thể mời');
+    // }
     const registerPitching: RegisterPitching =
-      this.registerPitchingRepository.create({
-        register_pitching_status: RegisterPitchingStatusEnum.PENDING,
-        group: group,
-        project: project,
-      });
+      this.registerPitchingRepository.create();
+    // const registerPitching: RegisterPitching =
+    //   this.registerPitchingRepository.create(createRegisterPitchingDto);
+    registerPitching.group = group;
+    registerPitching.project = project;
+    // registerPitching.lecturer = lecturer;
     let result: RegisterPitching = null;
     try {
       result = await this.registerPitchingRepository.save(registerPitching);

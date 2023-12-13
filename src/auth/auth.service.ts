@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SignInGoogleDto } from './dto/sign-in-google.dto';
 import { Role } from 'src/role/entities/role.entity';
 import { Repository } from 'typeorm';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable()
 export class AuthService {
@@ -31,15 +32,8 @@ export class AuthService {
   ) {}
 
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
+    const googlePayload: any = jwtDecode(token);
     try {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-      const client = new OAuth2Client(clientId, clientSecret);
-      const tokenInfo = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      const googlePayload = tokenInfo.getPayload();
       const user = await this.userRepository.findOneBy({
         email: googlePayload.email,
       });

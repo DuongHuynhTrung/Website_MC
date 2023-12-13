@@ -11,6 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/role/entities/role.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 
 @Entity()
 export class User {
@@ -91,7 +92,7 @@ export class User {
     example: '123456',
     nullable: false,
   })
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   password: string;
 
   @ApiProperty({
@@ -136,4 +137,10 @@ export class User {
 
   @OneToMany(() => UserGroup, (user_group) => user_group.user)
   user_groups: UserGroup[];
+
+  // @OneToMany(
+  //   () => RegisterPitching,
+  //   (register_pitchings) => register_pitchings.lecturer,
+  // )
+  // register_pitchings: RegisterPitching;
 }
