@@ -1,4 +1,3 @@
-import { OAuth2Client } from 'google-auth-library';
 import {
   Injectable,
   BadRequestException,
@@ -34,8 +33,11 @@ export class AuthService {
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
     const googlePayload: any = jwtDecode(token);
     try {
-      const user = await this.userRepository.findOneBy({
-        email: googlePayload.email,
+      const user = await this.userRepository.findOne({
+        where: {
+          email: googlePayload.email,
+        },
+        relations: ['role'],
       });
       if (user) {
         const payload: PayloadJwtDto = {
