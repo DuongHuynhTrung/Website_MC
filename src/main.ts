@@ -14,8 +14,8 @@ async function bootstrap() {
     }),
   );
   const config = new DocumentBuilder()
-    .setTitle('Image Generated')
-    .setDescription('The Image Generate API description')
+    .setTitle('Website for MC')
+    .setDescription('The Website for MC API description')
     .addBearerAuth()
     .setVersion('1.0')
     .build();

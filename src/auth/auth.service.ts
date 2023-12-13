@@ -58,6 +58,8 @@ export class AuthService {
         const role = await this.roleRepository.findOneByOrFail({ id: 2 });
         const user = this.userRepository.create({
           email: googlePayload.email,
+          fullname: googlePayload.name,
+          avatar_url: googlePayload.picture,
           status: true,
           role: role,
         });

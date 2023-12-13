@@ -47,22 +47,35 @@ export class UserService {
     }
   }
 
-  async searchUserByEmailString(searchEmail: string): Promise<User[]> {
+  async searchUserByEmailString(
+    searchEmail: string,
+    roleName: RoleEnum,
+  ): Promise<User[]> {
+    let users: User[] = [];
     try {
-      let users: User[] = await this.userRepository.find({
+      users = await this.userRepository.find({
         where: {
           email: Like(`%${searchEmail}%`),
         },
         relations: ['role'],
       });
-      if (!users || users.length === 0) {
-        return [];
-      }
-      users = users.filter((user) => user.role.role_name === RoleEnum.STUDENT);
-      return users;
     } catch (error) {
       throw new InternalServerErrorException(
-        `Something went wrong when searching for user by email`,
+        `Có lỗi xảy ra khi tìm kiếm sinh viên/giảng viên`,
+      );
+    }
+    if (!users || users.length === 0) {
+      return [];
+    }
+    if (roleName === RoleEnum.STUDENT) {
+      users = users.filter((user) => user.role.role_name == RoleEnum.STUDENT);
+      return users;
+    } else if (roleName === RoleEnum.LECTURER) {
+      users = users.filter((user) => user.role.role_name == RoleEnum.LECTURER);
+      return users;
+    } else {
+      throw new BadRequestException(
+        'Chỉ có thể tìm kiếm sinh viên hoặc giảng viên',
       );
     }
   }

@@ -15,6 +15,7 @@ import { PhaseModule } from './phase/phase.module';
 import { CategoryModule } from './category/category.module';
 import { CostModule } from './cost/cost.module';
 import { EvidenceModule } from './evidence/evidence.module';
+import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -68,6 +69,7 @@ import { EvidenceModule } from './evidence/evidence.module';
     CategoryModule,
     CostModule,
     EvidenceModule,
+    RefreshTokenModule,
     // TransactionModule,
     // ShareImageModule,
     // MessageModule,

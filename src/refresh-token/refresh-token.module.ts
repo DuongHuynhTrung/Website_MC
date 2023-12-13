@@ -1,11 +1,10 @@
-import { ConfigService, ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenController } from './refresh-token.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './jwt.strategy';
+import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/role/entities/role.entity';
 
 @Module({
@@ -16,14 +15,14 @@ import { Role } from 'src/role/entities/role.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('ACCESS_TOKEN_SECRET'),
+        secret: configService.get('REFRESH_TOKEN_SECRET'),
         signOptions: {
-          expiresIn: 3600,
+          expiresIn: 604800,
         },
       }),
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [RefreshTokenController],
+  providers: [RefreshTokenService],
 })
-export class AuthModule {}
+export class RefreshTokenModule {}

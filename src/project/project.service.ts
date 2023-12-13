@@ -107,7 +107,7 @@ export class ProjectService {
   async getProjectsOfBusiness(business: User): Promise<Project[]> {
     try {
       let projects = await this.projectRepository.find({
-        relations: ['business'],
+        relations: ['business', 'responsible_person'],
       });
       projects = projects.filter(
         (project) => project.business?._id === business._id,
@@ -139,11 +139,18 @@ export class ProjectService {
     }
   }
 
-  async updateProjectById(id: number, updateProjectDto: UpdateProjectDto) {
+  async updateProjectById(
+    id: number,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<Project> {
     //check if project already exists
     const project = await this.getProjectById(id);
-
-    //cheeck Responsible Person
+    if (project.project_status != ProjectStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Chỉ dự án đang trong giai đoạn chờ phê duyệt mới được cập nhật thông tin',
+      );
+    }
+    //check Responsible Person
     let responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
         updateProjectDto.email_responsible_person,
@@ -198,6 +205,11 @@ export class ProjectService {
 
   async confirmProject(id: number): Promise<Project> {
     const project: Project = await this.getProjectById(id);
+    if (project.project_status != ProjectStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Chỉ dự án đang chờ phê duyệt mới có thể phê duyệt',
+      );
+    }
     project.project_status = ProjectStatusEnum.PUBLIC;
     try {
       const result: Project = await this.projectRepository.save(project);

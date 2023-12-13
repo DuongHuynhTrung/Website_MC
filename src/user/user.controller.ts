@@ -71,11 +71,12 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error.',
   })
-  @Get('/search/:searchEmail')
+  @Get('/search/:roleName/:searchEmail')
   searchUserByEmail(
-    @Query('searchEmail') searchEmail: string,
+    @Param('roleName') roleName: RoleEnum,
+    @Param('searchEmail') searchEmail?: string,
   ): Promise<User[]> {
-    return this.userService.searchUserByEmailString(searchEmail);
+    return this.userService.searchUserByEmailString(searchEmail, roleName);
   }
 
   @ApiOperation({ summary: 'Change User Name' })

@@ -88,7 +88,7 @@ export class ProjectController {
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS)
   @UseGuards(JwtGuard)
-  getProjectsOfBusiness(@GetUser() business: User) {
+  getProjectsOfBusiness(@GetUser() business: User): Promise<Project[]> {
     return this.projectService.getProjectsOfBusiness(business);
   }
 
@@ -103,7 +103,7 @@ export class ProjectController {
     description: 'Không tìm thấy dự án với mã số ${id} ',
   })
   @Get(':id')
-  getProjectByID(@Param('id') id: number) {
+  getProjectByID(@Param('id') id: number): Promise<Project> {
     return this.projectService.getProjectById(id);
   }
 
@@ -124,7 +124,7 @@ export class ProjectController {
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
-  confirmProject(@Param('id') id: number) {
+  confirmProject(@Param('id') id: number): Promise<Project> {
     return this.projectService.confirmProject(id);
   }
 
@@ -151,7 +151,7 @@ export class ProjectController {
   updateProjectById(
     @Param('id') id: number,
     @Body() updateProjectDto: UpdateProjectDto,
-  ) {
+  ): Promise<Project> {
     return this.projectService.updateProjectById(id, updateProjectDto);
   }
 
@@ -176,7 +176,10 @@ export class ProjectController {
     @Param('projectId') projectId: number,
     @Param('projectStatus') projectStatus: ProjectStatusEnum,
   ): Promise<Project> {
-    return this.projectService.changeProjectStatus(projectId, projectStatus);
+    return this.projectService.businessChangeProjectStatus(
+      projectId,
+      projectStatus,
+    );
   }
 
   // @Delete(':id')
