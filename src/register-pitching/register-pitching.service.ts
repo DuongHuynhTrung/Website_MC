@@ -53,7 +53,7 @@ export class RegisterPitchingService {
     }
     const expired_date = moment(project.project_registration_expired_date);
     const nowDate = moment(new Date());
-    if (expired_date.isAfter(nowDate)) {
+    if (expired_date.isBefore(nowDate)) {
       throw new BadRequestException('Đã hết hạn đăng ký pitching dự án');
     }
     const group: Group = await this.groupService.getGroupByGroupId(
