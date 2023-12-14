@@ -118,12 +118,7 @@ export class ProjectService {
     }
   }
 
-  async getProjects(
-    page: number,
-  ): Promise<[{ totalProjects: number }, Project[]]> {
-    const limit = 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+  async getProjects(): Promise<[{ totalProjects: number }, Project[]]> {
     try {
       let projects = await this.projectRepository.find({
         relations: ['business', 'responsible_person'],
@@ -136,7 +131,7 @@ export class ProjectService {
         (project) => project.project_status == ProjectStatusEnum.PUBLIC,
       );
       const totalProjects = projects.length;
-      return [{ totalProjects }, projects.slice(startIndex, endIndex)];
+      return [{ totalProjects }, projects];
     } catch (error) {
       throw new NotFoundException(error.message);
     }

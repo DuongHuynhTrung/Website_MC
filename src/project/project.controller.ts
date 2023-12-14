@@ -88,10 +88,8 @@ export class ProjectController {
     type: [Project],
   })
   @Get()
-  getProjects(
-    @Query('page') page: number,
-  ): Promise<[{ totalProjects: number }, Project[]]> {
-    return this.projectService.getProjects(page);
+  getProjects(): Promise<[{ totalProjects: number }, Project[]]> {
+    return this.projectService.getProjects();
   }
 
   @ApiOperation({
