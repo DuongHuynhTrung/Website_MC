@@ -124,7 +124,10 @@ export class GroupService {
     }
     const checkGroupHasLecturer: UserGroup =
       await this.userGroupService.checkGroupHasLecturer(groupId);
-    if (checkGroupHasLecturer) {
+    if (
+      checkGroupHasLecturer &&
+      checkGroupHasLecturer.relationship_status == RelationshipStatusEnum.JOINED
+    ) {
       throw new BadRequestException(
         'Nhóm đã có giáo viên hướng dẫn. Không thể mời thêm',
       );

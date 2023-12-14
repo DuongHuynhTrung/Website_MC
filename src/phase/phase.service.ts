@@ -48,6 +48,9 @@ export class PhaseService {
       user.id,
       createPhaseDto.groupId,
     );
+    if (!userGroup) {
+      throw new BadRequestException('Thành viên không thuộc về nhóm');
+    }
     if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm có quyền tạo giai đoạn mới',
@@ -203,6 +206,9 @@ export class PhaseService {
       user.id,
       updatePhaseDto.groupId,
     );
+    if (!userGroup) {
+      throw new BadRequestException('Thành viên không thuộc về nhóm');
+    }
     if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm có quyền thay đổi thông tin của giai đoạn',
@@ -235,13 +241,7 @@ export class PhaseService {
     phaseStatus: PhaseStatusEnum,
   ): Promise<Phase> {
     const phase: Phase = await this.getPhaseById(phaseId);
-    phase.phase_status = phaseStatus;
-    if (phaseStatus === PhaseStatusEnum.PENDING) {
-      throw new BadRequestException(
-        'Không thể cập nhật giai đoạn về chờ triển khai',
-      );
-    }
-    if (phaseStatus === PhaseStatusEnum.PROCESSING) {
+    if (phase.phase_number != 1) {
       const phaseBefore: Phase = await this.getPhaseById(
         phase.phase_number - 1,
       );
@@ -251,9 +251,36 @@ export class PhaseService {
         );
       }
     }
+    if (phaseStatus === PhaseStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Không thể cập nhật giai đoạn về chờ triển khai',
+      );
+    }
+    if (
+      phase.phase_status == PhaseStatusEnum.PENDING &&
+      phaseStatus !== PhaseStatusEnum.PROCESSING
+    ) {
+      throw new BadRequestException(
+        'Giai đoạn đang chờ triển khai chỉ có thể chuyển sang trạng thái triển khai',
+      );
+    }
+    if (
+      phase.phase_status == PhaseStatusEnum.WARNING &&
+      phaseStatus === PhaseStatusEnum.PROCESSING
+    ) {
+      throw new BadRequestException(
+        'Không thể chuyển trạng thái giai đoạn từ cảnh báo sang triển khai',
+      );
+    }
+    if (phase.phase_status == PhaseStatusEnum.DONE) {
+      throw new BadRequestException(
+        'Giai đoạn đã hoàn thành không thể chuyển sang trạng thái khác',
+      );
+    }
     if (phaseStatus === PhaseStatusEnum.DONE) {
       phase.phase_actual_end_date = new Date();
     }
+    phase.phase_status = phaseStatus;
     try {
       const result: Phase = await this.phaseRepository.save(phase);
       return await this.getPhaseById(result.id);
@@ -332,5 +359,19 @@ export class PhaseService {
         );
       }
     }
+  }
+
+  async checkProjectCanBeDone(projectId: number): Promise<boolean> {
+    const phasesOfProject: Phase[] = await this.getAllPhaseOfProject(projectId);
+    if (phasesOfProject.length === 0) {
+      throw new NotFoundException('Dự án không có giai đoạn nào');
+    }
+    const isNotDone: Phase = phasesOfProject.find(
+      (phase) => phase.phase_status != PhaseStatusEnum.DONE,
+    );
+    if (isNotDone) {
+      throw new BadRequestException('Dự án tồn tại giai đoạn chưa hoàn thành');
+    }
+    return true;
   }
 }

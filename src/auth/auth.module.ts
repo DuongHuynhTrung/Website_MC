@@ -17,9 +17,9 @@ import { Role } from 'src/role/entities/role.entity';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('ACCESS_TOKEN_SECRET'),
-        signOptions: {
-          expiresIn: 3600,
-        },
+        // signOptions: {
+        //   expiresIn: 3600,
+        // },
       }),
     }),
   ],

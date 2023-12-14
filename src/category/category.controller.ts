@@ -19,6 +19,7 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { Category } from './entities/category.entity';
 import { CategoryStatusEnum } from './enum/category-status.enum';
+import { UpdateActualResultDto } from './dto/update-actual-result.dto';
 
 @ApiTags('Category')
 @ApiBearerAuth()
@@ -35,6 +36,12 @@ export class CategoryController {
     return this.categoryService.createCategory(createCategoryDto, user);
   }
 
+  @ApiOperation({ summary: 'Check All Phase of Phase are Done' })
+  @Get('checkPhaseCanDone/:phaseId')
+  checkPhaseCanDone(@Param('phaseId') phaseId: number): Promise<boolean> {
+    return this.categoryService.checkPhaseCanBeDone(phaseId);
+  }
+
   @ApiOperation({ summary: 'Get All Categories of Phase' })
   @Get('all/:phaseId')
   getAllCategoryOfPhase(@Param('phaseId') phaseId: number) {
@@ -47,11 +54,22 @@ export class CategoryController {
     return this.categoryService.getCategoryById(id);
   }
 
+  @ApiOperation({ summary: 'Update Actual Result after Done Project' })
+  @Patch('updateActualResult')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  updateActualResult(
+    @Body() updateActualResultDto: UpdateActualResultDto,
+    @GetUser() user: User,
+  ): Promise<Category> {
+    return this.categoryService.updateActualResult(updateActualResultDto, user);
+  }
+
   @ApiOperation({ summary: 'Update Category Information' })
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
-  update(
+  updateCategory(
     @Param('id') id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @GetUser() user: User,

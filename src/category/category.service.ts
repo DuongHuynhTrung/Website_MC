@@ -13,11 +13,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PhaseService } from 'src/phase/phase.service';
 import { UserGroupService } from 'src/user-group/user-group.service';
-import * as moment from 'moment';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { CategoryStatusEnum } from './enum/category-status.enum';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
+import { PhaseStatusEnum } from 'src/phase/enum/phase-status.enum';
+import { UpdateActualResultDto } from './dto/update-actual-result.dto';
 
 @Injectable()
 export class CategoryService {
@@ -34,15 +35,6 @@ export class CategoryService {
     createCategoryDto: CreateCategoryDto,
     user: User,
   ): Promise<Category> {
-    const start_date = moment(createCategoryDto.category_start_date);
-    const expected_end_date = moment(
-      createCategoryDto.category_expected_end_date,
-    );
-    if (start_date.isAfter(expected_end_date)) {
-      throw new BadRequestException(
-        'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
-      );
-    }
     const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
       user.id,
       createCategoryDto.groupId,
@@ -55,6 +47,11 @@ export class CategoryService {
     const phase: Phase = await this.phaseService.getPhaseById(
       createCategoryDto.phaseId,
     );
+    if (phase.phase_status != PhaseStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Chỉ có thể tạo hạng mục khi giai đoạn chưa bắt đầu',
+      );
+    }
     const category: Category =
       this.categoryRepository.create(createCategoryDto);
     if (!category) {
@@ -114,25 +111,21 @@ export class CategoryService {
     updateCategoryDto: UpdateCategoryDto,
     user: User,
   ): Promise<Category> {
-    const start_date = moment(updateCategoryDto.category_start_date);
-    const expected_end_date = moment(
-      updateCategoryDto.category_expected_end_date,
-    );
-    if (start_date.isAfter(expected_end_date)) {
-      throw new BadRequestException(
-        'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
-      );
-    }
     const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
       user.id,
       updateCategoryDto.groupId,
     );
     if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
-        'Chỉ có trưởng nhóm mới có thể tạo hạng mục',
+        'Chỉ có trưởng nhóm mới có thể cập nhật thông tin hạng mục',
       );
     }
     const category: Category = await this.getCategoryById(id);
+    if (category.category_status != CategoryStatusEnum.TODO) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật thông tin hạng mục khi chưa triển khai',
+      );
+    }
     category.category_name = updateCategoryDto.category_name;
     category.detail = updateCategoryDto.detail;
     category.result_expected = updateCategoryDto.result_expected;
@@ -146,15 +139,42 @@ export class CategoryService {
     }
   }
 
+  //Kiểm tra phase processing thì category mới được chuỷen trạng thái sang Doing. Làm sau demo
   async changeCategoryStatus(
     categoryId: number,
     categoryStatus: CategoryStatusEnum,
   ): Promise<Category> {
     const category: Category = await this.getCategoryById(categoryId);
-    category.category_status = categoryStatus;
+    if (categoryStatus == CategoryStatusEnum.TODO) {
+      throw new BadRequestException(
+        'Không thể chuyển hạng mục về trạng thái cần làm',
+      );
+    }
+    if (category.category_status == CategoryStatusEnum.DONE) {
+      throw new BadRequestException(
+        'Hạng mục đã hoàn thành không thể cập nhật trạng thái',
+      );
+    }
+    if (
+      categoryStatus == CategoryStatusEnum.DOING &&
+      category.category_status != CategoryStatusEnum.TODO
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật trạng thái hạng mục từ cần làm sang đang làm',
+      );
+    }
+    if (
+      categoryStatus == CategoryStatusEnum.DONE &&
+      category.category_status != CategoryStatusEnum.DOING
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể chuyện trạng thái hạng mục từ đang làm sang hoàn thành',
+      );
+    }
     if (categoryStatus === CategoryStatusEnum.DONE) {
       category.category_actual_end_date = new Date();
     }
+    category.category_status = categoryStatus;
     try {
       const result: Category = await this.categoryRepository.save(category);
       return await this.getCategoryById(result.id);
@@ -163,5 +183,54 @@ export class CategoryService {
         'Có lỗi xảy ra khi trạng thái của hạng mục',
       );
     }
+  }
+
+  async checkPhaseCanBeDone(phaseId: number): Promise<boolean> {
+    const categoriesOfPhase: Category[] =
+      await this.getAllCategoryOfPhase(phaseId);
+    if (categoriesOfPhase.length === 0) {
+      throw new NotFoundException('Giai đoạn không có hạng mục nào');
+    }
+    const isNotDone: Category = categoriesOfPhase.find(
+      (category) => category.category_status != CategoryStatusEnum.DONE,
+    );
+    if (isNotDone) {
+      throw new BadRequestException(
+        'Giai đoạn tồn tại hạng mục chưa hoàn thành',
+      );
+    }
+    return true;
+  }
+
+  async updateActualResult(
+    updateActualResultDto: UpdateActualResultDto,
+    user: User,
+  ): Promise<Category> {
+    const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
+      user.id,
+      updateActualResultDto.groupId,
+    );
+    if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
+      throw new ForbiddenException(
+        'Chỉ có trưởng nhóm mới có thể cập nhật kết quả thực tế hạng mục',
+      );
+    }
+    const category: Category = await this.getCategoryById(
+      updateActualResultDto.categoryId,
+    );
+    if (category.category_status != CategoryStatusEnum.DONE) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật kết quả thực tế khi hạng mục đã hoàn thành',
+      );
+    }
+    category.result_actual = updateActualResultDto.actual_result;
+    try {
+      await this.categoryRepository.save(category);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi cập nhật kết quả thực tế hạng mục',
+      );
+    }
+    return await this.getCategoryById(category.id);
   }
 }

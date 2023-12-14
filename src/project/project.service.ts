@@ -12,7 +12,6 @@ import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
-import { UserService } from 'src/user/user.service';
 import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-responsible_person.dto';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import * as moment from 'moment';
@@ -24,8 +23,6 @@ export class ProjectService {
     private readonly projectRepository: Repository<Project>,
 
     private readonly responsiblePersonService: ResponsiblePersonService,
-
-    private readonly userService: UserService,
   ) {}
   async createProject(
     business: User,
@@ -254,23 +251,6 @@ export class ProjectService {
       throw new InternalServerErrorException(error.message);
     }
   }
-
-  // async changeProjectStatus(
-  //   projectId: number,
-  //   projectStatus: ProjectStatusEnum,
-  // ): Promise<Project> {
-  //   const project: Project = await this.getProjectById(projectId);
-
-  //   project.project_status = projectStatus;
-  //   try {
-  //     const result: Project = await this.projectRepository.save(project);
-  //     return await this.getProjectById(result.id);
-  //   } catch (error) {
-  //     throw new InternalServerErrorException(
-  //       'Có lỗi xảy ra khi thay đổi trạng thái dự án',
-  //     );
-  //   }
-  // }
 
   async changeProjectStatus(
     projectId: number,

@@ -39,6 +39,12 @@ export class PhaseController {
     return this.phaseService.createPhase(createPhaseDto, user);
   }
 
+  @ApiOperation({ summary: 'Check All Phase of Project are Done' })
+  @Get('checkProjectCanDone/:projectId')
+  checkProjectCanDone(@Param('projectId') projectId: number): Promise<boolean> {
+    return this.phaseService.checkProjectCanBeDone(projectId);
+  }
+
   @ApiOperation({ summary: 'Get All Phase Of Project' })
   @Get(':projectId')
   getAllPhaseOfProject(@Param('projectId') projectId: number) {
@@ -55,6 +61,19 @@ export class PhaseController {
       projectId,
       phaseNumber,
     );
+  }
+
+  @ApiOperation({
+    summary: 'Business/Lecturer upload feedback for phase after Done',
+  })
+  @Patch('uploadFeedback')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.LECTURER)
+  uploadFeedback(
+    @Body() uploadFeedbackDto: UploadFeedbackDto,
+    @GetUser() user: User,
+  ): Promise<Phase> {
+    return this.phaseService.uploadFeedback(uploadFeedbackDto, user);
   }
 
   @ApiOperation({ summary: 'Update Phase Information In Status Processing' })
@@ -76,13 +95,5 @@ export class PhaseController {
     @Param('phaseStatus') phaseStatus: PhaseStatusEnum,
   ): Promise<Phase> {
     return this.phaseService.changePhaseStatus(phaseId, phaseStatus);
-  }
-
-  @Patch('uploadFeedback')
-  uploadFeedback(
-    @Body() uploadFeedbackDto: UploadFeedbackDto,
-    @GetUser() user: User,
-  ): Promise<Phase> {
-    return this.phaseService.uploadFeedback(uploadFeedbackDto, user);
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateCategoryDto {
   @ApiProperty({
@@ -17,22 +17,6 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   @IsString()
   detail: string;
-
-  @ApiProperty({
-    description: 'Category Start Date',
-    example: '2023-12-15',
-  })
-  @IsNotEmpty()
-  @IsDateString()
-  category_start_date: Date;
-
-  @ApiProperty({
-    description: 'Categort Expected End Date',
-    example: '2024-01-01',
-  })
-  @IsNotEmpty()
-  @IsDateString()
-  category_expected_end_date: Date;
 
   @ApiProperty({
     description: 'Category Expected Result',
