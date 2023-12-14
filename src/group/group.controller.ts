@@ -74,6 +74,8 @@ export class GroupController {
 
   @ApiOperation({ summary: 'Lecturer kick member' })
   @Patch('kick-member/:groupId/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.LECTURER)
   kickMember(
     @Param('groupId') groupId: number,
     @Param('userId') userId: number,

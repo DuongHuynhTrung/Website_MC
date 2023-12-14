@@ -16,17 +16,18 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getUsers(page: number): Promise<User[]> {
+  async getUsers(page: number): Promise<[{ totalUsers: number }, User[]]> {
     const limit = 10;
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     try {
       let users = await this.userRepository.find({ relations: ['role'] });
       if (!users || users.length === 0) {
-        return [];
+        return [{ totalUsers: 0 }, []];
       }
       users = users.filter((user) => user.email !== 'admin@gmail.com');
-      return users.slice(startIndex, endIndex);
+      const totalUsers = users.length;
+      return [{ totalUsers }, users.slice(startIndex, endIndex)];
     } catch (error) {
       throw new NotFoundException(error.message);
     }

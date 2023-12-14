@@ -18,6 +18,7 @@ import { User } from 'src/user/entities/user.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import * as moment from 'moment';
+import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 
 @Injectable()
 export class PhaseService {
@@ -42,10 +43,10 @@ export class PhaseService {
       );
     }
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
+      user.id,
       createPhaseDto.groupId,
     );
-    if (!userGroup.is_leader) {
+    if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm có quyền tạo giai đoạn mới',
       );
@@ -185,10 +186,10 @@ export class PhaseService {
       );
     }
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
+      user.id,
       updatePhaseDto.groupId,
     );
-    if (!userGroup.is_leader) {
+    if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm có quyền thay đổi thông tin của giai đoạn',
       );

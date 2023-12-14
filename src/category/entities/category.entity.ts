@@ -22,12 +22,6 @@ export class Category {
   @Column({ nullable: false })
   detail: string;
 
-  @Column({ nullable: false })
-  category_start_date: Date;
-
-  @Column({ nullable: false })
-  category_expected_end_date: Date;
-
   @Column({ nullable: true })
   category_actual_end_date: Date;
 

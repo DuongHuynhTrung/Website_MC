@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -70,8 +71,10 @@ export class ProjectController {
     type: [Project],
   })
   @Get()
-  getProjects(): Promise<Project[]> {
-    return this.projectService.getProjects();
+  getProjects(
+    @Query('page') page: number,
+  ): Promise<[{ totalProjects: number }, Project[]]> {
+    return this.projectService.getProjects(page);
   }
 
   @ApiOperation({
@@ -170,16 +173,13 @@ export class ProjectController {
   })
   @Patch('changeStatus/:projectId/:projectStatus')
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS)
+  @Roles(RoleEnum.LECTURER)
   @UseGuards(JwtGuard)
   async changeProjectStatus(
     @Param('projectId') projectId: number,
     @Param('projectStatus') projectStatus: ProjectStatusEnum,
   ): Promise<Project> {
-    return this.projectService.businessChangeProjectStatus(
-      projectId,
-      projectStatus,
-    );
+    return this.projectService.changeProjectStatus(projectId, projectStatus);
   }
 
   // @Delete(':id')

@@ -20,6 +20,8 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { RegisterPitchingStatusEnum } from './enum/register-pitching.enum';
 import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { UploadDocumentDto } from './dto/upload-document.dto';
+import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -52,7 +54,7 @@ export class RegisterPitchingService {
       createRegisterPitchingDto.groupId,
     );
     const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
+      user.id,
       group.id,
     );
     if (!user_group) {
@@ -60,24 +62,22 @@ export class RegisterPitchingService {
         'Sinh viên không có trong nhóm, không thể đăng ký pitching',
       );
     }
-    if (!user_group.is_leader) {
+    if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm mới có thế đăng ký pitching',
       );
     }
-    // const lecturer: User = await this.userService.getUserByEmail(
-    //   createRegisterPitchingDto.lecturer_email,
-    // );
-    // if (lecturer.role.role_name != RoleEnum.LECTURER) {
-    //   throw new BadRequestException('Chỉ có thể mời');
-    // }
+    const lecturer: User = await this.userService.getUserByEmail(
+      createRegisterPitchingDto.lecturer_email,
+    );
+    if (lecturer.role.role_name != RoleEnum.LECTURER) {
+      throw new BadRequestException('Chỉ có thể mời');
+    }
     const registerPitching: RegisterPitching =
-      this.registerPitchingRepository.create();
-    // const registerPitching: RegisterPitching =
-    //   this.registerPitchingRepository.create(createRegisterPitchingDto);
+      this.registerPitchingRepository.create(createRegisterPitchingDto);
     registerPitching.group = group;
     registerPitching.project = project;
-    // registerPitching.lecturer = lecturer;
+    registerPitching.lecturer = lecturer;
     let result: RegisterPitching = null;
     try {
       result = await this.registerPitchingRepository.save(registerPitching);
@@ -228,7 +228,7 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching> {
     const project: Project =
       await this.projectService.getProjectById(projectId);
-    if (project.business._id != user._id) {
+    if (project.business.id != user.id) {
       throw new ForbiddenException(
         'Chỉ có doanh nghiệp của dự án mới có thể chọn nhóm',
       );
@@ -260,5 +260,50 @@ export class RegisterPitchingService {
     );
 
     return await this.checkGroupRegisterPitchingProject(projectId, groupId);
+  }
+
+  async uploadDocument(
+    uploadDocumentDto: UploadDocumentDto,
+    user: User,
+  ): Promise<RegisterPitching> {
+    const registerPitching: RegisterPitching =
+      await this.getRegisterPitchingById(
+        uploadDocumentDto.register_pitching_id,
+      );
+    const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
+      user.id,
+      registerPitching.group.id,
+    );
+    if (!user_group) {
+      throw new ForbiddenException(
+        'Sinh viên không có trong nhóm, không thể upload tài liệu',
+      );
+    }
+    if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
+      throw new ForbiddenException(
+        'Chỉ có trưởng nhóm mới có thế upload tài liệu',
+      );
+    }
+    if (
+      registerPitching.register_pitching_status !=
+      RegisterPitchingStatusEnum.PENDING
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể upload tài liệu khi đang chờ doanh nghiệp phản hồi',
+      );
+    }
+    registerPitching.document_url = uploadDocumentDto.document_url;
+    try {
+      const result: RegisterPitching =
+        await this.registerPitchingRepository.save(registerPitching);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi upload tài liệu khi đăng kí pitching',
+        );
+      }
+      return await this.getRegisterPitchingById(result.id);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }

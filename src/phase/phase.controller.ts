@@ -68,6 +68,8 @@ export class PhaseController {
 
   @ApiOperation({ summary: 'Change Phase Status' })
   @Patch('changeStatus/:phaseId/:phaseStatus')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
   changePhaseStatus(
     @Param('phaseId') phaseId: number,
     @Param('phaseStatus') phaseStatus: PhaseStatusEnum,

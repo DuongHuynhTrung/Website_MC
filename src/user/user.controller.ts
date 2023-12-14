@@ -43,7 +43,9 @@ export class UserController {
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  getAllUsers(@Query('page') page: number): Promise<User[]> {
+  getAllUsers(
+    @Query('page') page: number,
+  ): Promise<[{ totalUsers: number }, User[]]> {
     return this.userService.getUsers(page);
   }
 

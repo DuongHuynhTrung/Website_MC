@@ -4,6 +4,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,6 +14,7 @@ import { User } from 'src/user/entities/user.entity';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
+import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
 
 @Entity()
 export class Project {
@@ -151,4 +153,7 @@ export class Project {
 
   @OneToMany(() => Phase, (phase) => phase.project)
   phases: Phase[];
+
+  @OneToOne(() => SummaryReport, (summary_report) => summary_report.project)
+  summary_report: SummaryReport;
 }

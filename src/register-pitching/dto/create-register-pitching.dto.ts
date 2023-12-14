@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { SubjectCodeEnum } from '../enum/subject-code.enum';
 
 export class CreateRegisterPitchingDto {
   @ApiProperty({
@@ -9,14 +10,26 @@ export class CreateRegisterPitchingDto {
   @IsNotEmpty()
   groupId: number;
 
+  @ApiProperty({
+    description: 'Document Url',
+    example: 'abc',
+  })
   @IsOptional()
   @IsString()
   document_url: string;
 
+  @ApiProperty({
+    description: 'Subject Code',
+    example: SubjectCodeEnum.MKT304,
+  })
   @IsNotEmpty()
-  @IsString()
-  subject_code: string;
+  @IsEnum(SubjectCodeEnum)
+  subject_code: SubjectCodeEnum;
 
+  @ApiProperty({
+    description: 'Lecturer Email',
+    example: 'lecturer@gmail.com',
+  })
   @IsNotEmpty()
   @IsString()
   lecturer_email: string;

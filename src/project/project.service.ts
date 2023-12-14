@@ -89,16 +89,22 @@ export class ProjectService {
     }
   }
 
-  async getProjects(): Promise<Project[]> {
+  async getProjects(
+    page: number,
+  ): Promise<[{ totalProjects: number }, Project[]]> {
+    const limit = 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
     try {
       const projects = await this.projectRepository.find({
         relations: ['business', 'responsible_person'],
       });
       if (!projects || projects.length === 0) {
-        return [];
+        return [{ totalProjects: 0 }, []];
       }
       projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      return projects;
+      const totalProjects = projects.length;
+      return [{ totalProjects }, projects.slice(startIndex, endIndex)];
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -110,7 +116,7 @@ export class ProjectService {
         relations: ['business', 'responsible_person'],
       });
       projects = projects.filter(
-        (project) => project.business?._id === business._id,
+        (project) => project.business?.id === business.id,
       );
       if (!projects || projects.length === 0) {
         return [];
@@ -222,24 +228,24 @@ export class ProjectService {
     }
   }
 
+  // async changeProjectStatus(
+  //   projectId: number,
+  //   projectStatus: ProjectStatusEnum,
+  // ): Promise<Project> {
+  //   const project: Project = await this.getProjectById(projectId);
+
+  //   project.project_status = projectStatus;
+  //   try {
+  //     const result: Project = await this.projectRepository.save(project);
+  //     return await this.getProjectById(result.id);
+  //   } catch (error) {
+  //     throw new InternalServerErrorException(
+  //       'Có lỗi xảy ra khi thay đổi trạng thái dự án',
+  //     );
+  //   }
+  // }
+
   async changeProjectStatus(
-    projectId: number,
-    projectStatus: ProjectStatusEnum,
-  ): Promise<Project> {
-    const project: Project = await this.getProjectById(projectId);
-
-    project.project_status = projectStatus;
-    try {
-      const result: Project = await this.projectRepository.save(project);
-      return await this.getProjectById(result.id);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi thay đổi trạng thái dự án',
-      );
-    }
-  }
-
-  async businessChangeProjectStatus(
     projectId: number,
     projectStatus: ProjectStatusEnum,
   ): Promise<Project> {

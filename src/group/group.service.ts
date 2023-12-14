@@ -17,6 +17,7 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { GroupStatusEnum } from './enum/group-status.enum';
+import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 
 @Injectable()
 export class GroupService {
@@ -104,21 +105,28 @@ export class GroupService {
     }
     const group: Group = await this.getGroupByGroupId(groupId);
     const checkUserInGroup: UserGroup =
-      await this.userGroupService.checkUserInGroup(user._id, group.id);
+      await this.userGroupService.checkUserInGroup(user.id, group.id);
     if (!checkUserInGroup) {
       throw new ForbiddenException(
         `Học sinh ngoài nhóm không có quyền mời thành viên`,
       );
     } else {
-      if (!checkUserInGroup.is_leader) {
+      if (checkUserInGroup.role_in_group != RoleInGroupEnum.LEADER) {
         throw new ForbiddenException('Chỉ có leader mới được mời thành viên');
       }
     }
     const checkMemberInGroup: UserGroup =
-      await this.userGroupService.checkUserInGroup(member._id, group.id);
+      await this.userGroupService.checkUserInGroup(member.id, group.id);
     if (checkMemberInGroup) {
       throw new BadRequestException(
         'Sinh viên hoặc giảng viên đã trong nhóm hoặc đang chờ phản hồi',
+      );
+    }
+    const checkGroupHasLecturer: UserGroup =
+      await this.userGroupService.checkGroupHasLecturer(groupId);
+    if (checkGroupHasLecturer) {
+      throw new BadRequestException(
+        'Nhóm đã có giáo viên hướng dẫn. Không thể mời thêm',
       );
     }
     const createUserGroupDto = new CreateUserGroupDto({
@@ -140,30 +148,37 @@ export class GroupService {
     relationStatus: RelationshipStatusEnum,
     user: User,
   ): Promise<UserGroup> {
+    if (
+      relationStatus !== RelationshipStatusEnum.JOINED &&
+      relationStatus !== RelationshipStatusEnum.REJECT
+    ) {
+      throw new BadRequestException('Chỉ có thể từ chối/chấp nhận lời mời');
+    }
     const userGroup: UserGroup =
       await this.userGroupService.findUserGroupById(userGroupId);
-    if (userGroup.user._id !== user._id) {
+    if (userGroup.user.id != user.id) {
       throw new ForbiddenException(
-        'Học sinh không thể trả lời lời mời của người khác!',
+        'Sinh viên/Giảng viên không thể trả lời lời mời của người khác!',
       );
     }
-    if (userGroup.relationship_status !== RelationshipStatusEnum.PENDING) {
+    if (userGroup.relationship_status != RelationshipStatusEnum.PENDING) {
       throw new BadRequestException(
         'Chỉ có lời mời đang chờ phản hồi mới thực hiện được chức năng này',
       );
     }
     userGroup.relationship_status = relationStatus;
     await this.userGroupService.saveUserGroup(userGroup);
-
-    if (relationStatus === RelationshipStatusEnum.JOINED) {
-      const group = await this.getGroupByGroupId(userGroup.group.id);
-      group.group_quantity += 1;
-      try {
-        await this.groupRepository.save(group);
-      } catch (error) {
-        throw new InternalServerErrorException(
-          'Có lỗi khi tăng số lượng thành viên trong nhóm',
-        );
+    if (user.role.role_name == RoleEnum.STUDENT) {
+      if (relationStatus === RelationshipStatusEnum.JOINED) {
+        const group = await this.getGroupByGroupId(userGroup.group.id);
+        group.group_quantity += 1;
+        try {
+          await this.groupRepository.save(group);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi khi tăng số lượng thành viên trong nhóm',
+          );
+        }
       }
     }
     return await this.userGroupService.findUserGroupById(userGroupId);
@@ -180,6 +195,18 @@ export class GroupService {
         'Chỉ có giảng viên mới có thể kick thành viên',
       );
     }
+    const checkUserInGroup: UserGroup =
+      await this.userGroupService.checkUserInGroup(user.id, groupId);
+    if (!checkUserInGroup) {
+      throw new BadRequestException(
+        'Giảng viên không thể kick thành viên của nhóm khác',
+      );
+    }
+    if (lecturer.id == userId) {
+      throw new BadRequestException(
+        'Giảng viên không thể tự kick chính mình ra khỏi nhóm',
+      );
+    }
     const userInGroup: UserGroup = await this.userGroupService.checkUserInGroup(
       userId,
       groupId,
@@ -194,6 +221,16 @@ export class GroupService {
     }
     userInGroup.relationship_status = RelationshipStatusEnum.OUTED;
     await this.userGroupService.saveUserGroup(userInGroup);
+    // Minus group quantity when kick member
+    const group = await this.getGroupByGroupId(userInGroup.group.id);
+    group.group_quantity -= 1;
+    try {
+      await this.groupRepository.save(group);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi khi tăng số lượng thành viên trong nhóm',
+      );
+    }
     return 'Thành viên đã bị kick khỏi nhóm';
   }
 

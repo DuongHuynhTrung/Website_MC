@@ -32,14 +32,14 @@ export class UserGroupController {
     return this.userGroupService.findAllUserGroupByGroupId(id);
   }
 
-  @ApiOperation({ summary: 'Get User Group By GroupID' })
+  @ApiOperation({ summary: 'Get User Group By ID' })
   @Get(':id')
   findUserGroupById(@Param('id') id: number): Promise<UserGroup> {
     return this.userGroupService.findUserGroupById(id);
   }
 
-  // @Get(':id')
-  // findUserGroupByGroup(@Param('id') id: string) {
-  //   return this.userGroupService.findUserGroupByGroup(+id);
-  // }
+  @Get('lecturer/:groupId')
+  findUserGroupByGroup(@Param('groupId') groupId: number) {
+    return this.userGroupService.checkGroupHasLecturer(groupId);
+  }
 }

@@ -26,6 +26,7 @@ import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { RegisterPitching } from './entities/register-pitching.entity';
+import { UploadDocumentDto } from './dto/upload-document.dto';
 
 @ApiTags('Register Pitching')
 @ApiBearerAuth()
@@ -141,5 +142,32 @@ export class RegisterPitchingController {
     @GetUser() user: User,
   ) {
     return this.registerPitchingService.chooseGroup(groupId, projectId, user);
+  }
+
+  @ApiOperation({ summary: 'Leader Upload Document' })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy lịch đăng ký pitching với id ${id}',
+  })
+  @ApiForbiddenResponse({
+    description: 'Sinh viên không có trong nhóm, không thể upload tài liệu',
+  })
+  @ApiForbiddenResponse({
+    description: 'Chỉ có trưởng nhóm mới có thế upload tài liệu',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Chỉ có thể upload tài liệu khi đang chờ doanh nghiệp phản hồi',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi upload tài liệu khi đăng kí pitching',
+  })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  @Patch('uploadDocument')
+  uploadDocument(
+    @Body() uploadDocumentDto: UploadDocumentDto,
+    @GetUser() user: User,
+  ): Promise<RegisterPitching> {
+    return this.registerPitchingService.uploadDocument(uploadDocumentDto, user);
   }
 }

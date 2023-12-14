@@ -20,7 +20,7 @@ export class User {
     example: 1,
   })
   @PrimaryGeneratedColumn()
-  _id: number;
+  id: number;
 
   @ApiProperty({
     description: 'UserName of User',
@@ -138,9 +138,9 @@ export class User {
   @OneToMany(() => UserGroup, (user_group) => user_group.user)
   user_groups: UserGroup[];
 
-  // @OneToMany(
-  //   () => RegisterPitching,
-  //   (register_pitchings) => register_pitchings.lecturer,
-  // )
-  // register_pitchings: RegisterPitching;
+  @OneToMany(
+    () => RegisterPitching,
+    (register_pitchings) => register_pitchings.lecturer,
+  )
+  register_pitchings: RegisterPitching;
 }

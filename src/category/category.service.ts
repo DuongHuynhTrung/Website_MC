@@ -17,6 +17,7 @@ import * as moment from 'moment';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { CategoryStatusEnum } from './enum/category-status.enum';
+import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 
 @Injectable()
 export class CategoryService {
@@ -43,10 +44,10 @@ export class CategoryService {
       );
     }
     const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
+      user.id,
       createCategoryDto.groupId,
     );
-    if (!user_group.is_leader) {
+    if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm mới có thể tạo hạng mục',
       );
@@ -123,19 +124,16 @@ export class CategoryService {
       );
     }
     const user_group: UserGroup = await this.userGroupService.checkUserInGroup(
-      user._id,
+      user.id,
       updateCategoryDto.groupId,
     );
-    if (!user_group.is_leader) {
+    if (user_group.role_in_group != RoleInGroupEnum.LEADER) {
       throw new ForbiddenException(
         'Chỉ có trưởng nhóm mới có thể tạo hạng mục',
       );
     }
     const category: Category = await this.getCategoryById(id);
     category.category_name = updateCategoryDto.category_name;
-    category.category_start_date = updateCategoryDto.category_start_date;
-    category.category_expected_end_date =
-      updateCategoryDto.category_expected_end_date;
     category.detail = updateCategoryDto.detail;
     category.result_expected = updateCategoryDto.result_expected;
     try {

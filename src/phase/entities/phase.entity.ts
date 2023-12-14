@@ -37,6 +37,12 @@ export class Phase {
   @Column({ nullable: false, default: PhaseStatusEnum.PROCESSING })
   phase_status: PhaseStatusEnum;
 
+  @Column()
+  lecturer_feedback: string;
+
+  @Column()
+  business_feeback: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

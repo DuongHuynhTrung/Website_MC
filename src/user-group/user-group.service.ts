@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { UserGroup } from './entities/user-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
+import { RoleEnum } from 'src/role/enum/role.enum';
 
 @Injectable()
 export class UserGroupService {
@@ -70,15 +71,17 @@ export class UserGroupService {
 
   async findAllUserGroupByUserId(user: User): Promise<UserGroup[]> {
     try {
-      let user_group = await this.userGroupRepository.find({
-        relations: ['user', 'group'],
-      });
-      user_group = user_group.filter(
-        (user_group) => user_group.user._id == user._id,
-      );
+      const userId = user.id;
+      const user_group: UserGroup[] = await this.userGroupRepository
+        .createQueryBuilder('user_group')
+        .leftJoinAndSelect('user_group.user', 'user')
+        .leftJoinAndSelect('user_group.group', 'group')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('user.id = :userId', { userId })
+        .getMany();
       if (!user_group) {
         throw new NotFoundException(
-          `Không tìm thấy user_group với user id ${user._id}`,
+          `Không tìm thấy user_group với user id ${user.id}`,
         );
       }
       return user_group;
@@ -89,12 +92,13 @@ export class UserGroupService {
 
   async findAllUserGroupByGroupId(groupId: number): Promise<UserGroup[]> {
     try {
-      const user_group: UserGroup[] = await this.userGroupRepository.find({
-        relations: ['user', 'group'],
-      });
-      const userGroup = user_group.filter(
-        (user_group) => user_group.group.id == groupId,
-      );
+      const userGroup: UserGroup[] = await this.userGroupRepository
+        .createQueryBuilder('user_group')
+        .leftJoinAndSelect('user_group.user', 'user')
+        .leftJoinAndSelect('user_group.group', 'group')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('group.id = :groupId', { groupId })
+        .getMany();
       if (!userGroup) {
         throw new NotFoundException(
           `Nhóm với id ${groupId} không có thành viên`,
@@ -111,13 +115,38 @@ export class UserGroupService {
       const user_group: UserGroup[] = await this.userGroupRepository.find({
         relations: ['user', 'group'],
       });
+      if (user_group.length === 0) {
+        throw new NotFoundException('Hệ thống hiện chưa có nhóm nào');
+      }
       const userGroup = user_group.find(
         (user_group) =>
-          user_group.group.id == groupId && user_group.user._id == userId,
+          user_group.group.id == groupId && user_group.user.id == userId,
       );
       return userGroup;
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+  async checkGroupHasLecturer(groupId: number): Promise<UserGroup> {
+    try {
+      const roleName = RoleEnum.LECTURER;
+      const userGroup: UserGroup = await this.userGroupRepository
+        .createQueryBuilder('user_group')
+        .leftJoinAndSelect('user_group.user', 'user')
+        .leftJoinAndSelect('user_group.group', 'group')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('group.id = :groupId', { groupId })
+        .andWhere('role.role_name = :roleName', { roleName })
+        .getOne();
+      if (!userGroup) {
+        return null;
+      }
+      return userGroup;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi kiểm tra nhóm có giảng viên chưa',
+      );
     }
   }
 }
