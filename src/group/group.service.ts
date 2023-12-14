@@ -55,7 +55,7 @@ export class GroupService {
       );
     }
     const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto({
-      is_leader: true,
+      role_in_group: RoleInGroupEnum.LEADER,
       relationship_status: RelationshipStatusEnum.JOINED,
       group,
       user,
@@ -129,18 +129,37 @@ export class GroupService {
         'Nhóm đã có giáo viên hướng dẫn. Không thể mời thêm',
       );
     }
-    const createUserGroupDto = new CreateUserGroupDto({
-      is_leader: false,
-      user: member,
-      group,
-      relationship_status: RelationshipStatusEnum.PENDING,
-    });
-    try {
-      await this.userGroupService.createUserGroup(createUserGroupDto);
-    } catch (error) {
-      throw new InternalServerErrorException('Có lỗi xảy ra khi invite member');
+    if (member.role.role_name == RoleEnum.STUDENT) {
+      const createUserGroupDto = new CreateUserGroupDto({
+        role_in_group: RoleInGroupEnum.MEMBER,
+        user: member,
+        group,
+        relationship_status: RelationshipStatusEnum.PENDING,
+      });
+      try {
+        await this.userGroupService.createUserGroup(createUserGroupDto);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi invite member',
+        );
+      }
+      return 'Mời thành viên thành công!';
+    } else {
+      const createUserGroupDto = new CreateUserGroupDto({
+        role_in_group: RoleInGroupEnum.LECTURER,
+        user: member,
+        group,
+        relationship_status: RelationshipStatusEnum.PENDING,
+      });
+      try {
+        await this.userGroupService.createUserGroup(createUserGroupDto);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi invite member',
+        );
+      }
+      return 'Mời thành viên thành công!';
     }
-    return 'Mời thành viên thành công!';
   }
 
   async replyInvite(

@@ -19,6 +19,7 @@ import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { PhaseStatusEnum } from './enum/phase-status.enum';
+import { UploadFeedbackDto } from './dto/upload-feedback.dto';
 
 @ApiTags('Phase')
 @UseGuards(JwtGuard)
@@ -75,5 +76,13 @@ export class PhaseController {
     @Param('phaseStatus') phaseStatus: PhaseStatusEnum,
   ): Promise<Phase> {
     return this.phaseService.changePhaseStatus(phaseId, phaseStatus);
+  }
+
+  @Patch('uploadFeedback')
+  uploadFeedback(
+    @Body() uploadFeedbackDto: UploadFeedbackDto,
+    @GetUser() user: User,
+  ): Promise<Phase> {
+    return this.phaseService.uploadFeedback(uploadFeedbackDto, user);
   }
 }

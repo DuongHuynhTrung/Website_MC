@@ -37,10 +37,10 @@ export class Phase {
   @Column({ nullable: false, default: PhaseStatusEnum.PROCESSING })
   phase_status: PhaseStatusEnum;
 
-  @Column()
+  @Column({ nullable: true })
   lecturer_feedback: string;
 
-  @Column()
+  @Column({ nullable: true })
   business_feeback: string;
 
   @CreateDateColumn()

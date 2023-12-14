@@ -19,6 +19,8 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import * as moment from 'moment';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
+import { RoleEnum } from 'src/role/enum/role.enum';
+import { UploadFeedbackDto } from './dto/upload-feedback.dto';
 
 @Injectable()
 export class PhaseService {
@@ -57,13 +59,24 @@ export class PhaseService {
     if (project.project_status !== ProjectStatusEnum.PROCESSING) {
       throw new BadRequestException('Dự án không trong giai đoạn triển khai');
     }
+    const project_start_date = moment(project.project_start_date);
+    const project_expected_end_date = moment(project.project_expected_end_date);
+    if (
+      start_date.isBefore(project_start_date) ||
+      expected_end_date.isAfter(project_expected_end_date)
+    ) {
+      throw new BadRequestException(
+        'Thời gian triển khai giai đoạn phải nằm trong thời gian dự án tiến hành',
+      );
+    }
     const phases: Phase[] = await this.getAllPhaseOfProject(project.id);
     const phase_number: number = phases.length;
-    const phaseOfProject: Phase = await this.getPhaseOfProjectAtPhaseNumber(
-      project.id,
-      phase_number,
-    );
-    if (!phaseOfProject) {
+    if (phase_number === 4) {
+      throw new BadRequestException(
+        'Một dự án chỉ có thể có tối đa 4 giai đoạn',
+      );
+    }
+    if (phase_number === 0) {
       const phase: Phase = this.phaseRepository.create(createPhaseDto);
       if (!phase) {
         throw new BadRequestException('Có lỗi xảy ra khi tạo phase mới');
@@ -81,17 +94,18 @@ export class PhaseService {
         throw new InternalServerErrorException(error.message);
       }
     } else {
-      if (phaseOfProject.phase_status != PhaseStatusEnum.DONE) {
-        throw new BadRequestException(
-          'Giai đoạn trước của dự án chưa được hoàn thành',
-        );
-      }
-      const end_date_phase_before = moment(
-        phaseOfProject.phase_actual_end_date,
+      const phaseOfProject: Phase = await this.getPhaseOfProjectAtPhaseNumber(
+        project.id,
+        phase_number,
       );
-      if (end_date_phase_before.isBefore(start_date)) {
+      console.log(phaseOfProject);
+      const end_date_phase_before = moment(
+        phaseOfProject.phase_expected_end_date,
+      );
+
+      if (end_date_phase_before.isAfter(start_date)) {
         throw new BadRequestException(
-          'Ngày bắt đầu của giai đoạn tiếp theo phải sau ngày kết thúc của giai đoạn trước đó',
+          'Ngày bắt đầu của giai đoạn tiếp theo phải sau ngày kết thúc mong muốn của giai đoạn trước đó',
         );
       }
       const phase: Phase = this.phaseRepository.create(createPhaseDto);
@@ -269,6 +283,39 @@ export class PhaseService {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi lưu giai đoạn bằng hàm',
       );
+    }
+  }
+
+  async uploadFeedback(
+    uploadFeedbackDto: UploadFeedbackDto,
+    user: User,
+  ): Promise<Phase> {
+    const phase: Phase = await this.getPhaseById(uploadFeedbackDto.phaseId);
+    if (phase.phase_status != PhaseStatusEnum.DONE) {
+      throw new BadRequestException(
+        'Chỉ được thêm feedback khi giai đoạn đã kết thúc',
+      );
+    }
+    if (user.role.role_name == RoleEnum.LECTURER) {
+      phase.lecturer_feedback = uploadFeedbackDto.feedback;
+      try {
+        await this.phaseRepository.save(phase);
+        return await this.getPhaseById(phase.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thêm feedback của giảng viên',
+        );
+      }
+    } else if (user.role.role_name == RoleEnum.BUSINESS) {
+      phase.business_feeback = uploadFeedbackDto.feedback;
+      try {
+        await this.phaseRepository.save(phase);
+        return await this.getPhaseById(phase.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thêm feedback của doanh nghiệp',
+        );
+      }
     }
   }
 }

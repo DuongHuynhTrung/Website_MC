@@ -1,20 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class UploadDocumentDto {
+export class UploadFeedbackDto {
   @ApiProperty({
-    description: 'Register Pitching Id',
+    description: 'Phase Id',
     example: 1,
   })
   @IsNotEmpty()
   @IsNumber()
-  register_pitching_id: number;
+  phaseId: number;
 
   @ApiProperty({
-    description: ' Document URL',
-    example: 'abc',
+    description: 'Feedback content',
+    example: 'Làm tốt lắm',
   })
   @IsNotEmpty()
   @IsString()
-  document_url: string;
+  feedback: string;
 }

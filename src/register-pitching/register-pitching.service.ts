@@ -22,6 +22,7 @@ import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
+import * as moment from 'moment';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -50,6 +51,11 @@ export class RegisterPitchingService {
         'Chỉ có dự án đang được công bố mới có thể đăng kí pitching',
       );
     }
+    const expired_date = moment(project.project_registration_expired_date);
+    const nowDate = moment(new Date());
+    if (expired_date.isAfter(nowDate)) {
+      throw new BadRequestException('Đã hết hạn đăng ký pitching dự án');
+    }
     const group: Group = await this.groupService.getGroupByGroupId(
       createRegisterPitchingDto.groupId,
     );
@@ -67,33 +73,63 @@ export class RegisterPitchingService {
         'Chỉ có trưởng nhóm mới có thế đăng ký pitching',
       );
     }
-    const lecturer: User = await this.userService.getUserByEmail(
-      createRegisterPitchingDto.lecturer_email,
-    );
-    if (lecturer.role.role_name != RoleEnum.LECTURER) {
-      throw new BadRequestException('Chỉ có thể mời');
+    const checkGroupRegisterPitchingProject: RegisterPitching =
+      await this.checkGroupRegisterPitchingProject(project.id, group.id);
+    if (checkGroupRegisterPitchingProject) {
+      throw new BadRequestException('Nhóm đã đăng ký pitching dự án này');
     }
-    const registerPitching: RegisterPitching =
-      this.registerPitchingRepository.create(createRegisterPitchingDto);
-    registerPitching.group = group;
-    registerPitching.project = project;
-    registerPitching.lecturer = lecturer;
-    let result: RegisterPitching = null;
-    try {
-      result = await this.registerPitchingRepository.save(registerPitching);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
+    const checkGroupHasLecturer: UserGroup =
+      await this.userGroupService.checkGroupHasLecturer(group.id);
+    if (checkGroupHasLecturer) {
+      const lecturer: User = await this.userService.getUserByEmail(
+        checkGroupHasLecturer.user.email,
       );
+      const registerPitching: RegisterPitching =
+        this.registerPitchingRepository.create(createRegisterPitchingDto);
+      registerPitching.group = group;
+      registerPitching.project = project;
+      registerPitching.lecturer = lecturer;
+      let result: RegisterPitching = null;
+      try {
+        result = await this.registerPitchingRepository.save(registerPitching);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
+        );
+      }
+      await this.groupService.changeGroupStatusToActive(group.id);
+      return await this.getRegisterPitchingById(result.id);
+    } else {
+      const lecturer: User = await this.userService.getUserByEmail(
+        createRegisterPitchingDto.lecturer_email,
+      );
+      if (lecturer.role.role_name != RoleEnum.LECTURER) {
+        throw new BadRequestException(
+          'Chỉ có thể mời giảng viên khi đăng ký pitching',
+        );
+      }
+      const registerPitching: RegisterPitching =
+        this.registerPitchingRepository.create(createRegisterPitchingDto);
+      registerPitching.group = group;
+      registerPitching.project = project;
+      registerPitching.lecturer = lecturer;
+      let result: RegisterPitching = null;
+      try {
+        result = await this.registerPitchingRepository.save(registerPitching);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
+        );
+      }
+      await this.groupService.changeGroupStatusToActive(group.id);
+      return await this.getRegisterPitchingById(result.id);
     }
-    await this.groupService.changeGroupStatusToActive(group.id);
-    return await this.getRegisterPitchingById(result.id);
   }
 
   async getAllRegisterPitchingOfUser(user: User): Promise<RegisterPitching[]> {
     const registerPitchings: RegisterPitching[] =
       await this.registerPitchingRepository.find({
-        relations: ['project', 'group'],
+        relations: ['group', 'project', 'lecturer'],
       });
     if (registerPitchings.length === 0) {
       return [];
@@ -116,7 +152,7 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching[]> {
     const registerPitchings: RegisterPitching[] =
       await this.registerPitchingRepository.find({
-        relations: ['project', 'group'],
+        relations: ['group', 'project', 'lecturer'],
       });
     if (registerPitchings.length === 0) {
       return [];
@@ -132,7 +168,7 @@ export class RegisterPitchingService {
       const registerPitching: RegisterPitching =
         await this.registerPitchingRepository.findOne({
           where: { id },
-          relations: ['group', 'project'],
+          relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitching) {
         throw new NotFoundException(
@@ -152,7 +188,7 @@ export class RegisterPitchingService {
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project'],
+          relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Không có một đăng ký pitching nào');
@@ -176,7 +212,7 @@ export class RegisterPitchingService {
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project'],
+          relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Không có một đăng ký pitching nào');
@@ -200,7 +236,7 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project'],
+          relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Không có một đăng ký pitching nào');
@@ -211,9 +247,7 @@ export class RegisterPitchingService {
           registerPitching.group.id == groupId,
       );
       if (!registerPitching) {
-        throw new NotFoundException(
-          'Nhóm đã chọn không đăng kí pitching dự án',
-        );
+        return null;
       }
       return registerPitching;
     } catch (error) {
@@ -241,8 +275,14 @@ export class RegisterPitchingService {
     const registerPitchings: RegisterPitching[] =
       await this.getAllRegisterPitchingByProjectId(projectId);
     // check Group Register Pitching Project
-    await this.checkGroupRegisterPitchingProject(projectId, groupId);
-
+    const checkGroupRegisterPitchingProject: RegisterPitching =
+      await this.checkGroupRegisterPitchingProject(projectId, groupId);
+    if (
+      !checkGroupRegisterPitchingProject ||
+      checkGroupRegisterPitchingProject === null
+    ) {
+      throw new NotFoundException('Nhóm đã chọn không đăng kí pitching dự án');
+    }
     registerPitchings.forEach(async (registerPitching) => {
       if (registerPitching.group.id == groupId) {
         registerPitching.register_pitching_status =

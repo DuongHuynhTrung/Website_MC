@@ -40,6 +40,14 @@ export class ProjectService {
         'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
       );
     }
+    //check the range between start_date and expected_end_date is in 3 months
+    const threeMonthsLater = start_date.clone().add(3, 'months');
+    console.log(threeMonthsLater);
+    if (expected_end_date.isSameOrAfter(threeMonthsLater)) {
+      throw new BadRequestException(
+        'Một dự án chỉ có thể được thực hiện trong 3 tháng',
+      );
+    }
     let responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
         createProjectDto.email_responsible_person,

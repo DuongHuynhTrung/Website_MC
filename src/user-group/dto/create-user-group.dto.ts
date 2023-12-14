@@ -1,12 +1,13 @@
 import { Group } from 'src/group/entities/group.entity';
 import { User } from 'src/user/entities/user.entity';
 import { RelationshipStatusEnum } from '../enum/relationship-status.enum';
-import { IsBoolean, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
+import { RoleInGroupEnum } from '../enum/role-in-group.enum';
 
 export class CreateUserGroupDto {
   @IsNotEmpty()
-  @IsBoolean()
-  is_leader: boolean;
+  @IsEnum(RoleInGroupEnum)
+  role_in_group: RoleInGroupEnum;
 
   @IsNotEmpty()
   @IsEnum(RelationshipStatusEnum)
@@ -19,12 +20,12 @@ export class CreateUserGroupDto {
   user: User;
 
   constructor(data: {
-    is_leader: boolean;
+    role_in_group: RoleInGroupEnum;
     relationship_status: RelationshipStatusEnum;
     group: Group;
     user: User;
   }) {
-    this.is_leader = data.is_leader;
+    this.role_in_group = data.role_in_group;
     this.relationship_status = data.relationship_status;
     this.group = data.group;
     this.user = data.user;

@@ -36,7 +36,7 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @ApiOperation({
-    summary: 'Create a new project',
+    summary: 'Business create a new project',
   })
   @ApiOkResponse({
     description: 'Project created successfully!',
@@ -64,7 +64,7 @@ export class ProjectController {
   }
 
   @ApiOperation({
-    summary: 'Get all projects for administration',
+    summary: 'Get all projects',
   })
   @ApiOkResponse({
     description: 'All projects have been retrieved',
@@ -159,7 +159,7 @@ export class ProjectController {
   }
 
   @ApiOperation({
-    summary: 'Business change Project Status',
+    summary: 'Lecturer change Project Status',
   })
   @ApiOkResponse({
     description: 'Project after change status have been retrieved',
