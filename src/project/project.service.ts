@@ -97,7 +97,7 @@ export class ProjectService {
     }
   }
 
-  async getProjects(
+  async getProjectsForAdmin(
     page: number,
   ): Promise<[{ totalProjects: number }, Project[]]> {
     const limit = 10;
@@ -111,6 +111,30 @@ export class ProjectService {
         return [{ totalProjects: 0 }, []];
       }
       projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      const totalProjects = projects.length;
+      return [{ totalProjects }, projects.slice(startIndex, endIndex)];
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async getProjects(
+    page: number,
+  ): Promise<[{ totalProjects: number }, Project[]]> {
+    const limit = 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    try {
+      let projects = await this.projectRepository.find({
+        relations: ['business', 'responsible_person'],
+      });
+      if (!projects || projects.length === 0) {
+        return [{ totalProjects: 0 }, []];
+      }
+      projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      projects = projects.filter(
+        (project) => project.project_status == ProjectStatusEnum.PUBLIC,
+      );
       const totalProjects = projects.length;
       return [{ totalProjects }, projects.slice(startIndex, endIndex)];
     } catch (error) {

@@ -236,6 +236,21 @@ export class PhaseService {
   ): Promise<Phase> {
     const phase: Phase = await this.getPhaseById(phaseId);
     phase.phase_status = phaseStatus;
+    if (phaseStatus === PhaseStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Không thể cập nhật giai đoạn về chờ triển khai',
+      );
+    }
+    if (phaseStatus === PhaseStatusEnum.PROCESSING) {
+      const phaseBefore: Phase = await this.getPhaseById(
+        phase.phase_number - 1,
+      );
+      if (phaseBefore.phase_status != PhaseStatusEnum.DONE) {
+        throw new BadRequestException(
+          'Không thể bắt đầu giai đoạn mới khi giai đoạn trước chưa hoàn thành',
+        );
+      }
+    }
     if (phaseStatus === PhaseStatusEnum.DONE) {
       phase.phase_actual_end_date = new Date();
     }

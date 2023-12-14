@@ -64,6 +64,23 @@ export class ProjectController {
   }
 
   @ApiOperation({
+    summary: 'Get all projects For Admin',
+  })
+  @ApiOkResponse({
+    description: 'All projects have been retrieved',
+    type: [Project],
+  })
+  @Get('admin')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  getProjectsForAdmin(
+    @Query('page') page: number,
+  ): Promise<[{ totalProjects: number }, Project[]]> {
+    return this.projectService.getProjectsForAdmin(page);
+  }
+
+  @ApiOperation({
     summary: 'Get all projects',
   })
   @ApiOkResponse({

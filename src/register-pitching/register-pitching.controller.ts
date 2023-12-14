@@ -79,7 +79,7 @@ export class RegisterPitchingController {
   })
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.STUDENT)
+  @Roles(RoleEnum.STUDENT, RoleEnum.LECTURER)
   getAllRegisterPitchingOfUser(
     @GetUser() user: User,
   ): Promise<RegisterPitching[]> {

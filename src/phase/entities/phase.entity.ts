@@ -34,7 +34,7 @@ export class Phase {
   @Column({ nullable: false, default: 1 })
   phase_number: number;
 
-  @Column({ nullable: false, default: PhaseStatusEnum.PROCESSING })
+  @Column({ nullable: false, default: PhaseStatusEnum.PENDING })
   phase_status: PhaseStatusEnum;
 
   @Column({ nullable: true })
