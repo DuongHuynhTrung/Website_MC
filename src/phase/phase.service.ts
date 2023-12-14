@@ -242,9 +242,11 @@ export class PhaseService {
   ): Promise<Phase> {
     const phase: Phase = await this.getPhaseById(phaseId);
     if (phase.phase_number != 1) {
-      const phaseBefore: Phase = await this.getPhaseById(
+      const phaseBefore: Phase = await this.getPhaseOfProjectAtPhaseNumber(
+        phase.project.id,
         phase.phase_number - 1,
       );
+      console.log(phaseBefore);
       if (phaseBefore.phase_status != PhaseStatusEnum.DONE) {
         throw new BadRequestException(
           'Không thể bắt đầu giai đoạn mới khi giai đoạn trước chưa hoàn thành',
