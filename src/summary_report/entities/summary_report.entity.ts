@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -29,5 +30,6 @@ export class SummaryReport {
   updatedAt: Date;
 
   @OneToOne(() => Project, (project) => project.summary_report)
+  @JoinColumn()
   project: Project;
 }
