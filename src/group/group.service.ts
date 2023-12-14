@@ -132,6 +132,15 @@ export class GroupService {
         'Nhóm đã có giáo viên hướng dẫn. Không thể mời thêm',
       );
     }
+    if (
+      checkGroupHasLecturer &&
+      checkGroupHasLecturer.relationship_status ==
+        RelationshipStatusEnum.PENDING
+    ) {
+      throw new BadRequestException(
+        'Nhóm đã mời giáo viên hướng dẫn. Hãy đợi hồi đáp',
+      );
+    }
     if (member.role.role_name == RoleEnum.STUDENT) {
       const createUserGroupDto = new CreateUserGroupDto({
         role_in_group: RoleInGroupEnum.MEMBER,
