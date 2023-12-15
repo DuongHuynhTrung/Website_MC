@@ -8,6 +8,6 @@ export class CreateGroupDto {
     nullable: false,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tên nhóm không được bỏ trống' })
   group_name: string;
 }

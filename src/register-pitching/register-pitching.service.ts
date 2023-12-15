@@ -23,6 +23,8 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 import * as moment from 'moment';
+import { CreateUserGroupDto } from 'src/user-group/dto/create-user-group.dto';
+import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -97,7 +99,9 @@ export class RegisterPitchingService {
           'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
         );
       }
+      // Change status of Group to Active
       await this.groupService.changeGroupStatusToActive(group.id);
+
       return await this.getRegisterPitchingById(result.id);
     } else {
       const lecturer: User = await this.userService.getUserByEmail(
@@ -121,7 +125,17 @@ export class RegisterPitchingService {
           'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
         );
       }
+      // Create UserGroup for Lecturer and Group
+      const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto({
+        group: group,
+        relationship_status: RelationshipStatusEnum.PENDING,
+        role_in_group: RoleInGroupEnum.LECTURER,
+        user: lecturer,
+      });
+      await this.userGroupService.createUserGroup(createUserGroupDto);
+      // Change status of Group to Active
       await this.groupService.changeGroupStatusToActive(group.id);
+
       return await this.getRegisterPitchingById(result.id);
     }
   }
@@ -137,6 +151,7 @@ export class RegisterPitchingService {
     const result: RegisterPitching[] = [];
     const userGroups: UserGroup[] =
       await this.userGroupService.findAllUserGroupByUserId(user);
+    console.log(userGroups);
     userGroups.forEach((userGroup) => {
       registerPitchings.forEach((registerPitching) => {
         if (registerPitching.group.id == userGroup.group.id) {

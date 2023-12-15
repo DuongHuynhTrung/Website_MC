@@ -8,7 +8,7 @@ export class SignInDto {
     nullable: false,
   })
   @IsEmail()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email không được rỗng' })
   email: string;
 
   @ApiProperty({
@@ -17,6 +17,6 @@ export class SignInDto {
     nullable: false,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Mật khẩu không được rỗng' })
   password: string;
 }

@@ -246,7 +246,7 @@ export class PhaseService {
         phase.project.id,
         phase.phase_number - 1,
       );
-      console.log(phaseBefore);
+
       if (phaseBefore.phase_status != PhaseStatusEnum.DONE) {
         throw new BadRequestException(
           'Không thể bắt đầu giai đoạn mới khi giai đoạn trước chưa hoàn thành',
