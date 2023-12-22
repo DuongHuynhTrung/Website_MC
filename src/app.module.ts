@@ -72,8 +72,6 @@ import { SummaryReportModule } from './summary_report/summary_report.module';
     EvidenceModule,
     RefreshTokenModule,
     SummaryReportModule,
-    // TransactionModule,
-    // ShareImageModule,
     // MessageModule,
   ],
   // providers: [SocketGateway, MessageService],

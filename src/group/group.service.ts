@@ -18,6 +18,10 @@ import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { GroupStatusEnum } from './enum/group-status.enum';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingStatusEnum } from 'src/register-pitching/enum/register-pitching.enum';
+import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 
 @Injectable()
 export class GroupService {
@@ -28,6 +32,8 @@ export class GroupService {
     private readonly userGroupService: UserGroupService,
 
     private readonly userService: UserService,
+
+    // private readonly registerPitchingService: RegisterPitchingService,
   ) {}
 
   async createGroup(
@@ -291,33 +297,36 @@ export class GroupService {
     }
   }
 
-  // async changeGroupStatusToFree(groupId: number): Promise<Group> {
+  // async changeGroupStatusToFree(groupId: number): Promise<void> {
   //   const group: Group = await this.getGroupByGroupId(groupId);
-  //   const registerPitchings: RegisterPitching[] = await this.registerPitchingService.getAllRegisterPitchingByGroupId(groupId);
+  //   const registerPitchings: RegisterPitching[] =
+  //     await this.registerPitchingService.getAllRegisterPitchingByGroupId(
+  //       groupId,
+  //     );
+  //   if (registerPitchings.length === 0) {
+  //     return;
+  //   }
   //   let count = 0;
-  //   registerPitchings.forEach(registerPitching => {
-  //     if (registerPitching.register_pitching_status === RegisterPitchingStatusEnum.PENDING) {
-  //       return null;
-  //     } else if (registerPitching.register_pitching_status === RegisterPitchingStatusEnum.SELECTED) {
-  //       if (registerPitching.project.project_status === ProjectStatusEnum.PROCESSING) {
-  //         count++;
-  //       }
+  //   registerPitchings.forEach((registerPitching) => {
+  //     if (
+  //       registerPitching.register_pitching_status ==
+  //         RegisterPitchingStatusEnum.SELECTED &&
+  //       registerPitching.project.project_status == ProjectStatusEnum.PROCESSING
+  //     ) {
+  //       count++;
   //     }
-  //   })
-  // }
-
-  // async getGroupByID(id: number): Promise<Group> {
-  //   try {
-  //     const group = await this.groupRepository.findOneBy({ id });
-  //   } catch (error) {}
-  //   return `This action returns a #${id} group`;
-  // }
-
-  // updateGroupName(id: number, user: User, updateGroupDto: UpdateGroupDto) {
-  //   return `This action updates a #${id} group`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} group`;
+  //   });
+  //   if (count > 0) {
+  //     return;
+  //   } else {
+  //     group.group_status = GroupStatusEnum.FREE;
+  //     try {
+  //       await this.groupRepository.save(group);
+  //     } catch (error) {
+  //       throw new InternalServerErrorException(
+  //         'Có lỗi xảy ra khi chuyển trạng thái nhóm về đang rảnh',
+  //       );
+  //     }
+  //   }
   // }
 }

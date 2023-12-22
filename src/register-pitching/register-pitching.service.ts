@@ -230,13 +230,13 @@ export class RegisterPitchingService {
           relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
-        throw new NotFoundException('Không có một đăng ký pitching nào');
+        return [];
       }
       registerPitchings = registerPitchings.filter(
         (registerPitching) => registerPitching.group.id == groupId,
       );
       if (!registerPitchings || registerPitchings.length === 0) {
-        throw new NotFoundException('Dự án không có đăng ký pitching nào');
+        return [];
       }
       return registerPitchings;
     } catch (error) {
