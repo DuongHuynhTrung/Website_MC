@@ -11,6 +11,9 @@ import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
+import { GroupService } from 'src/group/group.service';
+import { Group } from 'src/group/entities/group.entity';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 
 @Module({
   imports: [
@@ -20,6 +23,8 @@ import { UserGroupService } from 'src/user-group/user-group.service';
       ResponsiblePerson,
       User,
       UserGroup,
+      Group,
+      RegisterPitching,
     ]),
   ],
   controllers: [PhaseController],
@@ -29,6 +34,7 @@ import { UserGroupService } from 'src/user-group/user-group.service';
     ResponsiblePersonService,
     UserService,
     UserGroupService,
+    GroupService,
   ],
 })
 export class PhaseModule {}

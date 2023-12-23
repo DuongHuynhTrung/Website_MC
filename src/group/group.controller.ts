@@ -84,18 +84,8 @@ export class GroupController {
     return this.groupService.kickMember(groupId, userId, user);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.groupService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
-  //   return this.groupService.update(+id, updateGroupDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.groupService.remove(+id);
-  // }
+  @Get('changeStatus/:groupId')
+  changeGroupStatusToFree(@Param('groupId') groupId: number) {
+    return this.groupService.changeGroupStatusToFree(groupId);
+  }
 }

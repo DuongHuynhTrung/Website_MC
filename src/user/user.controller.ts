@@ -21,6 +21,7 @@ import {
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from '../role/enum/role.enum';
+import { GetUser } from 'src/auth/get-user.decorator';
 
 @UseGuards(JwtGuard)
 @ApiTags('User')
@@ -75,33 +76,38 @@ export class UserController {
   })
   @Get('/search/:roleName/:searchEmail')
   searchUserByEmail(
+    @GetUser() user: User,
     @Param('roleName') roleName: RoleEnum,
     @Param('searchEmail') searchEmail?: string,
   ): Promise<User[]> {
-    return this.userService.searchUserByEmailString(searchEmail, roleName);
+    return this.userService.searchUserByEmailString(
+      searchEmail,
+      roleName,
+      user,
+    );
   }
 
-  @ApiOperation({ summary: 'Change User Name' })
-  @ApiOkResponse({
-    description: 'UserName has been changed',
-  })
-  @ApiNotFoundResponse({
-    description: 'User not found.',
-  })
-  @ApiBadRequestResponse({
-    description: 'User status is false.',
-  })
-  @ApiBadRequestResponse({
-    description: 'UserName is not following regex pattern.',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error.',
-  })
-  @Patch(':email/username/:username')
-  updateUserName(
-    @Param('email') email: string,
-    @Param('username') username: string,
-  ): Promise<string> {
-    return this.userService.changeUserName(email, username);
-  }
+  // @ApiOperation({ summary: 'Change User Name' })
+  // @ApiOkResponse({
+  //   description: 'UserName has been changed',
+  // })
+  // @ApiNotFoundResponse({
+  //   description: 'User not found.',
+  // })
+  // @ApiBadRequestResponse({
+  //   description: 'User status is false.',
+  // })
+  // @ApiBadRequestResponse({
+  //   description: 'UserName is not following regex pattern.',
+  // })
+  // @ApiInternalServerErrorResponse({
+  //   description: 'Internal server error.',
+  // })
+  // @Patch(':email/username/:username')
+  // updateUserName(
+  //   @Param('email') email: string,
+  //   @Param('username') username: string,
+  // ): Promise<string> {
+  //   return this.userService.changeUserName(email, username);
+  // }
 }

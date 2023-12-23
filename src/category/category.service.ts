@@ -139,7 +139,6 @@ export class CategoryService {
     }
   }
 
-  //Kiểm tra phase processing thì category mới được chuỷen trạng thái sang Doing. Làm sau demo
   async changeCategoryStatus(
     categoryId: number,
     categoryStatus: CategoryStatusEnum,
@@ -153,6 +152,15 @@ export class CategoryService {
     if (category.category_status == CategoryStatusEnum.DONE) {
       throw new BadRequestException(
         'Hạng mục đã hoàn thành không thể cập nhật trạng thái',
+      );
+    }
+    if (
+      categoryStatus == CategoryStatusEnum.DOING &&
+      category.phase.phase_status != PhaseStatusEnum.PROCESSING &&
+      category.phase.phase_status != PhaseStatusEnum.WARNING
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể cập nhật trạng thái hạng mục sang đang làm khi giai đoạn đang được triển khai',
       );
     }
     if (

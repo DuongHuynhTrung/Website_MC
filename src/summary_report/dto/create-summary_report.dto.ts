@@ -17,4 +17,12 @@ export class CreateSummaryReportDto {
   @IsNotEmpty()
   @IsNumber()
   projectId: number;
+
+  @ApiProperty({
+    description: 'Group Id',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  groupId: number;
 }

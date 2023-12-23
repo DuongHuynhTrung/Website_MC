@@ -186,15 +186,20 @@ export class ProjectController {
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi khi thay đổi trạng thái của dự án',
   })
-  @Patch('changeStatus/:projectId/:projectStatus')
+  @Patch('changeStatus/:projectId/:projectStatus/:groupId')
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.LECTURER)
   @UseGuards(JwtGuard)
   async changeProjectStatus(
     @Param('projectId') projectId: number,
     @Param('projectStatus') projectStatus: ProjectStatusEnum,
+    @Param('groupId') groupId: number,
   ): Promise<Project> {
-    return this.projectService.changeProjectStatus(projectId, projectStatus);
+    return this.projectService.changeProjectStatus(
+      projectId,
+      projectStatus,
+      groupId,
+    );
   }
 
   // @Delete(':id')

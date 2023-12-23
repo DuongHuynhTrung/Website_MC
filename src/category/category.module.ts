@@ -13,6 +13,9 @@ import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
+import { Group } from 'src/group/entities/group.entity';
+import { GroupService } from 'src/group/group.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 
 @Module({
   imports: [
@@ -23,6 +26,8 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
       UserGroup,
       Project,
       ResponsiblePerson,
+      Group,
+      RegisterPitching,
     ]),
   ],
   controllers: [CategoryController],
@@ -33,6 +38,7 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
     UserGroupService,
     ProjectService,
     ResponsiblePersonService,
+    GroupService,
   ],
 })
 export class CategoryModule {}

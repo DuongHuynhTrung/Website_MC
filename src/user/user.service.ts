@@ -51,6 +51,7 @@ export class UserService {
   async searchUserByEmailString(
     searchEmail: string,
     roleName: RoleEnum,
+    leader: User,
   ): Promise<User[]> {
     let users: User[] = [];
     try {
@@ -69,7 +70,10 @@ export class UserService {
       return [];
     }
     if (roleName === RoleEnum.STUDENT) {
-      users = users.filter((user) => user.role.role_name == RoleEnum.STUDENT);
+      users = users.filter(
+        (user) =>
+          user.role.role_name == RoleEnum.STUDENT && user.email != leader.email,
+      );
       return users;
     } else if (roleName === RoleEnum.LECTURER) {
       users = users.filter((user) => user.role.role_name == RoleEnum.LECTURER);
@@ -79,38 +83,5 @@ export class UserService {
         'Chỉ có thể tìm kiếm sinh viên hoặc giảng viên',
       );
     }
-  }
-
-  async changeUserName(email: string, userName: string): Promise<string> {
-    let user = null;
-    try {
-      user = await this.getUserByEmail(email);
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
-    if (!user) {
-      throw new NotFoundException(
-        `Người dùng với email ${email} không tồn tại`,
-      );
-    }
-    if (!user.status) {
-      throw new BadRequestException(`User status is ${user.status}`);
-    }
-    const USERNAME_REGEX = /^[a-zA-Z0-9_]{4,15}$/;
-    if (!USERNAME_REGEX.test(userName)) {
-      throw new BadRequestException(
-        `Tên người dùng phải tuân theo nguyên tắc!`,
-      );
-    }
-    user.userName = userName;
-    try {
-      const updateUserName = await this.userRepository.save(user);
-      if (!updateUserName) {
-        throw new Error(`Something went wrong when changing user name`);
-      }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
-    return 'UserName has been changed';
   }
 }

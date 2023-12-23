@@ -196,6 +196,29 @@ export class RegisterPitchingService {
     }
   }
 
+  async getRegisterPitchingByGroupIdAndProjectId(
+    groupId: number,
+    projectId: number,
+  ): Promise<RegisterPitching> {
+    try {
+      const registerPitchings: RegisterPitching[] =
+        await this.registerPitchingRepository.find({
+          relations: ['group', 'project', 'lecturer'],
+        });
+      if (!registerPitchings) {
+        throw new NotFoundException('Hệ thống không có registerPitching nào');
+      }
+      const registerPitching: RegisterPitching = registerPitchings.find(
+        (registerPitching) =>
+          registerPitching.group.id == groupId &&
+          registerPitching.project.id == projectId,
+      );
+      return registerPitching;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
   async getAllRegisterPitchingByProjectId(
     projectId: number,
   ): Promise<RegisterPitching[]> {
@@ -213,30 +236,6 @@ export class RegisterPitchingService {
       );
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Dự án không có đăng ký pitching nào');
-      }
-      return registerPitchings;
-    } catch (error) {
-      throw new NotFoundException(error.message);
-    }
-  }
-
-  async getAllRegisterPitchingByGroupId(
-    groupId: number,
-  ): Promise<RegisterPitching[]> {
-    await this.groupService.getGroupByGroupId(groupId);
-    try {
-      let registerPitchings: RegisterPitching[] =
-        await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
-        });
-      if (!registerPitchings || registerPitchings.length === 0) {
-        return [];
-      }
-      registerPitchings = registerPitchings.filter(
-        (registerPitching) => registerPitching.group.id == groupId,
-      );
-      if (!registerPitchings || registerPitchings.length === 0) {
-        return [];
       }
       return registerPitchings;
     } catch (error) {
@@ -312,6 +311,7 @@ export class RegisterPitchingService {
     await this.projectService.changeProjectStatus(
       project.id,
       ProjectStatusEnum.PROCESSING,
+      groupId,
     );
 
     return await this.checkGroupRegisterPitchingProject(projectId, groupId);

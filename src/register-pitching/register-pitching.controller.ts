@@ -109,7 +109,7 @@ export class RegisterPitchingController {
   @ApiNotFoundResponse({
     description: 'Không tìm thấy lịch đăng ký pitching với id ${id}',
   })
-  @Get(':id')
+  @Get('getOne/:id')
   findOne(@Param('id') id: number) {
     return this.registerPitchingService.getRegisterPitchingById(id);
   }

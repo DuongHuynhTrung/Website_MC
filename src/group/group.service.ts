@@ -18,7 +18,6 @@ import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { GroupStatusEnum } from './enum/group-status.enum';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
-import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { RegisterPitchingStatusEnum } from 'src/register-pitching/enum/register-pitching.enum';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
@@ -29,11 +28,12 @@ export class GroupService {
     @InjectRepository(Group)
     private readonly groupRepository: Repository<Group>,
 
+    @InjectRepository(RegisterPitching)
+    private readonly registerPitchingRepository: Repository<RegisterPitching>,
+
     private readonly userGroupService: UserGroupService,
 
     private readonly userService: UserService,
-
-    // private readonly registerPitchingService: RegisterPitchingService,
   ) {}
 
   async createGroup(
@@ -297,36 +297,63 @@ export class GroupService {
     }
   }
 
-  // async changeGroupStatusToFree(groupId: number): Promise<void> {
-  //   const group: Group = await this.getGroupByGroupId(groupId);
-  //   const registerPitchings: RegisterPitching[] =
-  //     await this.registerPitchingService.getAllRegisterPitchingByGroupId(
-  //       groupId,
-  //     );
-  //   if (registerPitchings.length === 0) {
-  //     return;
-  //   }
-  //   let count = 0;
-  //   registerPitchings.forEach((registerPitching) => {
-  //     if (
-  //       registerPitching.register_pitching_status ==
-  //         RegisterPitchingStatusEnum.SELECTED &&
-  //       registerPitching.project.project_status == ProjectStatusEnum.PROCESSING
-  //     ) {
-  //       count++;
-  //     }
-  //   });
-  //   if (count > 0) {
-  //     return;
-  //   } else {
-  //     group.group_status = GroupStatusEnum.FREE;
-  //     try {
-  //       await this.groupRepository.save(group);
-  //     } catch (error) {
-  //       throw new InternalServerErrorException(
-  //         'Có lỗi xảy ra khi chuyển trạng thái nhóm về đang rảnh',
-  //       );
-  //     }
-  //   }
-  // }
+  async getAllRegisterPitchingByGroupId(
+    groupId: number,
+  ): Promise<RegisterPitching[]> {
+    await this.getGroupByGroupId(groupId);
+    try {
+      let registerPitchings: RegisterPitching[] =
+        await this.registerPitchingRepository.find({
+          relations: ['group', 'project', 'lecturer'],
+        });
+      if (!registerPitchings || registerPitchings.length === 0) {
+        return [];
+      }
+      registerPitchings = registerPitchings.filter(
+        (registerPitching) => registerPitching.group.id == groupId,
+      );
+      if (!registerPitchings || registerPitchings.length === 0) {
+        return [];
+      }
+      return registerPitchings;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async changeGroupStatusToFree(groupId: number): Promise<void> {
+    const group: Group = await this.getGroupByGroupId(groupId);
+    const registerPitchings: RegisterPitching[] =
+      await this.getAllRegisterPitchingByGroupId(groupId);
+    if (registerPitchings.length === 0) {
+      return;
+    }
+    let count = 0;
+    registerPitchings.forEach((registerPitching) => {
+      if (
+        (registerPitching.register_pitching_status ==
+          RegisterPitchingStatusEnum.SELECTED &&
+          registerPitching.project.project_status ==
+            ProjectStatusEnum.PROCESSING) ||
+        (registerPitching.register_pitching_status ==
+          RegisterPitchingStatusEnum.PENDING &&
+          registerPitching.project.project_status == ProjectStatusEnum.PUBLIC)
+      ) {
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      return;
+    } else {
+      group.group_status = GroupStatusEnum.FREE;
+      try {
+        await this.groupRepository.save(group);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi chuyển trạng thái nhóm về đang rảnh',
+        );
+      }
+    }
+  }
 }

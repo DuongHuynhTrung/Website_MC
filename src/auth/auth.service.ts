@@ -17,6 +17,11 @@ import { SignInGoogleDto } from './dto/sign-in-google.dto';
 import { Role } from 'src/role/entities/role.entity';
 import { Repository } from 'typeorm';
 import { jwtDecode } from 'jwt-decode';
+import { RoleEnum } from 'src/role/enum/role.enum';
+import { ProvideAccountDto } from './dto/provide-account.dto';
+import { UpRoleAccountDto } from './dto/upRole-account.dto';
+import { UserService } from 'src/user/user.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +32,9 @@ export class AuthService {
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
 
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
+
+    private readonly userService: UserService,
   ) {}
 
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
@@ -140,7 +147,9 @@ export class AuthService {
       );
     }
     if (!user.status) {
-      throw new BadRequestException(`Người dùng đang bị khóa tài khoản!`);
+      throw new BadRequestException(
+        `Tài khoản của người dùng đang ở trạng thái không hoạt động!`,
+      );
     }
     try {
       const checkPassword = await bcrypt.compare(
@@ -216,6 +225,138 @@ export class AuthService {
       return payload['email'];
     } catch (e) {
       throw new UnauthorizedException(e.message);
+    }
+  }
+
+  async provideAccountByAdmin(
+    provideAccountDto: ProvideAccountDto,
+    admin: User,
+  ): Promise<User> {
+    if (admin.role.role_name != RoleEnum.ADMIN) {
+      throw new BadRequestException(
+        'Chỉ có Administration mới có quyền cấp tài khoản',
+      );
+    }
+    if (provideAccountDto.roleName == RoleEnum.ADMIN) {
+      throw new BadRequestException(
+        'Không thể cung cấp tài khoản Administrator cho người dùng',
+      );
+    }
+    try {
+      const isExist = await this.userRepository.findOneBy({
+        email: provideAccountDto.email,
+      });
+      if (isExist) {
+        throw new BadRequestException(
+          `Email ${provideAccountDto.email} đã tồn tại trong hệ thống`,
+        );
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    const user = this.userRepository.create(provideAccountDto);
+    if (!user) {
+      throw new BadRequestException(
+        'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+      );
+    }
+    user.status = true;
+    const role = await this.roleRepository.findOneByOrFail({
+      role_name: provideAccountDto.roleName,
+    });
+    user.role = role;
+    try {
+      const salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash(provideAccountDto.password, salt);
+
+      const result: User = await this.userRepository.save(user);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
+        );
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async upRoleByAdmin(
+    upRoleAccountDto: UpRoleAccountDto,
+    admin: User,
+  ): Promise<User> {
+    if (admin.role.role_name != RoleEnum.ADMIN) {
+      throw new BadRequestException(
+        'Chỉ có Administration mới có quyền nâng cấp vai trò của người dùng',
+      );
+    }
+    if (upRoleAccountDto.roleName == RoleEnum.ADMIN) {
+      throw new BadRequestException(
+        'Không thể nâng cấp vai trò của người dùng thành Administration',
+      );
+    }
+    if (upRoleAccountDto.roleName == RoleEnum.STUDENT) {
+      throw new BadRequestException(
+        'Không thể nâng cấp vai trò của người dùng thành sinh viên',
+      );
+    }
+    const user: User = await this.userService.getUserByEmail(
+      upRoleAccountDto.email,
+    );
+    if (!user.status) {
+      throw new BadRequestException(
+        'Tài khoản của người dùng đang ở trạng thái không hoạt động',
+      );
+    }
+    const role: Role = await this.roleRepository.findOneByOrFail({
+      role_name: upRoleAccountDto.roleName,
+    });
+    user.role = role;
+    try {
+      const result: User = await this.userRepository.save(user);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi nâng cấp vai trò cho người dùng',
+        );
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async changePassword(
+    changePasswordDto: ChangePasswordDto,
+    user: User,
+  ): Promise<string> {
+    if (!user.status) {
+      throw new BadRequestException(
+        `Tài khoản của người dùng đang ở trạng thái không hoạt động`,
+      );
+    }
+    try {
+      const checkPassword = await bcrypt.compare(
+        changePasswordDto.oldPassword,
+        user.password,
+      );
+      if (!checkPassword) {
+        throw new BadRequestException('Nhập sai mật khẩu cũ!');
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?!.*\s).{8,}$/;
+    if (!PASSWORD_REGEX.test(changePasswordDto.newPassword)) {
+      throw new BadRequestException('Mật khẩu phải tuân thủ theo nguyên tắc');
+    }
+    try {
+      const salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash(changePasswordDto.newPassword, salt);
+
+      await this.userRepository.save(user);
+      return 'Đổi mật khẩu thành công!';
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 }

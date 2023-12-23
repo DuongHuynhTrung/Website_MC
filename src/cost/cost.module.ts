@@ -15,6 +15,9 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
+import { Group } from 'src/group/entities/group.entity';
+import { GroupService } from 'src/group/group.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 
 @Module({
   imports: [
@@ -26,6 +29,8 @@ import { User } from 'src/user/entities/user.entity';
       Project,
       ResponsiblePerson,
       User,
+      Group,
+      RegisterPitching,
     ]),
   ],
   controllers: [CostController],
@@ -37,6 +42,7 @@ import { User } from 'src/user/entities/user.entity';
     ProjectService,
     ResponsiblePersonService,
     UserService,
+    GroupService,
   ],
 })
 export class CostModule {}

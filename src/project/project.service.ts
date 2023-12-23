@@ -15,6 +15,7 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-responsible_person.dto';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import * as moment from 'moment';
+import { GroupService } from 'src/group/group.service';
 
 @Injectable()
 export class ProjectService {
@@ -23,12 +24,32 @@ export class ProjectService {
     private readonly projectRepository: Repository<Project>,
 
     private readonly responsiblePersonService: ResponsiblePersonService,
+
+    private readonly groupService: GroupService,
   ) {}
   async createProject(
     business: User,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
+    const current_date = moment(new Date());
+    const expired_date = moment(
+      createProjectDto.project_registration_expired_date,
+    );
+    const oneDateLaterCurrentDate = current_date.clone().add(1, 'day');
+    if (oneDateLaterCurrentDate.isAfter(expired_date)) {
+      throw new BadRequestException(
+        'Ngày hết hạn đăng ký pitching phải sau ngày hiện tại 1 ngày',
+      );
+    }
+
     const start_date = moment(createProjectDto.project_start_date);
+    const sevenDateAfterCurrentDate = current_date.clone().add(7, 'days');
+    if (sevenDateAfterCurrentDate.isAfter(start_date)) {
+      throw new BadRequestException(
+        'Ngày bắt đầu phải sau ngày hiện tại 7 ngày',
+      );
+    }
+
     const expected_end_date = moment(
       createProjectDto.project_expected_end_date,
     );
@@ -37,10 +58,18 @@ export class ProjectService {
         'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
       );
     }
-    //check the range between start_date and expected_end_date is in 3 months
-    const threeMonthsLater = start_date.clone().add(3, 'months');
-    console.log(threeMonthsLater);
-    if (expected_end_date.isSameOrAfter(threeMonthsLater)) {
+
+    //check the shortest range between start_date and expected_end_date is in 2 months
+    const twoMonthsLaterOfStartDate = start_date.clone().add(2, 'months');
+    if (expected_end_date.isBefore(twoMonthsLaterOfStartDate)) {
+      throw new BadRequestException(
+        'Một dự án ít nhất phải thực hiện trong 2 tháng',
+      );
+    }
+
+    //check the largest range between start_date and expected_end_date is in 3 months
+    const threeMonthsLaterOfStartDate = start_date.clone().add(3, 'months');
+    if (expected_end_date.isAfter(threeMonthsLaterOfStartDate)) {
       throw new BadRequestException(
         'Một dự án chỉ có thể được thực hiện trong 3 tháng',
       );
@@ -255,6 +284,7 @@ export class ProjectService {
   async changeProjectStatus(
     projectId: number,
     projectStatus: ProjectStatusEnum,
+    groupId: number,
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
     if (
@@ -291,6 +321,7 @@ export class ProjectService {
 
       try {
         const result: Project = await this.projectRepository.save(project);
+        await this.groupService.changeGroupStatusToFree(groupId);
         return await this.getProjectById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(

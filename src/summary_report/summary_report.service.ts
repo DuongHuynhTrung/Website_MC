@@ -1,3 +1,4 @@
+import { UserGroup } from './../user-group/entities/user-group.entity';
 import {
   BadGatewayException,
   Injectable,
@@ -14,6 +15,13 @@ import { Project } from 'src/project/entities/project.entity';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { UserGroupService } from 'src/user-group/user-group.service';
+import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { Group } from 'src/group/entities/group.entity';
+import { GroupService } from 'src/group/group.service';
+import { ConfirmSummaryReportDto } from './dto/confirm-summary_report.dto';
 
 @Injectable()
 export class SummaryReportService {
@@ -22,11 +30,30 @@ export class SummaryReportService {
     private readonly summaryReportRepository: Repository<SummaryReport>,
 
     private readonly projectService: ProjectService,
+
+    private readonly userGroupService: UserGroupService,
+
+    private readonly registerPitchingService: RegisterPitchingService,
+
+    private readonly groupService: GroupService,
   ) {}
 
   async createSummaryReport(
     createSummaryReportDto: CreateSummaryReportDto,
+    user: User,
   ): Promise<SummaryReport> {
+    const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
+      user.id,
+      createSummaryReportDto.groupId,
+    );
+    if (!userGroup) {
+      throw new BadGatewayException('Sinh viên không phải thành viên của nhóm');
+    }
+    if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
+      throw new BadGatewayException(
+        'Chỉ có trưởng nhóm mới có thể đăng tải kết quả tổng kết',
+      );
+    }
     const project: Project = await this.projectService.getProjectById(
       createSummaryReportDto.projectId,
     );
@@ -58,10 +85,6 @@ export class SummaryReportService {
     }
   }
 
-  getAllSummaryReport() {
-    return `This action returns all summaryReport`;
-  }
-
   async getSummaryReportById(id: number): Promise<SummaryReport> {
     try {
       const summaryReport: SummaryReport =
@@ -83,7 +106,20 @@ export class SummaryReportService {
   async updateSummaryReport(
     id: number,
     updateSummaryReportDto: UpdateSummaryReportDto,
-  ) {
+    user: User,
+  ): Promise<SummaryReport> {
+    const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
+      user.id,
+      updateSummaryReportDto.groupId,
+    );
+    if (!userGroup) {
+      throw new BadGatewayException('Sinh viên không phải thành viên của nhóm');
+    }
+    if (userGroup.role_in_group != RoleInGroupEnum.LEADER) {
+      throw new BadGatewayException(
+        'Chỉ có trưởng nhóm mới có thể đăng tải kết quả tổng kết',
+      );
+    }
     const project: Project = await this.projectService.getProjectById(
       updateSummaryReportDto.projectId,
     );
@@ -113,11 +149,41 @@ export class SummaryReportService {
     return await this.getSummaryReportById(id);
   }
 
-  async confirmSummaryReport(id: number, user: User): Promise<SummaryReport> {
-    const summaryReport: SummaryReport = await this.getSummaryReportById(id);
+  async confirmSummaryReport(
+    confirmSummaryReportDto: ConfirmSummaryReportDto,
+    user: User,
+  ): Promise<SummaryReport> {
+    console.log(confirmSummaryReportDto);
+    const summaryReport: SummaryReport = await this.getSummaryReportById(
+      confirmSummaryReportDto.summary_report_id,
+    );
     if (user.role.role_name == RoleEnum.LECTURER) {
+      const group: Group = await this.groupService.getGroupByGroupId(
+        confirmSummaryReportDto.groupId,
+      );
+      const project: Project = await this.projectService.getProjectById(
+        confirmSummaryReportDto.project_id,
+      );
+      const registerPitching: RegisterPitching =
+        await this.registerPitchingService.getRegisterPitchingByGroupIdAndProjectId(
+          group.id,
+          project.id,
+        );
+      if (registerPitching.lecturer.id != user.id) {
+        throw new BadGatewayException(
+          'Chỉ có giảng viên hướng dẫn dự án mới có thể xác nhận báo cáo tổng hợp',
+        );
+      }
       summaryReport.isLecturerConfirmed = true;
     } else {
+      const project: Project = await this.projectService.getProjectById(
+        confirmSummaryReportDto.project_id,
+      );
+      if (project.business.id != user.id) {
+        throw new BadGatewayException(
+          'Chỉ có doanh nghiệp sở hữu dự án mới có thể xác nhận báo cáo tổng hợp',
+        );
+      }
       summaryReport.isBusinessConfirmed = true;
     }
     try {
@@ -127,6 +193,8 @@ export class SummaryReportService {
         'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
       );
     }
-    return await this.getSummaryReportById(id);
+    return await this.getSummaryReportById(
+      confirmSummaryReportDto.summary_report_id,
+    );
   }
 }

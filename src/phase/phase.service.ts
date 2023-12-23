@@ -101,7 +101,6 @@ export class PhaseService {
         project.id,
         phase_number,
       );
-      console.log(phaseOfProject);
       const end_date_phase_before = moment(
         phaseOfProject.phase_expected_end_date,
       );
