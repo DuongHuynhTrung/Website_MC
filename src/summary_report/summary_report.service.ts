@@ -42,9 +42,12 @@ export class SummaryReportService {
     createSummaryReportDto: CreateSummaryReportDto,
     user: User,
   ): Promise<SummaryReport> {
+    const group: Group = await this.groupService.getGroupByGroupId(
+      createSummaryReportDto.groupId,
+    );
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
       user.id,
-      createSummaryReportDto.groupId,
+      group.id,
     );
     if (!userGroup) {
       throw new BadGatewayException('Sinh viên không phải thành viên của nhóm');
@@ -79,22 +82,22 @@ export class SummaryReportService {
           'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
         );
       }
-      return await this.getSummaryReportById(result.id);
+      return await this.getSummaryReportByProjectId(result.project.id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async getSummaryReportById(id: number): Promise<SummaryReport> {
+  async getSummaryReportByProjectId(projectId: number): Promise<SummaryReport> {
     try {
-      const summaryReport: SummaryReport =
-        await this.summaryReportRepository.findOne({
-          where: { id },
-          relations: ['project'],
-        });
+      const summaryReport: SummaryReport = await this.summaryReportRepository
+        .createQueryBuilder('summary_report')
+        .leftJoinAndSelect('summary_report.project', 'project')
+        .where('project.id = :projectId', { projectId })
+        .getOne();
       if (!summaryReport) {
         throw new NotFoundException(
-          `Không tìm thấy báo cáo tổng hợp với id ${id}`,
+          `Không tìm thấy báo cáo tổng hợp với mã số dự án ${projectId}`,
         );
       }
       return summaryReport;
@@ -104,13 +107,15 @@ export class SummaryReportService {
   }
 
   async updateSummaryReport(
-    id: number,
     updateSummaryReportDto: UpdateSummaryReportDto,
     user: User,
   ): Promise<SummaryReport> {
+    const group: Group = await this.groupService.getGroupByGroupId(
+      updateSummaryReportDto.groupId,
+    );
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
       user.id,
-      updateSummaryReportDto.groupId,
+      group.id,
     );
     if (!userGroup) {
       throw new BadGatewayException('Sinh viên không phải thành viên của nhóm');
@@ -128,7 +133,9 @@ export class SummaryReportService {
         'Chỉ có thể cập nhật báo cáo tổng hợp khi dự án đã kết thúc',
       );
     }
-    const summaryReport: SummaryReport = await this.getSummaryReportById(id);
+    const summaryReport: SummaryReport = await this.getSummaryReportByProjectId(
+      project.id,
+    );
     if (
       summaryReport.isBusinessConfirmed ||
       summaryReport.isLecturerConfirmed
@@ -146,16 +153,15 @@ export class SummaryReportService {
         'Có lỗi xảy ra khi cập nhật báo cáo tổng hợp',
       );
     }
-    return await this.getSummaryReportById(id);
+    return await this.getSummaryReportByProjectId(project.id);
   }
 
   async confirmSummaryReport(
     confirmSummaryReportDto: ConfirmSummaryReportDto,
     user: User,
   ): Promise<SummaryReport> {
-    console.log(confirmSummaryReportDto);
-    const summaryReport: SummaryReport = await this.getSummaryReportById(
-      confirmSummaryReportDto.summary_report_id,
+    const summaryReport: SummaryReport = await this.getSummaryReportByProjectId(
+      confirmSummaryReportDto.project_id,
     );
     if (user.role.role_name == RoleEnum.LECTURER) {
       const group: Group = await this.groupService.getGroupByGroupId(
@@ -193,8 +199,8 @@ export class SummaryReportService {
         'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
       );
     }
-    return await this.getSummaryReportById(
-      confirmSummaryReportDto.summary_report_id,
+    return await this.getSummaryReportByProjectId(
+      confirmSummaryReportDto.project_id,
     );
   }
 }

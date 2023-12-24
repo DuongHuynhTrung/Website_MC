@@ -5,6 +5,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Body,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
@@ -22,6 +23,7 @@ import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from '../role/enum/role.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('User')
@@ -87,27 +89,27 @@ export class UserController {
     );
   }
 
-  // @ApiOperation({ summary: 'Change User Name' })
-  // @ApiOkResponse({
-  //   description: 'UserName has been changed',
-  // })
-  // @ApiNotFoundResponse({
-  //   description: 'User not found.',
-  // })
-  // @ApiBadRequestResponse({
-  //   description: 'User status is false.',
-  // })
-  // @ApiBadRequestResponse({
-  //   description: 'UserName is not following regex pattern.',
-  // })
-  // @ApiInternalServerErrorResponse({
-  //   description: 'Internal server error.',
-  // })
-  // @Patch(':email/username/:username')
-  // updateUserName(
-  //   @Param('email') email: string,
-  //   @Param('username') username: string,
-  // ): Promise<string> {
-  //   return this.userService.changeUserName(email, username);
-  // }
+  @ApiOperation({ summary: 'Change User Name' })
+  @ApiOkResponse({
+    description: 'UserName has been changed',
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found.',
+  })
+  @ApiBadRequestResponse({
+    description: 'User status is false.',
+  })
+  @ApiBadRequestResponse({
+    description: 'UserName is not following regex pattern.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Patch('update-profile')
+  updateProfile(
+    @Body() updateProfileDto: UpdateProfileDto,
+    @GetUser() user: User,
+  ): Promise<User> {
+    return this.userService.updateProfile(updateProfileDto, user);
+  }
 }

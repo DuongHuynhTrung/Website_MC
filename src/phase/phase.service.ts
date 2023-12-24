@@ -21,6 +21,8 @@ import * as moment from 'moment';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { UploadFeedbackDto } from './dto/upload-feedback.dto';
+import { GroupService } from 'src/group/group.service';
+import { Group } from 'src/group/entities/group.entity';
 
 @Injectable()
 export class PhaseService {
@@ -31,6 +33,8 @@ export class PhaseService {
     private readonly projectService: ProjectService,
 
     private readonly userGroupService: UserGroupService,
+
+    private readonly groupService: GroupService,
   ) {}
 
   async createPhase(
@@ -44,9 +48,12 @@ export class PhaseService {
         'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
       );
     }
+    const group: Group = await this.groupService.getGroupByGroupId(
+      createPhaseDto.groupId,
+    );
     const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
       user.id,
-      createPhaseDto.groupId,
+      group.id,
     );
     if (!userGroup) {
       throw new BadRequestException('Thành viên không thuộc về nhóm');
@@ -107,7 +114,7 @@ export class PhaseService {
 
       if (end_date_phase_before.isAfter(start_date)) {
         throw new BadRequestException(
-          'Ngày bắt đầu của giai đoạn tiếp theo phải sau ngày kết thúc mong muốn của giai đoạn trước đó',
+          'Ngày bắt đầu của giai đoạn tiếp theo phải bằng hoặc sau ngày kết thúc mong muốn của giai đoạn trước đó',
         );
       }
       const phase: Phase = this.phaseRepository.create(createPhaseDto);

@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RoleEnum } from '../role/enum/role.enum';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UserService {
@@ -82,6 +83,19 @@ export class UserService {
       throw new BadRequestException(
         'Chỉ có thể tìm kiếm sinh viên hoặc giảng viên',
       );
+    }
+  }
+
+  async updateProfile(
+    updateProfileDto: UpdateProfileDto,
+    user: User,
+  ): Promise<User> {
+    try {
+      Object.assign(user, updateProfileDto);
+      await this.userRepository.save(user);
+      return await this.getUserByEmail(user.email);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 }

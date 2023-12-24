@@ -15,6 +15,8 @@ import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
       UserGroup,
       User,
       RegisterPitching,
+      Notification,
     ]),
   ],
   controllers: [SummaryReportController],
@@ -37,6 +40,7 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
     UserGroupService,
     UserService,
     RegisterPitchingService,
+    NotificationService,
   ],
 })
 export class SummaryReportModule {}

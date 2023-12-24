@@ -17,6 +17,7 @@ import { CostModule } from './cost/cost.module';
 import { EvidenceModule } from './evidence/evidence.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { SummaryReportModule } from './summary_report/summary_report.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { SummaryReportModule } from './summary_report/summary_report.module';
     EvidenceModule,
     RefreshTokenModule,
     SummaryReportModule,
+    NotificationModule,
     // MessageModule,
   ],
   // providers: [SocketGateway, MessageService],

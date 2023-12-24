@@ -13,6 +13,8 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { User } from 'src/user/entities/user.entity';
       UserGroup,
       ResponsiblePerson,
       User,
+      Notification,
     ]),
   ],
   controllers: [RegisterPitchingController],
@@ -33,6 +36,7 @@ import { User } from 'src/user/entities/user.entity';
     UserGroupService,
     ResponsiblePersonService,
     UserService,
+    NotificationService,
   ],
 })
 export class RegisterPitchingModule {}

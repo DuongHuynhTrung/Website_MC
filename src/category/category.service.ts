@@ -47,9 +47,12 @@ export class CategoryService {
     const phase: Phase = await this.phaseService.getPhaseById(
       createCategoryDto.phaseId,
     );
-    if (phase.phase_status != PhaseStatusEnum.PENDING) {
+    if (
+      phase.phase_status != PhaseStatusEnum.PENDING &&
+      phase.phase_status != PhaseStatusEnum.PROCESSING
+    ) {
       throw new BadRequestException(
-        'Chỉ có thể tạo hạng mục khi giai đoạn chưa bắt đầu',
+        'Chỉ có thể tạo hạng mục trước khi giai đoạn hoàn thành',
       );
     }
     const category: Category =

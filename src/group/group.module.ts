@@ -13,6 +13,8 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
 import { ProjectService } from 'src/project/project.service';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
+import { NotificationService } from 'src/notification/notification.service';
+import { Notification } from 'src/notification/entities/notification.entity';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
       Group,
       Project,
       ResponsiblePerson,
+      Notification,
     ]),
   ],
   controllers: [GroupController],
@@ -35,6 +38,7 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
     ProjectService,
     GroupService,
     ResponsiblePersonService,
+    NotificationService,
   ],
 })
 export class GroupModule {}

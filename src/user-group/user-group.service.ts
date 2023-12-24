@@ -10,6 +10,7 @@ import { UserGroup } from './entities/user-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { RoleInGroupEnum } from './enum/role-in-group.enum';
 
 @Injectable()
 export class UserGroupService {
@@ -147,6 +148,27 @@ export class UserGroupService {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi kiểm tra nhóm có giảng viên chưa',
       );
+    }
+  }
+
+  async getLeaderOfGroup(groupId: number): Promise<UserGroup> {
+    try {
+      const role_in_group = RoleInGroupEnum.LEADER;
+      const userGroup: UserGroup = await this.userGroupRepository
+        .createQueryBuilder('user_group')
+        .leftJoinAndSelect('user_group.user', 'user')
+        .leftJoinAndSelect('user_group.group', 'group')
+        .where('group.id = :groupId', { groupId })
+        .andWhere('role_in_group = :role_in_group', { role_in_group })
+        .getOne();
+      if (!userGroup) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi truy xuất thông tin trưởng nhóm để chọn',
+        );
+      }
+      return userGroup;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 }

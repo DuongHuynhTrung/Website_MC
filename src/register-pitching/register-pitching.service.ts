@@ -25,6 +25,9 @@ import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 import * as moment from 'moment';
 import { CreateUserGroupDto } from 'src/user-group/dto/create-user-group.dto';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
+import { NotificationService } from 'src/notification/notification.service';
+import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
+import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -39,6 +42,8 @@ export class RegisterPitchingService {
     private readonly userGroupService: UserGroupService,
 
     private readonly userService: UserService,
+
+    private readonly notificationService: NotificationService,
   ) {}
 
   async registerPitching(
@@ -151,7 +156,6 @@ export class RegisterPitchingService {
     const result: RegisterPitching[] = [];
     const userGroups: UserGroup[] =
       await this.userGroupService.findAllUserGroupByUserId(user);
-    console.log(userGroups);
     userGroups.forEach((userGroup) => {
       registerPitchings.forEach((registerPitching) => {
         if (registerPitching.group.id == userGroup.group.id) {
@@ -289,8 +293,9 @@ export class RegisterPitchingService {
     const registerPitchings: RegisterPitching[] =
       await this.getAllRegisterPitchingByProjectId(projectId);
     // check Group Register Pitching Project
+    const group: Group = await this.groupService.getGroupByGroupId(groupId);
     const checkGroupRegisterPitchingProject: RegisterPitching =
-      await this.checkGroupRegisterPitchingProject(projectId, groupId);
+      await this.checkGroupRegisterPitchingProject(projectId, group.id);
     if (
       !checkGroupRegisterPitchingProject ||
       checkGroupRegisterPitchingProject === null
@@ -301,20 +306,57 @@ export class RegisterPitchingService {
       if (registerPitching.group.id == groupId) {
         registerPitching.register_pitching_status =
           RegisterPitchingStatusEnum.SELECTED;
-        await this.registerPitchingRepository.save(registerPitching);
+        //Send notification to leader when selected
+        const userGroup: UserGroup =
+          await this.userGroupService.getLeaderOfGroup(
+            registerPitching.group.id,
+          );
+        const createNotificationDto: CreateNotificationDto =
+          new CreateNotificationDto(
+            NotificationTypeEnum.SELECTED_REGISTER_PITCHING,
+            `Doanh nghiệp ${project.business.fullname} đã chọn nhóm bạn tham gia dự án ${project.name_project}`,
+            project.business.email,
+            userGroup.user.email,
+          );
+
+        await this.notificationService.createNotification(
+          createNotificationDto,
+          project.business,
+        );
       } else {
         registerPitching.register_pitching_status =
           RegisterPitchingStatusEnum.REJECTED;
-        await this.registerPitchingRepository.save(registerPitching);
+        //Send notification to leader when selected
+        const userGroup: UserGroup =
+          await this.userGroupService.getLeaderOfGroup(
+            registerPitching.group.id,
+          );
+        const createNotificationDto: CreateNotificationDto =
+          new CreateNotificationDto(
+            NotificationTypeEnum.REJECTED_REGISTER_PITCHING,
+            `Doanh nghiệp ${project.business.fullname} đã không chọn nhóm bạn tham gia dự án ${project.name_project}`,
+            project.business.email,
+            userGroup.user.email,
+          );
+
+        await this.notificationService.createNotification(
+          createNotificationDto,
+          project.business,
+        );
       }
     });
+    await this.registerPitchingRepository.save(registerPitchings);
+
     await this.projectService.changeProjectStatus(
       project.id,
       ProjectStatusEnum.PROCESSING,
       groupId,
     );
 
-    return await this.checkGroupRegisterPitchingProject(projectId, groupId);
+    return await this.getRegisterPitchingByGroupIdAndProjectId(
+      groupId,
+      projectId,
+    );
   }
 
   async uploadDocument(

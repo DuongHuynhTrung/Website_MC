@@ -42,9 +42,11 @@ export class SummaryReportController {
   }
 
   @ApiOperation({ summary: 'Get Summary Report By Id' })
-  @Get(':id')
-  getSummaryReportById(@Param('id') id: string): Promise<SummaryReport> {
-    return this.summaryReportService.getSummaryReportById(+id);
+  @Get(':projectId')
+  getSummaryReportByProjectId(
+    @Param('projectId') projectId: number,
+  ): Promise<SummaryReport> {
+    return this.summaryReportService.getSummaryReportByProjectId(projectId);
   }
 
   @ApiOperation({ summary: 'Business/Lecturer confirm summary report' })
@@ -64,14 +66,12 @@ export class SummaryReportController {
   @ApiOperation({ summary: 'Leader update summary report' })
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
-  @Patch(':id')
+  @Patch()
   updateSummaryReport(
-    @Param('id') id: number,
     @Body() updateSummaryReportDto: UpdateSummaryReportDto,
     @GetUser() user: User,
   ): Promise<SummaryReport> {
     return this.summaryReportService.updateSummaryReport(
-      id,
       updateSummaryReportDto,
       user,
     );
