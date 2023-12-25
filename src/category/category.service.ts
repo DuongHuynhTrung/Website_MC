@@ -19,6 +19,7 @@ import { CategoryStatusEnum } from './enum/category-status.enum';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 import { PhaseStatusEnum } from 'src/phase/enum/phase-status.enum';
 import { UpdateActualResultDto } from './dto/update-actual-result.dto';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class CategoryService {
@@ -29,6 +30,8 @@ export class CategoryService {
     private readonly phaseService: PhaseService,
 
     private readonly userGroupService: UserGroupService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createCategory(
@@ -68,6 +71,7 @@ export class CategoryService {
           'Có lỗi xảy ra khi lưu thông tin hạng mục',
         );
       }
+      await this.handleGetCategories(phase.id);
       return await this.getCategoryById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -86,6 +90,7 @@ export class CategoryService {
       const result: Category[] = categories.filter(
         (category) => category.phase.id == phaseId,
       );
+      await this.handleGetCategories(phaseId);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(
@@ -134,6 +139,7 @@ export class CategoryService {
     category.result_expected = updateCategoryDto.result_expected;
     try {
       await this.categoryRepository.save(category);
+      await this.handleGetCategories(category.phase.id);
       return await this.getCategoryById(id);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -188,6 +194,9 @@ export class CategoryService {
     category.category_status = categoryStatus;
     try {
       const result: Category = await this.categoryRepository.save(category);
+      this.socketGateway.handleChangeCategoryStatus({
+        category: category,
+      });
       return await this.getCategoryById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -242,6 +251,34 @@ export class CategoryService {
         'Có lỗi xảy ra khi cập nhật kết quả thực tế hạng mục',
       );
     }
+    await this.handleGetCategories(category.phase.id);
     return await this.getCategoryById(category.id);
+  }
+
+  async handleGetCategories(phaseId: number): Promise<void> {
+    await this.phaseService.getPhaseById(phaseId);
+    try {
+      const categories: Category[] = await this.categoryRepository.find({
+        relations: ['phase'],
+      });
+      if (categories.length === 0) {
+        this.socketGateway.handleGetCategories({
+          totalCategories: 0,
+          categories: [],
+        });
+      }
+      const result: Category[] = categories.filter(
+        (category) => category.phase.id == phaseId,
+      );
+      const totalCategories: number = result.length;
+      this.socketGateway.handleGetCategories({
+        totalCategories: totalCategories,
+        categories: result,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi truy xuất tất cả hạng mục của giai đoạn',
+      );
+    }
   }
 }

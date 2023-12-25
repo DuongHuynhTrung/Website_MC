@@ -23,6 +23,11 @@ export class SocketGateway {
     this.server.emit('getProjects', data);
   }
 
+  @SubscribeMessage('getProjectsOfBusiness')
+  handleGetProjectsOfBusiness(data: any) {
+    this.server.emit('getProjectsOfBusiness', data);
+  }
+
   @SubscribeMessage('chooseGroup')
   handleChooseGroup(data: any) {
     this.server.emit('chooseGroup', data);
@@ -51,5 +56,10 @@ export class SocketGateway {
   @SubscribeMessage('getNotifications')
   handleGetNotifications(data: any) {
     this.server.emit('getNotifications', data);
+  }
+
+  @SubscribeMessage('getSummaryReports')
+  handleGetSummaryReports(data: any) {
+    this.server.emit('getSummaryReports', data);
   }
 }

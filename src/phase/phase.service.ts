@@ -31,6 +31,7 @@ import { UserService } from 'src/user/user.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class PhaseService {
@@ -49,6 +50,8 @@ export class PhaseService {
     private readonly notificationService: NotificationService,
 
     private readonly userService: UserService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createPhase(
@@ -113,6 +116,7 @@ export class PhaseService {
             'Có lỗi xảy ra khi lưu dự liệu giai đoạn mới',
           );
         }
+        await this.handleGetPhases(project.id);
         return await this.getPhaseById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(error.message);
@@ -144,6 +148,7 @@ export class PhaseService {
             'Có lỗi xảy ra khi lưu dự liệu giai đoạn mới',
           );
         }
+        await this.handleGetPhases(project.id);
         return await this.getPhaseById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(error.message);
@@ -160,6 +165,7 @@ export class PhaseService {
         return [];
       }
       const result = phases.filter((phase) => phase.project.id == projectId);
+      await this.handleGetPhases(projectId);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(
@@ -250,6 +256,7 @@ export class PhaseService {
           'Có lỗi xảy ra khi lưu dự liệu giai đoạn mới',
         );
       }
+      await this.handleGetPhases(phase.project.id);
       return await this.getPhaseById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -305,6 +312,9 @@ export class PhaseService {
     phase.phase_status = phaseStatus;
     try {
       const result: Phase = await this.phaseRepository.save(phase);
+      this.socketGateway.handleChangePhaseStatus({
+        phase: phase,
+      });
       return await this.getPhaseById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -320,6 +330,7 @@ export class PhaseService {
     try {
       const phase: Phase = await this.getPhaseById(phaseId);
       phase.expected_cost_total += expected_cost;
+      await this.handleGetPhases(phase.project.id);
       await this.phaseRepository.save(phase);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -364,6 +375,7 @@ export class PhaseService {
       phase.lecturer_feedback = uploadFeedbackDto.feedback;
       try {
         await this.phaseRepository.save(phase);
+        await this.handleGetPhases(phase.project.id);
         return await this.getPhaseById(phase.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -374,6 +386,7 @@ export class PhaseService {
       phase.business_feeback = uploadFeedbackDto.feedback;
       try {
         await this.phaseRepository.save(phase);
+        await this.handleGetPhases(phase.project.id);
         return await this.getPhaseById(phase.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -397,7 +410,7 @@ export class PhaseService {
     return true;
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleWarningPhase() {
     const warning = PhaseStatusEnum.WARNING;
     const done = PhaseStatusEnum.DONE;
@@ -490,6 +503,30 @@ export class PhaseService {
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi truy xuất thông tin trưởng nhóm của giai đoạn',
+      );
+    }
+  }
+
+  async handleGetPhases(projectId: number): Promise<void> {
+    try {
+      const phases: Phase[] = await this.phaseRepository.find({
+        relations: ['project'],
+      });
+      if (phases.length === 0) {
+        this.socketGateway.handleGetPhases({
+          totalPhases: 0,
+          phases: [],
+        });
+      }
+      const result = phases.filter((phase) => phase.project.id == projectId);
+      const totalPhases: number = result.length;
+      this.socketGateway.handleGetPhases({
+        totalPhases: totalPhases,
+        phases: result,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi truy xuất tất cả giai đoạn của project',
       );
     }
   }

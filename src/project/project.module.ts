@@ -12,6 +12,7 @@ import { Group } from 'src/group/entities/group.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
     ResponsiblePersonService,
     GroupService,
     UserGroupService,
+    SocketGateway,
   ],
 })
 export class ProjectModule {}

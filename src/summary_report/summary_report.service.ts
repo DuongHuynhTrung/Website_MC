@@ -22,6 +22,7 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { ConfirmSummaryReportDto } from './dto/confirm-summary_report.dto';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class SummaryReportService {
@@ -36,6 +37,8 @@ export class SummaryReportService {
     private readonly registerPitchingService: RegisterPitchingService,
 
     private readonly groupService: GroupService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createSummaryReport(
@@ -82,6 +85,7 @@ export class SummaryReportService {
           'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
         );
       }
+      await this.handleGetSummaryReports(result.project.id);
       return await this.getSummaryReportByProjectId(result.project.id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -100,6 +104,7 @@ export class SummaryReportService {
           `Không tìm thấy báo cáo tổng hợp với mã số dự án ${projectId}`,
         );
       }
+      await this.handleGetSummaryReports(projectId);
       return summaryReport;
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -153,6 +158,7 @@ export class SummaryReportService {
         'Có lỗi xảy ra khi cập nhật báo cáo tổng hợp',
       );
     }
+    await this.handleGetSummaryReports(project.id);
     return await this.getSummaryReportByProjectId(project.id);
   }
 
@@ -199,8 +205,29 @@ export class SummaryReportService {
         'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
       );
     }
+    await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
     return await this.getSummaryReportByProjectId(
       confirmSummaryReportDto.project_id,
     );
+  }
+
+  async handleGetSummaryReports(projectId: number): Promise<void> {
+    try {
+      const summaryReport: SummaryReport = await this.summaryReportRepository
+        .createQueryBuilder('summary_report')
+        .leftJoinAndSelect('summary_report.project', 'project')
+        .where('project.id = :projectId', { projectId })
+        .getOne();
+      if (!summaryReport) {
+        throw new NotFoundException(
+          `Không tìm thấy báo cáo tổng hợp với mã số dự án ${projectId}`,
+        );
+      }
+      this.socketGateway.handleGetSummaryReports({
+        summaryReport: summaryReport,
+      });
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 }

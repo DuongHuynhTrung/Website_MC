@@ -16,6 +16,7 @@ import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-re
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import * as moment from 'moment';
 import { GroupService } from 'src/group/group.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class ProjectService {
@@ -26,6 +27,8 @@ export class ProjectService {
     private readonly responsiblePersonService: ResponsiblePersonService,
 
     private readonly groupService: GroupService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
   async createProject(
     business: User,
@@ -117,6 +120,8 @@ export class ProjectService {
           'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
         );
       }
+      await this.handleGetProjects();
+      await this.handleGetProjectsOfBusiness(business);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -138,6 +143,7 @@ export class ProjectService {
       }
       projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       const totalProjects = projects.length;
+      await this.handleGetProjects();
       return [{ totalProjects }, projects.slice(startIndex, endIndex)];
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -157,6 +163,7 @@ export class ProjectService {
         (project) => project.project_status == ProjectStatusEnum.PUBLIC,
       );
       const totalProjects = projects.length;
+      await this.handleGetProjects();
       return [{ totalProjects }, projects];
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -174,6 +181,7 @@ export class ProjectService {
       if (!projects || projects.length === 0) {
         return [];
       }
+      await this.handleGetProjectsOfBusiness(business);
       return projects;
     } catch (error) {
       throw new InternalServerErrorException(
@@ -256,6 +264,8 @@ export class ProjectService {
       project.project_start_date = updateProjectDto.project_start_date;
       project.project_status = ProjectStatusEnum.PUBLIC;
       await this.projectRepository.save(project);
+      await this.handleGetProjects();
+      await this.handleGetProjectsOfBusiness(project.business);
       return await this.getProjectById(id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -275,6 +285,8 @@ export class ProjectService {
       if (!result) {
         throw new InternalServerErrorException('Có lỗi khi công bố dự án');
       }
+      await this.handleGetProjects();
+      await this.handleGetProjectsOfBusiness(project.business);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -302,6 +314,8 @@ export class ProjectService {
       project.project_status = projectStatus;
       try {
         const result: Project = await this.projectRepository.save(project);
+        await this.handleGetProjects();
+        await this.handleGetProjectsOfBusiness(project.business);
         return await this.getProjectById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -322,6 +336,8 @@ export class ProjectService {
       try {
         const result: Project = await this.projectRepository.save(project);
         await this.groupService.changeGroupStatusToFree(groupId);
+        await this.handleGetProjects();
+        await this.handleGetProjectsOfBusiness(project.business);
         return await this.getProjectById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -331,6 +347,57 @@ export class ProjectService {
     } else {
       throw new BadRequestException(
         'Chỉ có thể chuyển trạng thái dự án sang hoàn thành/kết thúc khi dự án đang tiến hành',
+      );
+    }
+  }
+
+  async handleGetProjects(): Promise<void> {
+    try {
+      let projects = await this.projectRepository.find({
+        relations: ['business', 'responsible_person'],
+      });
+      if (!projects || projects.length === 0) {
+        this.socketGateway.handleGetProjects({
+          totalProjects: 0,
+          projects: [],
+        });
+      }
+      projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      projects = projects.filter(
+        (project) => project.project_status == ProjectStatusEnum.PUBLIC,
+      );
+      const totalProjects = projects.length;
+      this.socketGateway.handleGetProjects({
+        totalProjects: totalProjects,
+        projects: projects,
+      });
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async handleGetProjectsOfBusiness(business: User): Promise<void> {
+    try {
+      let projects = await this.projectRepository.find({
+        relations: ['business', 'responsible_person'],
+      });
+      projects = projects.filter(
+        (project) => project.business?.id === business.id,
+      );
+      if (!projects || projects.length === 0) {
+        this.socketGateway.handleGetProjects({
+          totalProjects: 0,
+          projects: [],
+        });
+      }
+      const totalProjects: number = projects.length;
+      this.socketGateway.handleGetProjects({
+        totalProjects: totalProjects,
+        projects: projects,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Something went wrong when trying to retrieve projects of business',
       );
     }
   }
