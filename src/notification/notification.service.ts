@@ -79,6 +79,9 @@ export class NotificationService {
         (notification) => notification.is_new,
       ).length;
       await this.handleGetNotifications(user);
+      notifications.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      );
       return [total_notifications, notifications];
     } catch (error) {
       throw new InternalServerErrorException(
