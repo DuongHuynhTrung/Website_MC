@@ -73,6 +73,21 @@ export class NotificationController {
     return this.notificationService.getNotificationById(id);
   }
 
+  @ApiOperation({ summary: 'Mark All Notifications Of Receiver had read' })
+  @ApiNotFoundResponse({
+    description: 'Người dùng không có thông báo',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Có lỗi xảy ra khi đánh dấu người nhận đã đọc tất cả thông báo',
+  })
+  @Patch('read-all')
+  updateAllNotificationOfReceiver(
+    @GetUser() user: User,
+  ): Promise<Notification[]> {
+    return this.notificationService.updateAllNotificationOfReceiver(user);
+  }
+
   @ApiOperation({ summary: 'Mark Notification Of Receiver had read' })
   @ApiNotFoundResponse({
     description: 'Không tìm thấy thông báo',
@@ -83,26 +98,11 @@ export class NotificationController {
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi xảy ra khi đánh dấu người nhận đã đọc thông báo',
   })
-  @Patch(':id')
+  @Patch('read/:id')
   updateNotificationOfReceiver(
     @Param('id') id: number,
     @GetUser() user: User,
   ): Promise<Notification> {
     return this.notificationService.updateNotificationOfReceiver(id, user);
-  }
-
-  @ApiOperation({ summary: 'Mark All Notifications Of Receiver had read' })
-  @ApiNotFoundResponse({
-    description: 'Người dùng không có thông báo',
-  })
-  @ApiInternalServerErrorResponse({
-    description:
-      'Có lỗi xảy ra khi đánh dấu người nhận đã đọc tất cả thông báo',
-  })
-  @Patch('all/:id')
-  updateAllNotificationOfReceiver(
-    @GetUser() user: User,
-  ): Promise<Notification[]> {
-    return this.notificationService.updateAllNotificationOfReceiver(user);
   }
 }
