@@ -18,6 +18,10 @@ import { User } from 'src/user/entities/user.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { SocketGateway } from 'socket.gateway';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -31,6 +35,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
       User,
       Group,
       RegisterPitching,
+      Notification,
     ]),
   ],
   controllers: [CostController],
@@ -43,6 +48,9 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
     ResponsiblePersonService,
     UserService,
     GroupService,
+    RegisterPitchingService,
+    NotificationService,
+    SocketGateway,
   ],
 })
 export class CostModule {}

@@ -20,12 +20,14 @@ import { SummaryReportModule } from './summary_report/summary_report.module';
 import { NotificationModule } from './notification/notification.module';
 import { SocketGateway } from 'socket.gateway';
 import * as momentTimezone from 'moment-timezone';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

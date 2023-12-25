@@ -168,7 +168,6 @@ export class NotificationService {
         (notification) => notification.is_new,
       ).length;
       this.socketGateway.handleGetNotifications({
-        receiver: user,
         total_notifications: total_notifications,
         notifications: notifications,
       });

@@ -20,6 +20,10 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { NotificationService } from 'src/notification/notification.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -34,6 +38,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
       ResponsiblePerson,
       Group,
       RegisterPitching,
+      Notification,
     ]),
   ],
   controllers: [EvidenceController],
@@ -47,6 +52,9 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
     ProjectService,
     ResponsiblePersonService,
     GroupService,
+    RegisterPitchingService,
+    NotificationService,
+    SocketGateway,
   ],
 })
 export class EvidenceModule {}

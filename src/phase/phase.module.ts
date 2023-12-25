@@ -14,6 +14,10 @@ import { UserGroupService } from 'src/user-group/user-group.service';
 import { GroupService } from 'src/group/group.service';
 import { Group } from 'src/group/entities/group.entity';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { NotificationService } from 'src/notification/notification.service';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -25,6 +29,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
       UserGroup,
       Group,
       RegisterPitching,
+      Notification,
     ]),
   ],
   controllers: [PhaseController],
@@ -35,6 +40,9 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
     UserService,
     UserGroupService,
     GroupService,
+    RegisterPitchingService,
+    NotificationService,
+    SocketGateway,
   ],
 })
 export class PhaseModule {}

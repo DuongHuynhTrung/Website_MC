@@ -23,6 +23,14 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { UploadFeedbackDto } from './dto/upload-feedback.dto';
 import { GroupService } from 'src/group/group.service';
 import { Group } from 'src/group/entities/group.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingStatusEnum } from 'src/register-pitching/enum/register-pitching.enum';
+import { UserService } from 'src/user/user.service';
+import { NotificationService } from 'src/notification/notification.service';
+import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
+import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 
 @Injectable()
 export class PhaseService {
@@ -35,6 +43,12 @@ export class PhaseService {
     private readonly userGroupService: UserGroupService,
 
     private readonly groupService: GroupService,
+
+    private readonly registerPitchingService: RegisterPitchingService,
+
+    private readonly notificationService: NotificationService,
+
+    private readonly userService: UserService,
   ) {}
 
   async createPhase(
@@ -381,5 +395,102 @@ export class PhaseService {
       throw new BadRequestException('Dự án tồn tại giai đoạn chưa hoàn thành');
     }
     return true;
+  }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handleWarningPhase() {
+    const warning = PhaseStatusEnum.WARNING;
+    const done = PhaseStatusEnum.DONE;
+    const phases: Phase[] = await this.phaseRepository
+      .createQueryBuilder('phase')
+      .leftJoinAndSelect('phase.project', 'project')
+      .where('phase.phase_status != :warning', { warning })
+      .andWhere('phase.phase_status != :done', { done })
+      .getMany();
+    // Get the current date
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    const currentDate = moment(date);
+
+    phases.forEach(async (phase) => {
+      const expected_end_date = moment(phase.phase_expected_end_date);
+      if (currentDate.isSameOrAfter(expected_end_date)) {
+        phase.phase_status = PhaseStatusEnum.WARNING;
+        // Save warning status for phase
+        try {
+          await this.phaseRepository.save(phase);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi chuyển trạng thái của giai đoạn sang cảnh báo',
+          );
+        }
+        // Get leader information
+        const leader: UserGroup = await this.getLeaderByPhase(phase);
+        const admin: User =
+          await this.userService.getUserByEmail('admin@gmail.com');
+        // create notification for leader
+        const createNotificationDtoLeader: CreateNotificationDto =
+          new CreateNotificationDto(
+            NotificationTypeEnum.WARNING_PHASE_STUDENT,
+            `Nhóm bạn có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
+            'admin@gmail.com',
+            leader.user.email,
+          );
+        await this.notificationService.createNotification(
+          createNotificationDtoLeader,
+          admin,
+        );
+        // create notification for lecturer
+        const group: Group = await this.groupService.getGroupByGroupId(
+          leader.group.id,
+        );
+        const registerPitchigns: RegisterPitching[] =
+          await this.registerPitchingService.getAllRegisterPitchingByProjectId(
+            phase.project.id,
+          );
+        const selectedPitching: RegisterPitching = registerPitchigns.find(
+          (registerpitching) =>
+            registerpitching.register_pitching_status ==
+            RegisterPitchingStatusEnum.SELECTED,
+        );
+        const createNotificationDtoLecturer: CreateNotificationDto =
+          new CreateNotificationDto(
+            NotificationTypeEnum.WARNING_PHASE_LECTURER,
+            `Nhóm ${group.group_name} có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
+            'admin@gmail.com',
+            selectedPitching.lecturer.email,
+          );
+        await this.notificationService.createNotification(
+          createNotificationDtoLecturer,
+          admin,
+        );
+      }
+    });
+  }
+
+  async getLeaderByPhase(phase: Phase): Promise<UserGroup> {
+    try {
+      const registerPitchigns: RegisterPitching[] =
+        await this.registerPitchingService.getAllRegisterPitchingByProjectId(
+          phase.project.id,
+        );
+      const selectedPitching: RegisterPitching = registerPitchigns.find(
+        (registerpitching) =>
+          registerpitching.register_pitching_status ==
+          RegisterPitchingStatusEnum.SELECTED,
+      );
+      const userGroups: UserGroup[] =
+        await this.userGroupService.findAllUserGroupByGroupId(
+          selectedPitching.group.id,
+        );
+      const leader: UserGroup = userGroups.find(
+        (userGroup) => userGroup.role_in_group == RoleInGroupEnum.LEADER,
+      );
+      return leader;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi truy xuất thông tin trưởng nhóm của giai đoạn',
+      );
+    }
   }
 }
