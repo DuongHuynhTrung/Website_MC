@@ -18,6 +18,8 @@ import { EvidenceModule } from './evidence/evidence.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { SummaryReportModule } from './summary_report/summary_report.module';
 import { NotificationModule } from './notification/notification.module';
+import { SocketGateway } from 'socket.gateway';
+import * as momentTimezone from 'moment-timezone';
 
 @Module({
   imports: [
@@ -77,6 +79,11 @@ import { NotificationModule } from './notification/notification.module';
     NotificationModule,
     // MessageModule,
   ],
-  // providers: [SocketGateway, MessageService],
+  providers: [SocketGateway],
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {
+    // Set default timezone to Vietnam
+    momentTimezone.tz.setDefault('Asia/Ho_Chi_Minh');
+  }
+}

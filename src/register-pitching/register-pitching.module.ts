@@ -15,6 +15,7 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { NotificationService } from 'src/notification/notification.service';
     ResponsiblePersonService,
     UserService,
     NotificationService,
+    SocketGateway,
   ],
 })
 export class RegisterPitchingModule {}

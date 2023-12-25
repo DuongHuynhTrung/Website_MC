@@ -1,3 +1,4 @@
+import { SocketGateway } from 'socket.gateway';
 import {
   BadGatewayException,
   Injectable,
@@ -18,6 +19,8 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
 
     private readonly userService: UserService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
   async createNotification(
     createNotificationDto: CreateNotificationDto,
@@ -54,6 +57,7 @@ export class NotificationService {
           'Có lỗi xảy ra khi lưu thông báo mới',
         );
       }
+      await this.handleGetNotifications(receiver);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -74,6 +78,7 @@ export class NotificationService {
       const total_notifications: number = notifications.filter(
         (notification) => notification.is_new,
       ).length;
+      await this.handleGetNotifications(user);
       return [total_notifications, notifications];
     } catch (error) {
       throw new InternalServerErrorException(
@@ -117,6 +122,7 @@ export class NotificationService {
           'Có lỗi xảy ra khi đánh dấu người nhận đã đọc thông báo',
         );
       }
+      await this.handleGetNotifications(user);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -139,9 +145,34 @@ export class NotificationService {
           'Có lỗi xảy ra khi đánh dấu người nhận đã đọc tất cả thông báo',
         );
       }
+      await this.handleGetNotifications(user);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async handleGetNotifications(user: User): Promise<void> {
+    try {
+      const receiverId: number = user.id;
+      const notifications: Notification[] = await this.notificationRepository
+        .createQueryBuilder('notification')
+        .leftJoinAndSelect('notification.receiver', 'receiver')
+        .leftJoinAndSelect('notification.sender', 'sender')
+        .where('receiver.id = :receiverId', { receiverId })
+        .getMany();
+      const total_notifications: number = notifications.filter(
+        (notification) => notification.is_new,
+      ).length;
+      this.socketGateway.handleGetNotifications({
+        receiver: user,
+        total_notifications: total_notifications,
+        notifications: notifications,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi khi truy xuất tất cả thông báo của người nhận',
+      );
     }
   }
 }

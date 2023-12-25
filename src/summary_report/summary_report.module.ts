@@ -17,6 +17,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { NotificationService } from 'src/notification/notification.service';
     UserService,
     RegisterPitchingService,
     NotificationService,
+    SocketGateway,
   ],
 })
 export class SummaryReportModule {}

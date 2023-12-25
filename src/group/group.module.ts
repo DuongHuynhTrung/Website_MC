@@ -15,6 +15,7 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { Notification } from 'src/notification/entities/notification.entity';
     GroupService,
     ResponsiblePersonService,
     NotificationService,
+    SocketGateway,
   ],
 })
 export class GroupModule {}
