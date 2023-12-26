@@ -165,6 +165,9 @@ export class PhaseService {
         return [];
       }
       const result = phases.filter((phase) => phase.project.id == projectId);
+      result.sort(
+        (phase1, phase2) => phase1.phase_number - phase2.phase_number,
+      );
       await this.handleGetPhases(projectId);
       return result;
     } catch (error) {
@@ -520,6 +523,9 @@ export class PhaseService {
       }
       const result = phases.filter((phase) => phase.project.id == projectId);
       const totalPhases: number = result.length;
+      result.sort(
+        (phase1, phase2) => phase1.phase_number - phase2.phase_number,
+      );
       this.socketGateway.handleGetPhases({
         totalPhases: totalPhases,
         phases: result,
