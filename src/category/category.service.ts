@@ -195,7 +195,7 @@ export class CategoryService {
     try {
       const result: Category = await this.categoryRepository.save(category);
       this.socketGateway.handleChangeCategoryStatus({
-        category: category,
+        category: result,
       });
       return await this.getCategoryById(result.id);
     } catch (error) {

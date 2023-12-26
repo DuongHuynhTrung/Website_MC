@@ -316,7 +316,7 @@ export class PhaseService {
     try {
       const result: Phase = await this.phaseRepository.save(phase);
       this.socketGateway.handleChangePhaseStatus({
-        phase: phase,
+        phase: result,
       });
       return await this.getPhaseById(result.id);
     } catch (error) {
