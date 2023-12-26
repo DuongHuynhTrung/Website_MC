@@ -165,7 +165,6 @@ export class PhaseService {
         return [];
       }
       const result = phases.filter((phase) => phase.project.id == projectId);
-      await this.handleGetPhases(projectId);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(

@@ -78,7 +78,6 @@ export class NotificationService {
       const total_notifications: number = notifications.filter(
         (notification) => notification.is_new,
       ).length;
-      await this.handleGetNotifications(user);
       notifications.sort(
         (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
       );
@@ -167,6 +166,7 @@ export class NotificationService {
       const total_notifications: number = notifications.filter(
         (notification) => notification.is_new,
       ).length;
+
       this.socketGateway.handleGetNotifications({
         total_notifications: total_notifications,
         notifications: notifications,
