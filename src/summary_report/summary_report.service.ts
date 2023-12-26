@@ -225,6 +225,7 @@ export class SummaryReportService {
       }
       this.socketGateway.handleGetSummaryReports({
         summaryReport: summaryReport,
+        projectId: projectId,
       });
     } catch (error) {
       throw new NotFoundException(error.message);

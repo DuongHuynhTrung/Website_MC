@@ -20,6 +20,9 @@ export class Notification {
   @Column()
   information: string;
 
+  @Column({ nullable: true })
+  note: number;
+
   @Column({ default: true })
   is_new: boolean;
 

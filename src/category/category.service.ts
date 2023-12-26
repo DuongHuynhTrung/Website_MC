@@ -273,6 +273,7 @@ export class CategoryService {
       this.socketGateway.handleGetCategories({
         totalCategories: totalCategories,
         categories: result,
+        phaseId: phaseId,
       });
     } catch (error) {
       throw new InternalServerErrorException(

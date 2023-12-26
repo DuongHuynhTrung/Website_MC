@@ -522,6 +522,7 @@ export class PhaseService {
       this.socketGateway.handleGetPhases({
         totalPhases: totalPhases,
         phases: result,
+        projectId: projectId,
       });
     } catch (error) {
       throw new InternalServerErrorException(

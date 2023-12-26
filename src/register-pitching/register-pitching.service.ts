@@ -138,6 +138,18 @@ export class RegisterPitchingService {
         user: lecturer,
       });
       await this.userGroupService.createUserGroup(createUserGroupDto);
+      // Sent Notification to Lecturer
+      const createNotificationDto: CreateNotificationDto =
+        new CreateNotificationDto(
+          NotificationTypeEnum.INVITE_LECTURER,
+          `${group.group_name} đã gửi lời mời bạn làm Mentor cho dự án ${project.name_project}`,
+          user_group.user.email,
+          lecturer.email,
+        );
+      await this.notificationService.createNotification(
+        createNotificationDto,
+        user_group.user,
+      );
       // Change status of Group to Active
       await this.groupService.changeGroupStatusToActive(group.id);
 

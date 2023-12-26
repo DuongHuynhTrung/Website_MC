@@ -35,12 +35,12 @@ export class SocketGateway {
 
   @SubscribeMessage('getPhases')
   handleGetPhases(data: any) {
-    this.server.emit('getPhases', data);
+    this.server.emit(`getPhases-${data.projectId}`, data);
   }
 
   @SubscribeMessage('getCategories')
   handleGetCategories(data: any) {
-    this.server.emit('getCategories', data);
+    this.server.emit(`getCategories-${data.phaseId}`, data);
   }
 
   @SubscribeMessage('changePhaseStatus')
@@ -55,13 +55,11 @@ export class SocketGateway {
 
   @SubscribeMessage('getNotifications')
   handleGetNotifications(data: any) {
-    console.log(data);
-    console.log(data.receiverEmail);
     this.server.emit(`getNotifications-${data.receiverEmail}`, data);
   }
 
   @SubscribeMessage('getSummaryReports')
   handleGetSummaryReports(data: any) {
-    this.server.emit('getSummaryReports', data);
+    this.server.emit(`getSummaryReports-${data.projectId}`, data);
   }
 }
