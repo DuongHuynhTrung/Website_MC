@@ -90,6 +90,7 @@ export class CategoryService {
       const result: Category[] = categories.filter(
         (category) => category.phase.id == phaseId,
       );
+      await this.handleGetCategories(phaseId);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(
