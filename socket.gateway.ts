@@ -55,7 +55,9 @@ export class SocketGateway {
 
   @SubscribeMessage('getNotifications')
   handleGetNotifications(data: any) {
-    this.server.emit('getNotifications', data);
+    console.log(data);
+    console.log(data.receiverEmail);
+    this.server.emit(`getNotifications-${data.receiverEmail}`, data);
   }
 
   @SubscribeMessage('getSummaryReports')

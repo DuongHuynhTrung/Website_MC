@@ -81,6 +81,7 @@ export class NotificationService {
       notifications.sort(
         (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
       );
+      await this.handleGetNotifications(user);
       return [total_notifications, notifications];
     } catch (error) {
       throw new InternalServerErrorException(
@@ -170,6 +171,7 @@ export class NotificationService {
       this.socketGateway.handleGetNotifications({
         total_notifications: total_notifications,
         notifications: notifications,
+        receiverEmail: user.email,
       });
     } catch (error) {
       throw new InternalServerErrorException(
