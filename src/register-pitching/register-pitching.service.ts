@@ -299,7 +299,7 @@ export class RegisterPitchingService {
           relations: ['group', 'project', 'lecturer'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
-        throw new NotFoundException('Không có một đăng ký pitching nào');
+        return null;
       }
       const registerPitching: RegisterPitching = registerPitchings.find(
         (registerPitching) =>
