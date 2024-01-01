@@ -188,7 +188,7 @@ export class ProjectController {
   })
   @Patch('changeStatus/:projectId/:projectStatus/:groupId')
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.LECTURER)
+  @Roles(RoleEnum.BUSINESS)
   @UseGuards(JwtGuard)
   async changeProjectStatus(
     @Param('projectId') projectId: number,
@@ -202,8 +202,42 @@ export class ProjectController {
     );
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.projectService.remove(+id);
-  // }
+  @ApiOperation({
+    summary: 'Admin Statistics Project',
+  })
+  @ApiOkResponse({
+    description: 'Number Projects follow Status have been retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
+  })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  @Get('admin/statisticsProject')
+  statisticsProject(): Promise<
+    {
+      key: string;
+      value: number;
+    }[]
+  > {
+    return this.projectService.statisticsProject();
+  }
+
+  @ApiOperation({
+    summary: 'Admin Statistics Project',
+  })
+  @ApiOkResponse({
+    description: 'Number Projects follow Status have been retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
+  })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  @Get('admin/statisticsSpecializationField')
+  statisticsSpecializationField() {
+    return this.projectService.statisticsSpecializationField();
+  }
 }

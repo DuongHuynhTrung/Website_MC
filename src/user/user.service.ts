@@ -98,4 +98,36 @@ export class UserService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async statisticsAccount(): Promise<{ key: string; value: number }[]> {
+    try {
+      const users: User[] = await this.userRepository.find({
+        relations: ['role'],
+      });
+      if (!users || users.length === 0) {
+        return null;
+      }
+      const tmpCountData: { [key: string]: number } = {
+        Lecturer: 0,
+        Business: 0,
+        Student: 0,
+      };
+
+      users.forEach((user: User) => {
+        const role_name = user.role.role_name;
+        tmpCountData[role_name] = tmpCountData[role_name] + 1;
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result.filter(
+        (value) => value.key != 'Admin' && value.key != 'Staff',
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê tài khoản',
+      );
+    }
+  }
 }

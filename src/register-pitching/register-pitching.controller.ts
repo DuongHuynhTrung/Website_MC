@@ -94,11 +94,35 @@ export class RegisterPitchingController {
     description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
   })
   @Get(':projectId')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.BUSINESS)
   getAllRegisterPitchingOfBusiness(
     @Param('projectId') projectId: number,
   ): Promise<RegisterPitching[]> {
     return this.registerPitchingService.getAllRegisterPitchingOfBusiness(
       projectId,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Get All Register Pitching Of Student By ProjectId',
+  })
+  @ApiOkResponse({
+    description: 'All Register Pitching are Retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi truy xuất tất cả đăng ký pitching',
+  })
+  @Get('student/:projectId')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  getAllRegisterPitchingOfStudent(
+    @Param('projectId') projectId: number,
+    @GetUser() user: User,
+  ): Promise<RegisterPitching[]> {
+    return this.registerPitchingService.getAllRegisterPitchingOfStudent(
+      projectId,
+      user,
     );
   }
 

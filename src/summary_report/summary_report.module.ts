@@ -18,6 +18,8 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { SocketGateway } from 'socket.gateway';
+import { Phase } from 'src/phase/entities/phase.entity';
+import { PhaseService } from 'src/phase/phase.service';
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { SocketGateway } from 'socket.gateway';
       User,
       RegisterPitching,
       Notification,
+      Phase,
     ]),
   ],
   controllers: [SummaryReportController],
@@ -43,6 +46,7 @@ import { SocketGateway } from 'socket.gateway';
     RegisterPitchingService,
     NotificationService,
     SocketGateway,
+    PhaseService,
   ],
 })
 export class SummaryReportModule {}

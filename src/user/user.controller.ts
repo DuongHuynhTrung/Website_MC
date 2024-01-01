@@ -112,4 +112,18 @@ export class UserController {
   ): Promise<User> {
     return this.userService.updateProfile(updateProfileDto, user);
   }
+
+  @ApiOperation({ summary: 'Admin Statistics Account' })
+  @ApiOkResponse({
+    description: 'The list user has been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi thống kê tài khoản',
+  })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Get('/admin/statisticsAccount')
+  statisticsAccount(): Promise<{ key: string; value: number }[]> {
+    return this.userService.statisticsAccount();
+  }
 }

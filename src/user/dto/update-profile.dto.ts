@@ -50,6 +50,15 @@ export class UpdateProfileDto {
   address: string;
 
   @ApiProperty({
+    description: 'Address Detail of User',
+    example: 'Số 123, khu phố 4',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  address_detail: string;
+
+  @ApiProperty({
     description: 'Phone Number of User',
     example: '0838462852',
     nullable: true,

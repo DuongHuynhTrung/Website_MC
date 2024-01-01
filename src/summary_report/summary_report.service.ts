@@ -1,6 +1,7 @@
 import { UserGroup } from './../user-group/entities/user-group.entity';
 import {
   BadGatewayException,
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,7 +13,6 @@ import { SummaryReport } from './entities/summary_report.entity';
 import { Repository } from 'typeorm';
 import { ProjectService } from 'src/project/project.service';
 import { Project } from 'src/project/entities/project.entity';
-import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { UserGroupService } from 'src/user-group/user-group.service';
@@ -23,6 +23,9 @@ import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { ConfirmSummaryReportDto } from './dto/confirm-summary_report.dto';
 import { SocketGateway } from 'socket.gateway';
+import { ProjectTypeEnum } from 'src/project/enum/project-type.enum';
+import { PhaseService } from 'src/phase/phase.service';
+import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 
 @Injectable()
 export class SummaryReportService {
@@ -37,6 +40,8 @@ export class SummaryReportService {
     private readonly registerPitchingService: RegisterPitchingService,
 
     private readonly groupService: GroupService,
+
+    private readonly phaseService: PhaseService,
 
     private readonly socketGateway: SocketGateway,
   ) {}
@@ -63,32 +68,62 @@ export class SummaryReportService {
     const project: Project = await this.projectService.getProjectById(
       createSummaryReportDto.projectId,
     );
-    if (project.project_status != ProjectStatusEnum.DONE) {
-      throw new BadGatewayException(
-        'Chỉ có thể tải báo cáo tổng hợp khi dự án đã kết thúc',
+    if (project.business_type == ProjectTypeEnum.PLAN) {
+      // TODO: upload summary report for business plan
+      const summaryReport: SummaryReport = this.summaryReportRepository.create(
+        createSummaryReportDto,
       );
-    }
-    const summaryReport: SummaryReport = this.summaryReportRepository.create(
-      createSummaryReportDto,
-    );
-    if (!summaryReport) {
-      throw new BadGatewayException(
-        'Có lỗi xảy ra khi tạo mới báo cáo tổng hợp',
-      );
-    }
-    summaryReport.project = project;
-    try {
-      const result: SummaryReport =
-        await this.summaryReportRepository.save(summaryReport);
-      if (!result) {
-        throw new InternalServerErrorException(
-          'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
+      if (!summaryReport) {
+        throw new BadGatewayException(
+          'Có lỗi xảy ra khi tạo mới báo cáo tổng hợp',
         );
       }
-      await this.handleGetSummaryReports(result.project.id);
-      return await this.getSummaryReportByProjectId(result.project.id);
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      summaryReport.project = project;
+      try {
+        const result: SummaryReport =
+          await this.summaryReportRepository.save(summaryReport);
+        if (!result) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
+          );
+        }
+        await this.handleGetSummaryReports(result.project.id);
+        return await this.getSummaryReportByProjectId(result.project.id);
+      } catch (error) {
+        throw new InternalServerErrorException(error.message);
+      }
+    } else {
+      // TODO: upload summary report for business project
+      const canUpload: boolean = await this.phaseService.checkProjectCanBeDone(
+        project.id,
+      );
+      if (!canUpload) {
+        throw new BadRequestException(
+          'Dự án tồn tại giai đoạn chưa hoàn thành',
+        );
+      }
+      const summaryReport: SummaryReport = this.summaryReportRepository.create(
+        createSummaryReportDto,
+      );
+      if (!summaryReport) {
+        throw new BadGatewayException(
+          'Có lỗi xảy ra khi tạo mới báo cáo tổng hợp',
+        );
+      }
+      summaryReport.project = project;
+      try {
+        const result: SummaryReport =
+          await this.summaryReportRepository.save(summaryReport);
+        if (!result) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
+          );
+        }
+        await this.handleGetSummaryReports(result.project.id);
+        return await this.getSummaryReportByProjectId(result.project.id);
+      } catch (error) {
+        throw new InternalServerErrorException(error.message);
+      }
     }
   }
 
@@ -133,10 +168,11 @@ export class SummaryReportService {
     const project: Project = await this.projectService.getProjectById(
       updateSummaryReportDto.projectId,
     );
-    if (project.project_status != ProjectStatusEnum.DONE) {
-      throw new BadGatewayException(
-        'Chỉ có thể cập nhật báo cáo tổng hợp khi dự án đã kết thúc',
-      );
+    const canUpload: boolean = await this.phaseService.checkProjectCanBeDone(
+      project.id,
+    );
+    if (!canUpload) {
+      throw new BadRequestException('Dự án tồn tại giai đoạn chưa hoàn thành');
     }
     const summaryReport: SummaryReport = await this.getSummaryReportByProjectId(
       project.id,
@@ -170,6 +206,11 @@ export class SummaryReportService {
       confirmSummaryReportDto.project_id,
     );
     if (user.role.role_name == RoleEnum.LECTURER) {
+      if (!summaryReport.isBusinessConfirmed) {
+        throw new BadRequestException(
+          'Doanh nghiệp chưa nghiệm thu dự án. Hãy đợi doanh nghiệp nghiệm thu',
+        );
+      }
       const group: Group = await this.groupService.getGroupByGroupId(
         confirmSummaryReportDto.groupId,
       );
@@ -186,7 +227,50 @@ export class SummaryReportService {
           'Chỉ có giảng viên hướng dẫn dự án mới có thể xác nhận báo cáo tổng hợp',
         );
       }
-      summaryReport.isLecturerConfirmed = true;
+      if (project.business_type == ProjectTypeEnum.PROJECT) {
+        const canConfirm: boolean =
+          await this.phaseService.checkProjectCanBeDone(project.id);
+        if (!canConfirm) {
+          throw new BadRequestException(
+            'Dự án tồn tại giai đoạn chưa hoàn thành',
+          );
+        }
+        summaryReport.isLecturerConfirmed = true;
+        try {
+          await this.summaryReportRepository.save(summaryReport);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
+          );
+        }
+        await this.projectService.changeProjectStatus(
+          project.id,
+          ProjectStatusEnum.DONE,
+          group.id,
+        );
+        await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
+        return await this.getSummaryReportByProjectId(
+          confirmSummaryReportDto.project_id,
+        );
+      } else {
+        summaryReport.isLecturerConfirmed = true;
+        try {
+          await this.summaryReportRepository.save(summaryReport);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
+          );
+        }
+        await this.projectService.changeProjectStatus(
+          project.id,
+          ProjectStatusEnum.DONE,
+          group.id,
+        );
+        await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
+        return await this.getSummaryReportByProjectId(
+          confirmSummaryReportDto.project_id,
+        );
+      }
     } else {
       const project: Project = await this.projectService.getProjectById(
         confirmSummaryReportDto.project_id,
@@ -196,19 +280,41 @@ export class SummaryReportService {
           'Chỉ có doanh nghiệp sở hữu dự án mới có thể xác nhận báo cáo tổng hợp',
         );
       }
-      summaryReport.isBusinessConfirmed = true;
+      if (project.business_type == ProjectTypeEnum.PROJECT) {
+        const canConfirm: boolean =
+          await this.phaseService.checkProjectCanBeDone(project.id);
+        if (!canConfirm) {
+          throw new BadRequestException(
+            'Dự án tồn tại giai đoạn chưa hoàn thành',
+          );
+        }
+        summaryReport.isBusinessConfirmed = true;
+        try {
+          await this.summaryReportRepository.save(summaryReport);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
+          );
+        }
+        await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
+        return await this.getSummaryReportByProjectId(
+          confirmSummaryReportDto.project_id,
+        );
+      } else {
+        summaryReport.isBusinessConfirmed = true;
+        try {
+          await this.summaryReportRepository.save(summaryReport);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
+          );
+        }
+        await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
+        return await this.getSummaryReportByProjectId(
+          confirmSummaryReportDto.project_id,
+        );
+      }
     }
-    try {
-      await this.summaryReportRepository.save(summaryReport);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
-      );
-    }
-    await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
-    return await this.getSummaryReportByProjectId(
-      confirmSummaryReportDto.project_id,
-    );
   }
 
   async handleGetSummaryReports(projectId: number): Promise<void> {

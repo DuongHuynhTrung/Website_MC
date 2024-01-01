@@ -194,6 +194,36 @@ export class RegisterPitchingService {
     return result;
   }
 
+  async getAllRegisterPitchingOfStudent(
+    projectId: number,
+    user: User,
+  ): Promise<RegisterPitching[]> {
+    const registerPitchings: RegisterPitching[] =
+      await this.registerPitchingRepository.find({
+        relations: ['group', 'project', 'lecturer'],
+      });
+    if (registerPitchings.length === 0) {
+      return [];
+    }
+    const userGroups: UserGroup[] =
+      await this.userGroupService.findAllUserGroupByUserId(user);
+    const result: RegisterPitching[] = [];
+    userGroups.forEach((userGroup) => {
+      registerPitchings.forEach((registerPitching) => {
+        if (
+          registerPitching.project.id == projectId &&
+          registerPitching.group.id == userGroup.group.id
+        ) {
+          result.push(registerPitching);
+        }
+      });
+    });
+    if (result.length === 0) {
+      return [];
+    }
+    return result;
+  }
+
   async getRegisterPitchingById(id: number): Promise<RegisterPitching> {
     try {
       const registerPitching: RegisterPitching =
@@ -364,6 +394,10 @@ export class RegisterPitchingService {
       ProjectStatusEnum.PROCESSING,
       groupId,
     );
+
+    // update Actual Start Date
+    project.project_actual_start_date = new Date();
+    await this.projectService.saveProject(project);
 
     return await this.getRegisterPitchingByGroupIdAndProjectId(
       groupId,

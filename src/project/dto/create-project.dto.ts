@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { ProjectTypeEnum } from '../enum/project-type.enum';
+import { ProjectSpecializationFieldEnum } from '../enum/project-specializationField.enum';
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -47,13 +55,22 @@ export class CreateProjectDto {
   name_project: string;
 
   @ApiProperty({
-    description: 'Business Sector of Project',
+    description: 'Type of Project',
+    example: 'Project',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsEnum(ProjectTypeEnum)
+  business_type: ProjectTypeEnum;
+
+  @ApiProperty({
+    description: 'Business Model of Project',
     example: 'Friendly',
     nullable: false,
   })
   @IsNotEmpty()
   @IsString()
-  business_sector: string;
+  business_model: string;
 
   @ApiProperty({
     description: 'Specialized Field of Project',
@@ -61,17 +78,8 @@ export class CreateProjectDto {
     nullable: false,
   })
   @IsNotEmpty()
-  @IsString()
-  specialized_field: string;
-
-  @ApiProperty({
-    description: 'Purpose of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  purpose: string;
+  @IsEnum(ProjectSpecializationFieldEnum)
+  specialized_field: ProjectSpecializationFieldEnum;
 
   @ApiProperty({
     description: 'Description of Project',
@@ -81,15 +89,6 @@ export class CreateProjectDto {
   @IsNotEmpty()
   @IsString()
   description_project: string;
-
-  @ApiProperty({
-    description: 'Request of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  request: string;
 
   @ApiProperty({
     description: 'Note of Project',

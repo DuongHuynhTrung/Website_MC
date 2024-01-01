@@ -408,7 +408,7 @@ export class PhaseService {
       (phase) => phase.phase_status != PhaseStatusEnum.DONE,
     );
     if (isNotDone) {
-      throw new BadRequestException('Dự án tồn tại giai đoạn chưa hoàn thành');
+      return false;
     }
     return true;
   }

@@ -15,6 +15,8 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
+import { ProjectTypeEnum } from '../enum/project-type.enum';
+import { ProjectSpecializationFieldEnum } from '../enum/project-specializationField.enum';
 
 @Entity()
 export class Project {
@@ -35,12 +37,20 @@ export class Project {
   name_project: string;
 
   @ApiProperty({
-    description: 'Business Sector of Project',
+    description: 'Type of Project',
+    example: 'Project',
+    nullable: false,
+  })
+  @Column({ nullable: true }) //remember change to false
+  business_type: ProjectTypeEnum;
+
+  @ApiProperty({
+    description: 'Business Model of Project',
     example: 'Friendly',
     nullable: false,
   })
-  @Column({ nullable: false })
-  business_sector: string;
+  @Column({ nullable: true }) //remember change to false
+  business_model: string;
 
   @ApiProperty({
     description: 'Specialized Field of Project',
@@ -48,15 +58,7 @@ export class Project {
     nullable: false,
   })
   @Column({ nullable: false })
-  specialized_field: string;
-
-  @ApiProperty({
-    description: 'Purpose of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @Column({ nullable: false })
-  purpose: string;
+  specialized_field: ProjectSpecializationFieldEnum;
 
   @ApiProperty({
     description: 'Description of Project',
@@ -65,14 +67,6 @@ export class Project {
   })
   @Column({ nullable: false })
   description_project: string;
-
-  @ApiProperty({
-    description: 'Request of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @Column({ nullable: false })
-  request: string;
 
   @ApiProperty({
     description: 'Note of Project',
@@ -105,6 +99,14 @@ export class Project {
   })
   @Column({ nullable: false })
   project_start_date: Date;
+
+  @ApiProperty({
+    description: 'Project Actual Start Date',
+    example: '25/12/2023',
+    nullable: false,
+  })
+  @Column({ nullable: true })
+  project_actual_start_date: Date;
 
   @ApiProperty({
     description: 'Project Expected End Date',

@@ -206,6 +206,16 @@ export class ProjectService {
     }
   }
 
+  async saveProject(project: Project): Promise<void> {
+    try {
+      await this.projectRepository.save(project);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi lưu thông tin dự án',
+      );
+    }
+  }
+
   async updateProjectById(
     id: number,
     updateProjectDto: UpdateProjectDto,
@@ -248,13 +258,11 @@ export class ProjectService {
     }
 
     try {
-      project.business_sector = updateProjectDto.business_sector;
+      project.business_model = updateProjectDto.business_model;
       project.description_project = updateProjectDto.description_project;
       project.document_related_link = updateProjectDto?.document_related_link;
       project.name_project = updateProjectDto.name_project;
       project.note = updateProjectDto.note;
-      project.purpose = updateProjectDto.purpose;
-      project.request = updateProjectDto.request;
       project.responsible_person = responsiblePerson;
       project.specialized_field = updateProjectDto.specialized_field;
       project.project_expected_end_date =
@@ -347,6 +355,70 @@ export class ProjectService {
     } else {
       throw new BadRequestException(
         'Chỉ có thể chuyển trạng thái dự án sang hoàn thành/kết thúc khi dự án đang tiến hành',
+      );
+    }
+  }
+
+  async statisticsProject(): Promise<
+    {
+      key: string;
+      value: number;
+    }[]
+  > {
+    try {
+      const dataProject: Project[] = await this.projectRepository.find();
+      if (!dataProject || dataProject.length === 0) {
+        return null;
+      }
+      const tmpCountData: { [key: string]: number } = {
+        Pending: 0,
+        Public: 0,
+        Processing: 0,
+        Done: 0,
+        End: 0,
+        Expired: 0,
+      };
+
+      dataProject.forEach((project: Project) => {
+        const project_status = project.project_status;
+        tmpCountData[project_status] = tmpCountData[project_status] + 1;
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
+      );
+    }
+  }
+
+  async statisticsSpecializationField(): Promise<
+    {
+      key: string;
+      value: number;
+    }[]
+  > {
+    try {
+      const dataProject: Project[] = await this.projectRepository.find();
+
+      const tmpCountData: { [key: string]: number } = {};
+
+      dataProject.forEach((projects: Project) => {
+        const specializationField = projects.specialized_field;
+        tmpCountData[specializationField] =
+          (tmpCountData[specializationField] || 0) + 1;
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result;
+    } catch {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê dự án',
       );
     }
   }
