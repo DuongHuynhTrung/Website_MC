@@ -7,7 +7,6 @@ import {
   IsString,
 } from 'class-validator';
 import { ProjectTypeEnum } from '../enum/project-type.enum';
-import { ProjectSpecializationFieldEnum } from '../enum/project-specializationField.enum';
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -78,8 +77,8 @@ export class CreateProjectDto {
     nullable: false,
   })
   @IsNotEmpty()
-  @IsEnum(ProjectSpecializationFieldEnum)
-  specialized_field: ProjectSpecializationFieldEnum;
+  @IsString()
+  specialized_field: string;
 
   @ApiProperty({
     description: 'Description of Project',

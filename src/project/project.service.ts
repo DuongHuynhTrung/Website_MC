@@ -34,9 +34,9 @@ export class ProjectService {
     business: User,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    const current_date = moment(new Date());
+    const current_date = moment(new Date().setHours(0, 0, 0, 0));
     const expired_date = moment(
-      createProjectDto.project_registration_expired_date,
+      new Date(createProjectDto.project_registration_expired_date),
     );
     const oneDateLaterCurrentDate = current_date.clone().add(1, 'day');
     if (oneDateLaterCurrentDate.isAfter(expired_date)) {

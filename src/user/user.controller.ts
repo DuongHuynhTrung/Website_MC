@@ -126,4 +126,20 @@ export class UserController {
   statisticsAccount(): Promise<{ key: string; value: number }[]> {
     return this.userService.statisticsAccount();
   }
+
+  @ApiOperation({ summary: 'Admin Statistics Business Follow Province' })
+  @ApiOkResponse({
+    description: 'The list business has been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi thống kê doanh nghiệp theo tỉnh/thành phố',
+  })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Get('/admin/statisticsBusinessFollowProvince')
+  statisticsBusinessFollowProvince(): Promise<
+    { key: string; value: number }[]
+  > {
+    return this.userService.statisticsBusinessFollowProvince();
+  }
 }

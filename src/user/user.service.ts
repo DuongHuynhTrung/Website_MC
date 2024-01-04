@@ -130,4 +130,98 @@ export class UserService {
       );
     }
   }
+
+  async statisticsBusinessFollowProvince(): Promise<
+    { key: string; value: number }[]
+  > {
+    try {
+      const users: User[] = await this.userRepository.find({
+        relations: ['role'],
+      });
+      if (!users || users.length === 0) {
+        return null;
+      }
+      const tmpCountData: { [key: string]: number } = {
+        'Hà Nội': 0,
+        'Hồ Chí Minh': 0,
+        'Hải Phòng': 0,
+        'Đà Nẵng': 0,
+        'Biên Hòa': 0,
+        'Nha Trang': 0,
+        Huế: 0,
+        'Cần Thơ': 0,
+        'An Giang': 0,
+        'Bà Rịa - Vũng Tàu': 0,
+        'Bắc Giang': 0,
+        'Bắc Kạn': 0,
+        'Bạc Liêu': 0,
+        'Bắc Ninh': 0,
+        'Bến Tre': 0,
+        'Bình Định': 0,
+        'Bình Dương': 0,
+        'Bình Phước': 0,
+        'Bình Thuận': 0,
+        'Cao Bằng': 0,
+        'Đắk Lắk': 0,
+        'Đắk Nông': 0,
+        'Đồng Nai': 0,
+        'Đồng Tháp': 0,
+        'Gia Lai': 0,
+        'Hà Giang': 0,
+        'Hà Nam': 0,
+        'Hà Tĩnh': 0,
+        'Hải Dương': 0,
+        'Hậu Giang': 0,
+        'Hưng Yên': 0,
+        'Khánh Hòa': 0,
+        'Kiên Giang': 0,
+        'Kon Tum': 0,
+        'Lai Châu': 0,
+        'Lâm Đồng': 0,
+        'Lạng Sơn': 0,
+        'Lào Cai': 0,
+        'Long An': 0,
+        'Nam Định': 0,
+        'Nghệ An': 0,
+        'Ninh Bình': 0,
+        'Ninh Thuận': 0,
+        'Phú Thọ': 0,
+        'Phú Yên': 0,
+        'Quảng Bình': 0,
+        'Quảng Nam': 0,
+        'Quảng Ngãi': 0,
+        'Quảng Ninh': 0,
+        'Quảng Trị': 0,
+        'Sóc Trăng': 0,
+        'Sơn La': 0,
+        'Tây Ninh': 0,
+        'Thái Bình': 0,
+        'Thái Nguyên': 0,
+        'Thanh Hóa': 0,
+        'Thừa Thiên Huế': 0,
+        'Tiền Giang': 0,
+        'Trà Vinh': 0,
+        'Tuyên Quang': 0,
+        'Vĩnh Long': 0,
+        'Vĩnh Phúc': 0,
+        'Yên Bái': 0,
+      };
+
+      users.forEach((user: User) => {
+        if (user.role.role_name == RoleEnum.BUSINESS) {
+          const province = user.address_detail.split(',')[0];
+          tmpCountData[province] = tmpCountData[province] + 1;
+        }
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result.sort((a, b) => b.value - a.value);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê doanh nghiệp theo tỉnh/thành phố',
+      );
+    }
+  }
 }

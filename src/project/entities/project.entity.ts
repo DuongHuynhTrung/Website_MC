@@ -16,7 +16,6 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 import { Phase } from 'src/phase/entities/phase.entity';
 import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
 import { ProjectTypeEnum } from '../enum/project-type.enum';
-import { ProjectSpecializationFieldEnum } from '../enum/project-specializationField.enum';
 
 @Entity()
 export class Project {
@@ -58,7 +57,7 @@ export class Project {
     nullable: false,
   })
   @Column({ nullable: false })
-  specialized_field: ProjectSpecializationFieldEnum;
+  specialized_field: string;
 
   @ApiProperty({
     description: 'Description of Project',
