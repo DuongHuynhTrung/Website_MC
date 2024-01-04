@@ -62,4 +62,24 @@ export class SocketGateway {
   handleGetSummaryReports(data: any) {
     this.server.emit(`getSummaryReports-${data.projectId}`, data);
   }
+
+  @SubscribeMessage('getAllUserChats')
+  handleGetAllUserChats(data: any) {
+    this.server.emit(`getAllUserChats-${data.identifierUserChat}`, data);
+  }
+
+  @SubscribeMessage('getAllMessage')
+  handleGetAllMessage(data: any) {
+    this.server.emit(`getAllMessage-${data.identifierUserChat}`, data);
+  }
+
+  @SubscribeMessage('getNewMessage')
+  handleGetNewMessage(data: any) {
+    this.server.emit(`getNewMessage-${data.userEmail}`, data);
+  }
+
+  @SubscribeMessage('getAllNewMessage')
+  handleGetAllNewMessage(data: any) {
+    this.server.emit(`getAllNewMessage-${data.identifierUserChat}`, data);
+  }
 }

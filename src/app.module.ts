@@ -21,6 +21,10 @@ import { NotificationModule } from './notification/notification.module';
 import { SocketGateway } from 'socket.gateway';
 import * as momentTimezone from 'moment-timezone';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MessageModule } from './message/message.module';
+import { UserChatModule } from './user-chat/user-chat.module';
+import { NewMessageModule } from './new-message/new-message.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -63,6 +67,9 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
       inject: [ConfigService],
     }),
+    EventEmitterModule.forRoot({
+      maxListeners: 20,
+    }),
     AuthModule,
     UserModule,
     RoleModule,
@@ -79,6 +86,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     RefreshTokenModule,
     SummaryReportModule,
     NotificationModule,
+    MessageModule,
+    UserChatModule,
+    NewMessageModule,
     // MessageModule,
   ],
   providers: [SocketGateway],
