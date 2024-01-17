@@ -457,13 +457,14 @@ export class ProjectService {
         (project) => project.business?.id === business.id,
       );
       if (!projects || projects.length === 0) {
-        this.socketGateway.handleGetProjects({
+        this.socketGateway.handleGetProjectsOfBusiness({
           totalProjects: 0,
           projects: [],
+          emailBusiness: business.email,
         });
       }
       const totalProjects: number = projects.length;
-      this.socketGateway.handleGetProjects({
+      this.socketGateway.handleGetProjectsOfBusiness({
         totalProjects: totalProjects,
         projects: projects,
         emailBusiness: business.email,
