@@ -65,7 +65,7 @@ export class SocketGateway {
 
   @SubscribeMessage('getAllUserChats')
   handleGetAllUserChats(data: any) {
-    this.server.emit(`getAllUserChats-${data.identifierUserChat}`, data);
+    this.server.emit('getAllUserChats', data);
   }
 
   @SubscribeMessage('getAllMessage')
@@ -81,5 +81,10 @@ export class SocketGateway {
   @SubscribeMessage('getAllNewMessage')
   handleGetAllNewMessage(data: any) {
     this.server.emit(`getAllNewMessage-${data.identifierUserChat}`, data);
+  }
+
+  @SubscribeMessage('getAllRegisterPitching')
+  handleGetAllRegisterPitching(data: any) {
+    this.server.emit(`getAllRegisterPitching-${data.email}`, data);
   }
 }

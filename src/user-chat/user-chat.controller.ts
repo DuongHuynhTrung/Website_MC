@@ -27,9 +27,9 @@ export class UserChatController {
   }
 
   @ApiOperation({ summary: 'Get All User-Chat' })
-  @Get(':identifierUserChat')
-  getAllUserChats(@Param('identifierUserChat') identifierUserChat: string) {
-    return this.userChatService.getAllUserChats(identifierUserChat);
+  @Get()
+  getAllUserChats() {
+    return this.userChatService.getAllUserChats();
   }
 
   @ApiOperation({ summary: 'Update User-Chat' })

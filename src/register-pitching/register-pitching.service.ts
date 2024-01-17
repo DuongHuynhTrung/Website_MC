@@ -28,6 +28,7 @@ import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.
 import { NotificationService } from 'src/notification/notification.service';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -44,6 +45,8 @@ export class RegisterPitchingService {
     private readonly userService: UserService,
 
     private readonly notificationService: NotificationService,
+
+    private readonly socketGateway: SocketGateway,
   ) {}
 
   async registerPitching(
@@ -175,6 +178,7 @@ export class RegisterPitchingService {
         }
       });
     });
+    await this.handleGetAllRegisterPitching(user);
     return result;
   }
 
@@ -395,10 +399,6 @@ export class RegisterPitchingService {
       groupId,
     );
 
-    // update Actual Start Date
-    project.project_actual_start_date = new Date();
-    await this.projectService.saveProject(project);
-
     return await this.getRegisterPitchingByGroupIdAndProjectId(
       groupId,
       projectId,
@@ -445,6 +445,38 @@ export class RegisterPitchingService {
         );
       }
       return await this.getRegisterPitchingById(result.id);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async handleGetAllRegisterPitching(user: User): Promise<void> {
+    try {
+      const registerPitchings: RegisterPitching[] =
+        await this.registerPitchingRepository.find({
+          relations: ['group', 'project', 'lecturer'],
+        });
+      if (registerPitchings.length === 0) {
+        this.socketGateway.handleGetAllRegisterPitching({
+          registerPitchings: [],
+          email: user.email,
+        });
+      } else {
+        const result: RegisterPitching[] = [];
+        const userGroups: UserGroup[] =
+          await this.userGroupService.findAllUserGroupByUserId(user);
+        userGroups.forEach((userGroup) => {
+          registerPitchings.forEach((registerPitching) => {
+            if (registerPitching.group.id == userGroup.group.id) {
+              result.push(registerPitching);
+            }
+          });
+        });
+        this.socketGateway.handleGetAllRegisterPitching({
+          registerPitchings: result,
+          email: user.email,
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

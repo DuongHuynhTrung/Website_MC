@@ -36,24 +36,22 @@ export class UserChatService {
           'Có lỗi xảy ra khi lưu thông tin tạo cuộc hội thoại nhắn tin',
         );
       }
-      await this.handleGetAllUserChats(createUserChatDto.identifierUserChat);
+      await this.handleGetAllUserChats();
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async getAllUserChats(identifierUserChat: string): Promise<UserChat[]> {
+  async getAllUserChats(): Promise<UserChat[]> {
     try {
-      const userChats: UserChat[] = await this.userChatRepository.find({
-        where: { identifierUserChat },
-      });
+      const userChats: UserChat[] = await this.userChatRepository.find();
       if (!userChats) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi truy xuất tất cả cuộc hội thoại nhắn tin',
         );
       }
-      await this.handleGetAllUserChats(identifierUserChat);
+      await this.handleGetAllUserChats();
       return userChats;
     } catch (error) {}
   }
@@ -85,18 +83,16 @@ export class UserChatService {
           'Có lỗi xảy ra khi cập nhật thông tin cuộc hội thoại',
         );
       }
-      await this.handleGetAllUserChats(identifierUserChat);
+      await this.handleGetAllUserChats();
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async handleGetAllUserChats(identifierUserChat: string): Promise<void> {
+  async handleGetAllUserChats(): Promise<void> {
     try {
-      const userChats: UserChat[] = await this.userChatRepository.find({
-        where: { identifierUserChat },
-      });
+      const userChats: UserChat[] = await this.userChatRepository.find();
       if (!userChats) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi truy xuất tất cả tin nhắn',
@@ -104,7 +100,6 @@ export class UserChatService {
       }
       this.socketGateway.handleGetAllUserChats({
         userChats: userChats,
-        identifierUserChat: identifierUserChat,
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);

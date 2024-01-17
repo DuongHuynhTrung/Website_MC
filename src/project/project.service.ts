@@ -206,16 +206,6 @@ export class ProjectService {
     }
   }
 
-  async saveProject(project: Project): Promise<void> {
-    try {
-      await this.projectRepository.save(project);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi lưu thông tin dự án',
-      );
-    }
-  }
-
   async updateProjectById(
     id: number,
     updateProjectDto: UpdateProjectDto,
@@ -320,8 +310,10 @@ export class ProjectService {
       project.project_status == ProjectStatusEnum.PUBLIC
     ) {
       project.project_status = projectStatus;
+      project.project_actual_start_date = new Date();
       try {
         const result: Project = await this.projectRepository.save(project);
+        console.log(result);
         await this.handleGetProjects();
         await this.handleGetProjectsOfBusiness(project.business);
         return await this.getProjectById(result.id);
