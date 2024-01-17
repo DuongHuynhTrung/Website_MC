@@ -466,6 +466,7 @@ export class ProjectService {
       this.socketGateway.handleGetProjects({
         totalProjects: totalProjects,
         projects: projects,
+        emailBusiness: business.email,
       });
     } catch (error) {
       throw new InternalServerErrorException(

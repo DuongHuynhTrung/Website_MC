@@ -25,7 +25,7 @@ export class SocketGateway {
 
   @SubscribeMessage('getProjectsOfBusiness')
   handleGetProjectsOfBusiness(data: any) {
-    this.server.emit('getProjectsOfBusiness', data);
+    this.server.emit(`getProjectsOfBusiness-${data.emailBusiness}`, data);
   }
 
   @SubscribeMessage('chooseGroup')
