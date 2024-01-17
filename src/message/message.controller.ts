@@ -19,7 +19,7 @@ export class MessageController {
   }
 
   @ApiOperation({ summary: 'Get All Messages' })
-  @Get()
+  @Get('/:identifierUserChat')
   getAllMessages(
     @Param('identifierUserChat') identifierUserChat: string,
   ): Promise<Message[]> {

@@ -17,14 +17,11 @@ export class UserChat {
   @Column()
   avatarGroup: string;
 
-  @Column()
+  @Column({ nullable: true })
   senderEmail: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastNameSender: string;
-
-  @Column()
-  newMsg: string;
 
   @Column()
   lastMessage: string;
