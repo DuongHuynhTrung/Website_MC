@@ -265,6 +265,7 @@ export class CategoryService {
         this.socketGateway.handleGetCategories({
           totalCategories: 0,
           categories: [],
+          phaseId: phaseId,
         });
       }
       const result: Category[] = categories.filter(

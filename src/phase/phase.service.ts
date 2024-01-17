@@ -519,6 +519,7 @@ export class PhaseService {
         this.socketGateway.handleGetPhases({
           totalPhases: 0,
           phases: [],
+          projectId: projectId,
         });
       }
       const result = phases.filter((phase) => phase.project.id == projectId);
