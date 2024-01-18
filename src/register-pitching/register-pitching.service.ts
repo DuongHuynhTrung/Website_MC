@@ -399,6 +399,8 @@ export class RegisterPitchingService {
       groupId,
     );
 
+    await this.handleGetAllRegisterPitching(user);
+
     return await this.getRegisterPitchingByGroupIdAndProjectId(
       groupId,
       projectId,
@@ -454,11 +456,22 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
+          relations: ['group', 'project', 'lecturer', 'project.business'],
         });
       if (registerPitchings.length === 0) {
         this.socketGateway.handleGetAllRegisterPitching({
           registerPitchings: [],
+          email: user.email,
+        });
+      } else if (user.role.role_name == RoleEnum.BUSINESS) {
+        const result: RegisterPitching[] = [];
+        registerPitchings.forEach(async (registerPitching) => {
+          if (registerPitching.project.business.email == user.email) {
+            result.push(registerPitching);
+          }
+        });
+        this.socketGateway.handleGetAllRegisterPitching({
+          registerPitchings: result,
           email: user.email,
         });
       } else {
