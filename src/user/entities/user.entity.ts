@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/role/entities/role.entity';
@@ -13,6 +14,7 @@ import { Project } from 'src/project/entities/project.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 
 @Entity()
 export class User {
@@ -105,7 +107,7 @@ export class User {
   password: string;
 
   @ApiProperty({
-    description: 'Discription of User',
+    description: 'Description of User',
     example: 'Friendly',
     nullable: true,
   })
@@ -120,6 +122,30 @@ export class User {
   @Column({ nullable: true })
   link_web: string;
 
+  @ApiProperty({
+    description: 'Description of Business',
+    example: 'Friendly',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  business_description: string;
+
+  @ApiProperty({
+    description: 'Business Sector',
+    example: 'Friendly',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  business_sector: string;
+
+  @ApiProperty({
+    description: 'Is Confirm By Admin',
+    example: false,
+    nullable: true,
+  })
+  @Column({ default: false })
+  isConfirmByAdmin: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -133,6 +159,13 @@ export class User {
   })
   @Column({ nullable: false, default: false })
   status: boolean;
+
+  @ApiProperty({
+    description: 'Role Name of User',
+    example: 'Admin',
+  })
+  @Column({ nullable: true })
+  role_name: string;
 
   @ApiProperty({
     description: 'Role of User',
@@ -158,4 +191,10 @@ export class User {
 
   @OneToMany(() => Notification, (notification) => notification.receiver)
   receiver_notifications: Notification[];
+
+  @OneToOne(
+    () => ResponsiblePerson,
+    (responsible_person) => responsible_person.business,
+  )
+  responsible_person: ResponsiblePerson;
 }

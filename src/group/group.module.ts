@@ -16,6 +16,8 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { SocketGateway } from 'socket.gateway';
+import { Role } from 'src/role/entities/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   imports: [
@@ -28,10 +30,12 @@ import { SocketGateway } from 'socket.gateway';
       Project,
       ResponsiblePerson,
       Notification,
+      Role,
     ]),
   ],
   controllers: [GroupController],
   providers: [
+    RoleService,
     GroupService,
     UserGroupService,
     UserService,

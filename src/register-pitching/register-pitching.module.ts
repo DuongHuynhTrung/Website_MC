@@ -16,6 +16,8 @@ import { User } from 'src/user/entities/user.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { SocketGateway } from 'socket.gateway';
+import { Role } from 'src/role/entities/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   imports: [
@@ -27,10 +29,12 @@ import { SocketGateway } from 'socket.gateway';
       ResponsiblePerson,
       User,
       Notification,
+      Role,
     ]),
   ],
   controllers: [RegisterPitchingController],
   providers: [
+    RoleService,
     RegisterPitchingService,
     ProjectService,
     GroupService,

@@ -13,6 +13,8 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { SocketGateway } from 'socket.gateway';
+import { Role } from 'src/role/entities/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   imports: [
@@ -23,10 +25,12 @@ import { SocketGateway } from 'socket.gateway';
       RegisterPitching,
       Group,
       UserGroup,
+      Role,
     ]),
   ],
   controllers: [ProjectController],
   providers: [
+    RoleService,
     ProjectService,
     UserService,
     ResponsiblePersonService,

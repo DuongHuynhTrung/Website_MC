@@ -24,6 +24,7 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from '../role/enum/role.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('User')
@@ -64,8 +65,10 @@ export class UserController {
     description: 'Internal server error.',
   })
   @Get(':email')
-  getUserByEmail(@Param('email') email: string): Promise<User> {
-    return this.userService.getUserByEmail(email);
+  getUserByEmail(
+    @Param('email') email: string,
+  ): Promise<{ user: User; responsiblePerson: ResponsiblePerson }> {
+    return this.userService.getUserEmail(email);
   }
 
   @ApiOperation({ summary: 'Search user who have email contain searchEmail' })

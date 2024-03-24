@@ -9,12 +9,20 @@ import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RoleEnum } from '../role/enum/role.enum';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(ResponsiblePerson)
+    private readonly responsiblePersonRepository: Repository<ResponsiblePerson>,
+
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   async getUsers(page: number): Promise<[{ totalUsers: number }, User[]]> {
@@ -29,6 +37,36 @@ export class UserService {
       users = users.filter((user) => user.email !== 'admin@gmail.com');
       const totalUsers = users.length;
       return [{ totalUsers }, users.slice(startIndex, endIndex)];
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async getUserEmail(
+    email: string,
+  ): Promise<{ user: User; responsiblePerson: ResponsiblePerson }> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
+      });
+      if (!user) {
+        throw new Error(`Người dùng với email ${email} không tồn tại`);
+      }
+      if (user.role.role_name == RoleEnum.BUSINESS) {
+        const responsiblePersons = await this.responsiblePersonRepository.find({
+          relations: ['business'],
+        });
+        if (!responsiblePersons && responsiblePersons.length > 0) {
+          const responsiblePerson = responsiblePersons.find(
+            (p) => p.business.id == user.id,
+          );
+          if (responsiblePerson) {
+            return { user, responsiblePerson };
+          }
+        }
+      }
+      return { user, responsiblePerson: null };
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -92,6 +130,10 @@ export class UserService {
   ): Promise<User> {
     try {
       Object.assign(user, updateProfileDto);
+      const role = await this.roleRepository.findOne({
+        where: { role_name: updateProfileDto.role_name },
+      });
+      user.role = role;
       await this.userRepository.save(user);
       return await this.getUserByEmail(user.email);
     } catch (error) {

@@ -9,12 +9,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePerson } from './entities/responsible_person.entity';
 import { CreateResponsiblePersonDto } from './dto/create-responsible_person.dto';
 import { UpdateResponsiblePersonDto } from './dto/update-responsible_person.dto';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ResponsiblePersonService {
   constructor(
     @InjectRepository(ResponsiblePerson)
     private readonly responsiblePersonRepository: Repository<ResponsiblePerson>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async createResponsiblePerson(
@@ -28,6 +32,16 @@ export class ResponsiblePersonService {
         'Có lỗi khi tạo Người chịu trách nhiệm. Vui lòng kiểm tra lại thông tin!',
       );
     }
+    console.log(createResponsiblePersonDto);
+    const business = await this.userRepository.findOne({
+      where: { email: createResponsiblePersonDto.businessEmail },
+    });
+    if (!business) {
+      throw new NotFoundException(
+        `Không tìm thấy doanh nghiệp với email ${createResponsiblePersonDto.businessEmail}`,
+      );
+    }
+    responsiblePerson.business = business;
     try {
       const result =
         await this.responsiblePersonRepository.save(responsiblePerson);
@@ -39,6 +53,36 @@ export class ResponsiblePersonService {
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getResponsiblePersonOfBusiness(
+    businessEmail: string,
+  ): Promise<ResponsiblePerson> {
+    try {
+      const responsiblePersons: ResponsiblePerson[] =
+        await this.responsiblePersonRepository.find({
+          relations: ['business'],
+        });
+      const business = await this.userRepository.findOne({
+        where: { email: businessEmail },
+      });
+      if (!business) {
+        throw new NotFoundException(
+          `Không tìm thấy doanh nghiệp với email ${businessEmail}`,
+        );
+      }
+      const responsiblePerson = responsiblePersons.find(
+        (responsible) => responsible.business.id === business.id,
+      );
+      if (!responsiblePerson) {
+        throw new NotFoundException(
+          'Không tìm thấy người phụ trách của doanh nghiệp',
+        );
+      }
+      return responsiblePerson;
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
   }
 

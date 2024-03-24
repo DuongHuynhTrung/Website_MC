@@ -8,11 +8,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { Role } from 'src/role/entities/role.entity';
 import { UserService } from 'src/user/user.service';
+import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([User, Role]),
+    TypeOrmModule.forFeature([User, Role, ResponsiblePerson]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -25,6 +27,6 @@ import { UserService } from 'src/user/user.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UserService],
+  providers: [AuthService, JwtStrategy, UserService, ResponsiblePersonService],
 })
 export class AuthModule {}

@@ -1,10 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Project } from 'src/project/entities/project.entity';
+import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -51,6 +54,22 @@ export class ResponsiblePerson {
   @Column({ nullable: false, unique: true })
   phone_number: string;
 
+  @ApiProperty({
+    description: 'Zalo of Responsible Person Information',
+    example: 'Abc',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  zalo: string;
+
+  @ApiProperty({
+    description: 'Facebook of Responsible Person Information',
+    example: 'Abc',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  facebook: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -59,4 +78,8 @@ export class ResponsiblePerson {
 
   @OneToMany(() => Project, (project) => project.responsible_person)
   projects: Project[];
+
+  @OneToOne(() => User, (user) => user.responsible_person)
+  @JoinColumn()
+  business: User;
 }

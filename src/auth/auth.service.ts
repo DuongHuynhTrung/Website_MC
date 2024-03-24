@@ -58,7 +58,9 @@ export class AuthService {
         const accessToken = this.jwtService.sign(payload);
         return { accessToken };
       } else {
-        const role = await this.roleRepository.findOneByOrFail({ id: 2 });
+        const role = await this.roleRepository.findOneByOrFail({
+          role_name: 'Student',
+        });
         const user = this.userRepository.create({
           email: googlePayload.email,
           fullname: googlePayload.name,
@@ -114,8 +116,8 @@ export class AuthService {
       );
     }
     user.status = false;
-    const role = await this.roleRepository.findOneByOrFail({ id: 2 });
-    user.role = role;
+    // const role = await this.roleRepository.findOneByOrFail({ id: 2 });
+    // user.role = role;
     try {
       const salt = await bcrypt.genSalt();
       user.password = await bcrypt.hash(signUpDto.password, salt);
@@ -128,6 +130,21 @@ export class AuthService {
       } else {
         throw new InternalServerErrorException(error.message);
       }
+    }
+  }
+
+  async checkEmailExist(email: string): Promise<User> {
+    try {
+      const user: User = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
+      });
+      if (!user) {
+        return null;
+      }
+      return user;
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
   }
 
@@ -146,11 +163,11 @@ export class AuthService {
         `Người dùng với email ${signInDto.email} không tồn tại!`,
       );
     }
-    if (!user.status) {
-      throw new BadRequestException(
-        `Tài khoản của người dùng đang ở trạng thái không hoạt động!`,
-      );
-    }
+    // if (!user.status) {
+    //   throw new BadRequestException(
+    //     `Tài khoản của người dùng đang ở trạng thái không hoạt động!`,
+    //   );
+    // }
     try {
       const checkPassword = await bcrypt.compare(
         signInDto.password,

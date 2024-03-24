@@ -15,7 +15,6 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
-import { ProjectTypeEnum } from '../enum/project-type.enum';
 
 @Entity()
 export class Project {
@@ -40,39 +39,31 @@ export class Project {
     example: 'Project',
     nullable: false,
   })
-  @Column({ nullable: true }) //remember change to false
-  business_type: ProjectTypeEnum;
+  @Column({ nullable: false })
+  business_type: string;
 
   @ApiProperty({
-    description: 'Business Model of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @Column({ nullable: true }) //remember change to false
-  business_model: string;
-
-  @ApiProperty({
-    description: 'Specialized Field of Project',
+    description: 'Project Purpose',
     example: 'Friendly',
     nullable: false,
   })
   @Column({ nullable: false })
-  specialized_field: string;
+  purpose: string;
 
   @ApiProperty({
-    description: 'Description of Project',
+    description: 'Target Object',
     example: 'Friendly',
     nullable: false,
   })
   @Column({ nullable: false })
-  description_project: string;
+  target_object: string;
 
   @ApiProperty({
     description: 'Note of Project',
     example: 'Friendly',
-    nullable: false,
+    nullable: true,
   })
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   note: string;
 
   @ApiProperty({
@@ -80,39 +71,55 @@ export class Project {
     example: 'Friendly',
     nullable: true,
   })
-  @Column({ nullable: true })
-  document_related_link: string;
+  @Column({ type: 'jsonb', nullable: true })
+  document_related_link: string[];
 
   @ApiProperty({
-    description: 'Project Registration Expired Date',
-    example: '23/12/2023',
+    description: 'Project Request',
+    example: 'Friendly',
     nullable: true,
   })
+  @Column({ nullable: true })
+  request: string;
+
+  @ApiProperty({
+    description: 'Project Implement Time',
+    example: '23/12/2023',
+    nullable: false,
+  })
   @Column({ nullable: false })
-  project_registration_expired_date: Date;
+  project_implement_time: string;
 
   @ApiProperty({
     description: 'Project Start Date',
     example: '25/12/2023',
-    nullable: false,
+    nullable: true,
   })
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   project_start_date: Date;
 
   @ApiProperty({
     description: 'Project Actual Start Date',
     example: '25/12/2023',
-    nullable: false,
+    nullable: true,
   })
   @Column({ nullable: true })
   project_actual_start_date: Date;
 
   @ApiProperty({
+    description: 'Is Extent',
+    example: true,
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  is_extent: boolean;
+
+  @ApiProperty({
     description: 'Project Expected End Date',
     example: '25/05/2024',
-    nullable: false,
+    nullable: true,
   })
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   project_expected_end_date: Date;
 
   @ApiProperty({
@@ -124,12 +131,28 @@ export class Project {
   project_actual_end_date: Date;
 
   @ApiProperty({
+    description: 'Project Expected Budget',
+    example: 100000,
+    nullable: false,
+  })
+  @Column({ nullable: false })
+  expected_budget: number;
+
+  @ApiProperty({
     description: 'Project Status',
     example: ProjectStatusEnum.PENDING,
     nullable: false,
   })
   @Column({ nullable: false, default: ProjectStatusEnum.PENDING })
   project_status: ProjectStatusEnum;
+
+  @ApiProperty({
+    description: 'Is First Project',
+    example: false,
+    nullable: false,
+  })
+  @Column({ nullable: false, default: false })
+  is_first_project: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

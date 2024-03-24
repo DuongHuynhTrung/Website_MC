@@ -20,6 +20,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { SocketGateway } from 'socket.gateway';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { PhaseService } from 'src/phase/phase.service';
+import { Role } from 'src/role/entities/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   imports: [
@@ -33,10 +35,12 @@ import { PhaseService } from 'src/phase/phase.service';
       RegisterPitching,
       Notification,
       Phase,
+      Role,
     ]),
   ],
   controllers: [SummaryReportController],
   providers: [
+    RoleService,
     SummaryReportService,
     ProjectService,
     ResponsiblePersonService,

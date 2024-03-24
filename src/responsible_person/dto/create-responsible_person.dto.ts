@@ -37,15 +37,27 @@ export class CreateResponsiblePersonDto {
   @IsNotEmpty()
   phone_number: string;
 
-  constructor(data: {
-    email: string;
-    fullname: string;
-    position: string;
-    phone_number: string;
-  }) {
-    this.email = data.email;
-    this.fullname = data.fullname;
-    this.position = data.position;
-    this.phone_number = data.phone_number;
-  }
+  @ApiProperty({
+    description: 'Zalo of Responsible Person Information',
+    example: 'Abc',
+    nullable: true,
+  })
+  @IsNotEmpty()
+  zalo: string;
+
+  @ApiProperty({
+    description: 'Facebook of Responsible Person Information',
+    example: 'Abc',
+    nullable: true,
+  })
+  @IsNotEmpty()
+  facebook: string;
+
+  @ApiProperty({
+    description: 'Business Email',
+    example: 'Abc',
+    nullable: true,
+  })
+  @IsNotEmpty()
+  businessEmail: string;
 }

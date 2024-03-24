@@ -1,5 +1,4 @@
 import { User } from './../user/entities/user.entity';
-import { CreateResponsiblePersonDto } from './../responsible_person/dto/create-responsible_person.dto';
 import {
   Injectable,
   BadRequestException,
@@ -12,11 +11,10 @@ import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
-import { UpdateResponsiblePersonDto } from 'src/responsible_person/dto/update-responsible_person.dto';
 import { ProjectStatusEnum } from './enum/project-status.enum';
-import * as moment from 'moment';
 import { GroupService } from 'src/group/group.service';
 import { SocketGateway } from 'socket.gateway';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ProjectService {
@@ -26,83 +24,30 @@ export class ProjectService {
 
     private readonly responsiblePersonService: ResponsiblePersonService,
 
+    private readonly userService: UserService,
+
     private readonly groupService: GroupService,
 
     private readonly socketGateway: SocketGateway,
   ) {}
-  async createProject(
-    business: User,
-    createProjectDto: CreateProjectDto,
-  ): Promise<Project> {
-    const current_date = moment(new Date().setHours(0, 0, 0, 0));
-    const expired_date = moment(
-      new Date(createProjectDto.project_registration_expired_date),
-    );
-    const oneDateLaterCurrentDate = current_date.clone().add(1, 'day');
-    if (oneDateLaterCurrentDate.isAfter(expired_date)) {
-      throw new BadRequestException(
-        'Ngày hết hạn đăng ký pitching phải sau ngày hiện tại 1 ngày',
-      );
-    }
-
-    const start_date = moment(createProjectDto.project_start_date);
-    const sevenDateAfterCurrentDate = current_date.clone().add(7, 'days');
-    if (sevenDateAfterCurrentDate.isAfter(start_date)) {
-      throw new BadRequestException(
-        'Ngày bắt đầu phải sau ngày hiện tại 7 ngày',
-      );
-    }
-
-    const expected_end_date = moment(
-      createProjectDto.project_expected_end_date,
-    );
-    if (start_date.isAfter(expected_end_date)) {
-      throw new BadRequestException(
-        'Ngày bắt đầu phải trước ngày mong muốn kết thúc',
-      );
-    }
-
-    //check the shortest range between start_date and expected_end_date is in 2 months
-    const twoMonthsLaterOfStartDate = start_date.clone().add(2, 'months');
-    if (expected_end_date.isBefore(twoMonthsLaterOfStartDate)) {
-      throw new BadRequestException(
-        'Một dự án ít nhất phải thực hiện trong 2 tháng',
-      );
-    }
-
-    //check the largest range between start_date and expected_end_date is in 3 months
-    const threeMonthsLaterOfStartDate = start_date.clone().add(3, 'months');
-    if (expected_end_date.isAfter(threeMonthsLaterOfStartDate)) {
-      throw new BadRequestException(
-        'Một dự án chỉ có thể được thực hiện trong 3 tháng',
-      );
-    }
-    let responsiblePerson =
+  async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
+    const responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
         createProjectDto.email_responsible_person,
       );
     if (!responsiblePerson) {
-      const createResponsiblePersonDto = new CreateResponsiblePersonDto({
-        email: createProjectDto.email_responsible_person,
-        fullname: createProjectDto.fullname,
-        position: createProjectDto.position,
-        phone_number: createProjectDto.phone_number,
-      });
-      responsiblePerson =
-        await this.responsiblePersonService.createResponsiblePerson(
-          createResponsiblePersonDto,
-        );
-    } else {
-      const updateResponsiblePersonDto = new UpdateResponsiblePersonDto({
-        email: createProjectDto.email_responsible_person,
-        fullname: createProjectDto.fullname,
-        position: createProjectDto.position,
-        phone_number: createProjectDto.phone_number,
-      });
-      responsiblePerson =
-        await this.responsiblePersonService.updateResponsiblePerson(
-          updateResponsiblePersonDto,
-        );
+      throw new NotFoundException(
+        `Không tìm thấy người phụ trách với email ${createProjectDto.email_responsible_person}`,
+      );
+    }
+
+    const business = await this.userService.getUserByEmail(
+      createProjectDto.email_responsible_person,
+    );
+    if (!business) {
+      throw new NotFoundException(
+        `Không tìm thấy doanh nghiệp với email ${createProjectDto.businessEmail}`,
+      );
     }
 
     const project = this.projectRepository.create(createProjectDto);
@@ -120,9 +65,28 @@ export class ProjectService {
           'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
         );
       }
-      await this.handleGetProjects();
+      await await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(business);
       return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllFirstProject(): Promise<Project[]> {
+    try {
+      const projects: Project[] = await this.projectRepository.find({
+        where: {
+          is_first_project: true,
+        },
+        relations: ['business', 'responsible_person'],
+      });
+      if (!projects) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi truy xuất tất cả dự án lần đầu đăng',
+        );
+      }
+      return projects;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -212,55 +176,37 @@ export class ProjectService {
   ): Promise<Project> {
     //check if project already exists
     const project = await this.getProjectById(id);
-    if (project.project_status != ProjectStatusEnum.PENDING) {
-      throw new BadRequestException(
-        'Chỉ dự án đang trong giai đoạn chờ phê duyệt mới được cập nhật thông tin',
-      );
-    }
+
     //check Responsible Person
-    let responsiblePerson =
+    const responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
         updateProjectDto.email_responsible_person,
       );
     if (!responsiblePerson) {
-      const createResponsiblePersonDto = new CreateResponsiblePersonDto({
-        email: updateProjectDto.email_responsible_person,
-        fullname: updateProjectDto.fullname,
-        position: updateProjectDto.position,
-        phone_number: updateProjectDto.phone_number,
-      });
-
-      responsiblePerson =
-        await this.responsiblePersonService.createResponsiblePerson(
-          createResponsiblePersonDto,
-        );
-    } else {
-      const updateResponsiblePersonDto = new UpdateResponsiblePersonDto({
-        email: updateProjectDto.email_responsible_person,
-        fullname: updateProjectDto.fullname,
-        position: updateProjectDto.position,
-        phone_number: updateProjectDto.phone_number,
-      });
-      responsiblePerson =
-        await this.responsiblePersonService.updateResponsiblePerson(
-          updateResponsiblePersonDto,
-        );
+      throw new NotFoundException(
+        `Không tìm thấy người phụ trách với email ${updateProjectDto.email_responsible_person}`,
+      );
     }
 
     try {
-      project.business_model = updateProjectDto.business_model;
-      project.description_project = updateProjectDto.description_project;
-      project.document_related_link = updateProjectDto?.document_related_link;
       project.name_project = updateProjectDto.name_project;
+      project.business_type = updateProjectDto.business_type;
+      project.purpose = updateProjectDto.purpose;
+      project.target_object = updateProjectDto.target_object;
       project.note = updateProjectDto.note;
-      project.responsible_person = responsiblePerson;
-      project.specialized_field = updateProjectDto.specialized_field;
+      project.document_related_link = updateProjectDto?.document_related_link;
+      project.request = updateProjectDto?.request;
+      project.project_implement_time = updateProjectDto.project_implement_time;
+      project.project_start_date = updateProjectDto.project_start_date;
+      project.is_extent = updateProjectDto?.is_extent;
       project.project_expected_end_date =
         updateProjectDto.project_expected_end_date;
-      project.project_registration_expired_date =
-        updateProjectDto.project_registration_expired_date;
-      project.project_start_date = updateProjectDto.project_start_date;
-      project.project_status = ProjectStatusEnum.PUBLIC;
+      project.expected_budget = updateProjectDto.expected_budget;
+      project.is_first_project = updateProjectDto?.is_first_project;
+      project.responsible_person = responsiblePerson;
+      if (project.project_status == ProjectStatusEnum.PENDING) {
+        project.project_status = ProjectStatusEnum.PUBLIC;
+      }
       await this.projectRepository.save(project);
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(project.business);
@@ -387,33 +333,33 @@ export class ProjectService {
     }
   }
 
-  async statisticsSpecializationField(): Promise<
-    {
-      key: string;
-      value: number;
-    }[]
-  > {
-    try {
-      const dataProject: Project[] = await this.projectRepository.find();
+  // async statisticsSpecializationField(): Promise<
+  //   {
+  //     key: string;
+  //     value: number;
+  //   }[]
+  // > {
+  //   try {
+  //     const dataProject: Project[] = await this.projectRepository.find();
 
-      const tmpCountData: { [key: string]: number } = {};
+  //     const tmpCountData: { [key: string]: number } = {};
 
-      dataProject.forEach((projects: Project) => {
-        const specializationField = projects.specialized_field;
-        tmpCountData[specializationField] =
-          (tmpCountData[specializationField] || 0) + 1;
-      });
+  //     dataProject.forEach((projects: Project) => {
+  //       const specializationField = projects.specialized_field;
+  //       tmpCountData[specializationField] =
+  //         (tmpCountData[specializationField] || 0) + 1;
+  //     });
 
-      const result: { key: string; value: number }[] = Object.keys(
-        tmpCountData,
-      ).map((key) => ({ key, value: tmpCountData[key] }));
-      return result;
-    } catch {
-      throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi thống kê dự án',
-      );
-    }
-  }
+  //     const result: { key: string; value: number }[] = Object.keys(
+  //       tmpCountData,
+  //     ).map((key) => ({ key, value: tmpCountData[key] }));
+  //     return result;
+  //   } catch {
+  //     throw new InternalServerErrorException(
+  //       'Có lỗi xảy ra khi thống kê dự án',
+  //     );
+  //   }
+  // }
 
   async handleGetProjects(): Promise<void> {
     try {

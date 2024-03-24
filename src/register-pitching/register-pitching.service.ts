@@ -22,7 +22,6 @@ import { UserService } from 'src/user/user.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
-import * as moment from 'moment';
 import { CreateUserGroupDto } from 'src/user-group/dto/create-user-group.dto';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 import { NotificationService } from 'src/notification/notification.service';
@@ -60,11 +59,6 @@ export class RegisterPitchingService {
       throw new BadRequestException(
         'Chỉ có dự án đang được công bố mới có thể đăng kí pitching',
       );
-    }
-    const expired_date = moment(project.project_registration_expired_date);
-    const nowDate = moment(new Date());
-    if (expired_date.isBefore(nowDate)) {
-      throw new BadRequestException('Đã hết hạn đăng ký pitching dự án');
     }
     const group: Group = await this.groupService.getGroupByGroupId(
       createRegisterPitchingDto.groupId,

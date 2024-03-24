@@ -1,31 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ProjectTypeEnum } from '../enum/project-type.enum';
 
 export class CreateProjectDto {
   @ApiProperty({
-    description: 'Full Name of Responsible Person',
-    example: 'Duong Huynh',
+    description: 'Email of Business',
+    example: 'Acb',
     nullable: false,
   })
   @IsString()
   @IsNotEmpty()
-  fullname: string;
-
-  @ApiProperty({
-    description: 'Position of Responsible Person',
-    example: 'abc',
-    nullable: false,
-  })
-  @IsString()
-  @IsNotEmpty()
-  position: string;
+  businessEmail: string;
 
   @ApiProperty({
     description: 'Email of Responsible Person',
@@ -35,14 +25,6 @@ export class CreateProjectDto {
   @IsEmail()
   @IsNotEmpty()
   email_responsible_person: string;
-
-  @ApiProperty({
-    description: 'Phone Number of Responsible Person',
-    example: '0838323403',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  phone_number: string;
 
   @ApiProperty({
     description: 'Name of Project',
@@ -59,42 +41,30 @@ export class CreateProjectDto {
     nullable: false,
   })
   @IsNotEmpty()
-  @IsEnum(ProjectTypeEnum)
-  business_type: ProjectTypeEnum;
+  business_type: string;
 
   @ApiProperty({
-    description: 'Business Model of Project',
+    description: 'Project Purpose',
     example: 'Friendly',
     nullable: false,
   })
   @IsNotEmpty()
-  @IsString()
-  business_model: string;
+  purpose: string;
 
   @ApiProperty({
-    description: 'Specialized Field of Project',
+    description: 'Target Object',
     example: 'Friendly',
     nullable: false,
   })
   @IsNotEmpty()
-  @IsString()
-  specialized_field: string;
-
-  @ApiProperty({
-    description: 'Description of Project',
-    example: 'Friendly',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  description_project: string;
+  target_object: string;
 
   @ApiProperty({
     description: 'Note of Project',
     example: 'Friendly',
     nullable: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   note: string;
 
@@ -104,16 +74,24 @@ export class CreateProjectDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  document_related_link: string;
+  @IsArray()
+  document_related_link: string[];
 
   @ApiProperty({
-    description: 'Project Registration Expired Date',
-    example: '2023-12-05 18:47:22.132523',
+    description: 'Project Request',
+    example: 'Friendly',
     nullable: true,
   })
+  @IsOptional()
+  request: string;
+
+  @ApiProperty({
+    description: 'Project Implement Time',
+    example: '23/12/2023',
+    nullable: false,
+  })
   @IsNotEmpty()
-  project_registration_expired_date: Date;
+  project_implement_time: string;
 
   @ApiProperty({
     description: 'Project Start Date',
@@ -124,10 +102,34 @@ export class CreateProjectDto {
   project_start_date: Date;
 
   @ApiProperty({
+    description: 'Is Extent',
+    example: true,
+    nullable: true,
+  })
+  @IsOptional()
+  is_extent: boolean;
+
+  @ApiProperty({
     description: 'Project Expected End Date',
     example: '2024-05-25 18:47:22.132523',
     nullable: false,
   })
   @IsNotEmpty()
   project_expected_end_date: Date;
+
+  @ApiProperty({
+    description: 'Project Expected Budget',
+    example: 100000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  expected_budget: number;
+
+  @ApiProperty({
+    description: 'Is First Project',
+    example: false,
+    nullable: false,
+  })
+  @IsOptional()
+  is_first_project: boolean;
 }

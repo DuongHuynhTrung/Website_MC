@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Patch, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  UseGuards,
+  Get,
+  Query,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
@@ -60,6 +68,15 @@ export class AuthController {
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto): Promise<string> {
     return this.authService.signUp(signUpDto);
+  }
+
+  @ApiOperation({ summary: 'Check email Exist. Return null when not exist' })
+  @ApiOkResponse({
+    description: 'The User retrieved.',
+  })
+  @Get('checkEmailExist')
+  checkEmailExist(@Query('email') email: string): Promise<User> {
+    return this.authService.checkEmailExist(email);
   }
 
   @ApiOperation({ summary: 'Sign In to get Access Token' })

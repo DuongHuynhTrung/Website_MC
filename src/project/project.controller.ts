@@ -54,13 +54,25 @@ export class ProjectController {
   })
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
-  createProject(
-    @Body() createProjectDto: CreateProjectDto,
-    @GetUser() business: User,
-  ): Promise<Project> {
-    return this.projectService.createProject(business, createProjectDto);
+  createProject(@Body() createProjectDto: CreateProjectDto): Promise<Project> {
+    return this.projectService.createProject(createProjectDto);
+  }
+
+  @ApiOperation({
+    summary: 'Get all projects For Admin',
+  })
+  @ApiOkResponse({
+    description: 'All projects have been retrieved',
+    type: [Project],
+  })
+  @Get('firstProject')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  getFistProjectsForAdmin(): Promise<Project[]> {
+    return this.projectService.getAllFirstProject();
   }
 
   @ApiOperation({
@@ -224,20 +236,20 @@ export class ProjectController {
     return this.projectService.statisticsProject();
   }
 
-  @ApiOperation({
-    summary: 'Admin Statistics Project',
-  })
-  @ApiOkResponse({
-    description: 'Number Projects follow Status have been retrieved',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
-  })
-  @UseGuards(RolesGuard)
-  @Roles(RoleEnum.ADMIN)
-  @UseGuards(JwtGuard)
-  @Get('admin/statisticsSpecializationField')
-  statisticsSpecializationField() {
-    return this.projectService.statisticsSpecializationField();
-  }
+  // @ApiOperation({
+  //   summary: 'Admin Statistics Project',
+  // })
+  // @ApiOkResponse({
+  //   description: 'Number Projects follow Status have been retrieved',
+  // })
+  // @ApiInternalServerErrorResponse({
+  //   description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
+  // })
+  // @UseGuards(RolesGuard)
+  // @Roles(RoleEnum.ADMIN)
+  // @UseGuards(JwtGuard)
+  // @Get('admin/statisticsSpecializationField')
+  // statisticsSpecializationField() {
+  //   return this.projectService.statisticsSpecializationField();
+  // }
 }

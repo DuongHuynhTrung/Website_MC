@@ -84,4 +84,13 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   link_web: string;
+
+  @ApiProperty({
+    description: 'Link Website of User',
+    example: 'Friendly',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  role_name: string;
 }
