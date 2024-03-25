@@ -183,7 +183,7 @@ export class AuthService {
       fullname: user.fullname,
       email: user.email,
       status: user.status,
-      role_name: user.role.role_name,
+      role_name: user.role_name,
       avatar_url: user.avatar_url,
       isNewUser: false,
     };

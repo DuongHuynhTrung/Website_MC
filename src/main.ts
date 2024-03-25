@@ -27,7 +27,7 @@ async function bootstrap() {
   const io = new Server(app.getHttpServer());
 
   // Set the maximum number of listeners for the 'connection' event
-  io.sockets.setMaxListeners(20); // Set your desired limit
+  io.setMaxListeners(20);
 
   await app.listen(5000);
   Logger.log(`Application listening on port 5000`);
