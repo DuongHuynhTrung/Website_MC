@@ -256,7 +256,7 @@ export class EmailService {
       fullname: updateUserStatus.fullname,
       email: updateUserStatus.email,
       status: updateUserStatus.status,
-      role_name: user.role.role_name,
+      role_name: user.role_name,
       avatar_url: user.avatar_url,
       isNewUser: false,
     };
