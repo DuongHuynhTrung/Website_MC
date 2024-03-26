@@ -51,22 +51,18 @@ export class AuthService {
           fullname: user.fullname,
           email: user.email,
           status: user.status,
-          role_name: user.role.role_name,
+          role_name: user.role_name,
           avatar_url: user.avatar_url,
           isNewUser: false,
         };
         const accessToken = this.jwtService.sign(payload);
         return { accessToken };
       } else {
-        const role = await this.roleRepository.findOneByOrFail({
-          role_name: 'Student',
-        });
         const user = this.userRepository.create({
           email: googlePayload.email,
           fullname: googlePayload.name,
           avatar_url: googlePayload.picture,
           status: true,
-          role: role,
         });
         if (!user) {
           throw new BadRequestException(
@@ -80,7 +76,7 @@ export class AuthService {
           fullname: user.fullname,
           email: user.email,
           status: user.status,
-          role_name: user.role.role_name,
+          role_name: user.role_name,
           avatar_url: user.avatar_url,
           isNewUser: true,
         };
