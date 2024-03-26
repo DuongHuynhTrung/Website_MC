@@ -30,6 +30,7 @@ export class ProjectService {
 
     private readonly socketGateway: SocketGateway,
   ) {}
+
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
     const responsiblePerson =
       await this.responsiblePersonService.getResponsiblePerson(
@@ -42,13 +43,8 @@ export class ProjectService {
     }
 
     const business = await this.userService.getUserByEmail(
-      createProjectDto.email_responsible_person,
+      createProjectDto.businessEmail,
     );
-    if (!business) {
-      throw new NotFoundException(
-        `Không tìm thấy doanh nghiệp với email ${createProjectDto.businessEmail}`,
-      );
-    }
 
     const project = this.projectRepository.create(createProjectDto);
     if (!project) {
@@ -65,7 +61,7 @@ export class ProjectService {
           'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
         );
       }
-      await await this.handleGetProjects();
+      await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(business);
       return result;
     } catch (error) {

@@ -89,6 +89,19 @@ export class ResponsiblePersonController {
     );
   }
 
+  @ApiOperation({ summary: 'Check Exist Responsible Person By Email' })
+  @ApiOkResponse({
+    description: 'The Responsible Person has been successfully retrieved.',
+    type: [ResponsiblePerson],
+  })
+  @ApiBadRequestResponse({
+    description: 'Could not find with ${searchEmail}',
+  })
+  @Get('check-responsible-person-exist/:email')
+  checkResponsiblePersonExist(@Param('email') email: string) {
+    return this.responsiblePersonService.checkResponsiblePersonExist(email);
+  }
+
   @ApiOperation({ summary: 'Get Responsible Person Info Of Business' })
   @ApiOkResponse({
     description: 'The Responsible Person has been successfully retrieved.',

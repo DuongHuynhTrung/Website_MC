@@ -56,6 +56,19 @@ export class ResponsiblePersonService {
     }
   }
 
+  async checkResponsiblePersonExist(email: string): Promise<ResponsiblePerson> {
+    try {
+      const responsiblePerson: ResponsiblePerson =
+        await this.responsiblePersonRepository.findOneBy({ email });
+      if (!responsiblePerson) {
+        return null;
+      }
+      return responsiblePerson;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
   async getResponsiblePersonOfBusiness(
     businessEmail: string,
   ): Promise<ResponsiblePerson> {
