@@ -95,11 +95,11 @@ export class CreateProjectDto {
 
   @ApiProperty({
     description: 'Project Start Date',
-    example: '2023-12-25 18:47:22.132523',
+    example: '2023-12-25',
     nullable: false,
   })
   @IsNotEmpty()
-  project_start_date: Date;
+  project_start_date: string;
 
   @ApiProperty({
     description: 'Is Extent',
@@ -115,7 +115,7 @@ export class CreateProjectDto {
     nullable: false,
   })
   @IsNotEmpty()
-  project_expected_end_date: Date;
+  project_expected_end_date: string;
 
   @ApiProperty({
     description: 'Project Expected Budget',

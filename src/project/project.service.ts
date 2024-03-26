@@ -252,7 +252,7 @@ export class ProjectService {
       project.project_status == ProjectStatusEnum.PUBLIC
     ) {
       project.project_status = projectStatus;
-      project.project_actual_start_date = new Date();
+      // project.project_actual_start_date = new Date();
       try {
         const result: Project = await this.projectRepository.save(project);
         console.log(result);
@@ -273,7 +273,7 @@ export class ProjectService {
       project.project_status == ProjectStatusEnum.PROCESSING
     ) {
       project.project_status = projectStatus;
-      project.project_actual_end_date = new Date();
+      // project.project_actual_end_date = new Date();
 
       try {
         const result: Project = await this.projectRepository.save(project);

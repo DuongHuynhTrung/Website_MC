@@ -96,7 +96,7 @@ export class Project {
     nullable: true,
   })
   @Column({ nullable: true })
-  project_start_date: Date;
+  project_start_date: string;
 
   @ApiProperty({
     description: 'Project Actual Start Date',
@@ -104,7 +104,7 @@ export class Project {
     nullable: true,
   })
   @Column({ nullable: true })
-  project_actual_start_date: Date;
+  project_actual_start_date: string;
 
   @ApiProperty({
     description: 'Is Extent',
@@ -120,7 +120,7 @@ export class Project {
     nullable: true,
   })
   @Column({ nullable: true })
-  project_expected_end_date: Date;
+  project_expected_end_date: string;
 
   @ApiProperty({
     description: 'Project Actual End Date',
@@ -128,7 +128,7 @@ export class Project {
     nullable: true,
   })
   @Column({ nullable: true })
-  project_actual_end_date: Date;
+  project_actual_end_date: string;
 
   @ApiProperty({
     description: 'Project Expected Budget',
