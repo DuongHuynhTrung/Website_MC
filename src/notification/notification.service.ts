@@ -1,4 +1,3 @@
-import { SocketGateway } from 'socket.gateway';
 import {
   BadGatewayException,
   Injectable,
@@ -11,6 +10,7 @@ import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class NotificationService {
@@ -19,8 +19,6 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
 
     private readonly userService: UserService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
   async createNotification(
     createNotificationDto: CreateNotificationDto,
@@ -170,7 +168,7 @@ export class NotificationService {
       notifications.sort(
         (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
       );
-      this.socketGateway.handleGetNotifications({
+      SocketGateway.handleGetNotifications({
         total_notifications: total_notifications,
         notifications: notifications,
         receiverEmail: user.email,

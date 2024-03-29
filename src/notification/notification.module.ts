@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Notification } from './entities/notification.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
-import { SocketGateway } from 'socket.gateway';
+
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { Role } from 'src/role/entities/role.entity';
@@ -20,7 +20,7 @@ import { RoleService } from 'src/role/role.service';
     RoleService,
     NotificationService,
     UserService,
-    SocketGateway,
+
     ResponsiblePersonService,
   ],
 })

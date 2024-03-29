@@ -44,8 +44,6 @@ export class RegisterPitchingService {
     private readonly userService: UserService,
 
     private readonly notificationService: NotificationService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
 
   async registerPitching(
@@ -453,7 +451,7 @@ export class RegisterPitchingService {
           relations: ['group', 'project', 'lecturer', 'project.business'],
         });
       if (registerPitchings.length === 0) {
-        this.socketGateway.handleGetAllRegisterPitching({
+        SocketGateway.handleGetAllRegisterPitching({
           registerPitchings: [],
           email: user.email,
         });
@@ -464,7 +462,7 @@ export class RegisterPitchingService {
             result.push(registerPitching);
           }
         });
-        this.socketGateway.handleGetAllRegisterPitching({
+        SocketGateway.handleGetAllRegisterPitching({
           registerPitchings: result,
           email: user.email,
         });
@@ -479,7 +477,7 @@ export class RegisterPitchingService {
             }
           });
         });
-        this.socketGateway.handleGetAllRegisterPitching({
+        SocketGateway.handleGetAllRegisterPitching({
           registerPitchings: result,
           email: user.email,
         });

@@ -23,11 +23,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  // Create a Socket.IO server instance
-  const io = new Server(app.getHttpServer());
-
-  // Set the maximum number of listeners for the 'connection' event
-  io.setMaxListeners(20);
+  new Server(app.getHttpServer());
 
   await app.listen(5000);
   Logger.log(`Application listening on port 5000`);

@@ -1,4 +1,5 @@
 import {
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -10,81 +11,108 @@ import { Server } from 'socket.io';
     origin: '*',
   },
 })
-export class SocketGateway {
-  @WebSocketServer() server: Server;
+export class SocketGateway implements OnGatewayInit {
+  private static server: Server;
+
+  @WebSocketServer() serverInstance: Server;
+
+  afterInit(server: Server) {
+    SocketGateway.setServerInstance(server);
+  }
+
+  static setServerInstance(server: Server) {
+    SocketGateway.server = server;
+  }
+
+  private static emitToServer(event: string, data: any) {
+    if (SocketGateway.server) {
+      SocketGateway.server.emit(event, data);
+    } else {
+      console.error('Socket server is not initialized!');
+    }
+  }
 
   @SubscribeMessage('reply-invite')
-  handleReplyInvite(data: any) {
-    this.server.emit('reply-invite', data);
+  static handleReplyInvite(data: any) {
+    SocketGateway.emitToServer('reply-invite', data);
   }
 
   @SubscribeMessage('getProjects')
-  handleGetProjects(data: any) {
-    this.server.emit('getProjects', data);
+  static handleGetProjects(data: any) {
+    SocketGateway.emitToServer('getProjects', data);
   }
 
   @SubscribeMessage('getProjectsOfBusiness')
-  handleGetProjectsOfBusiness(data: any) {
-    this.server.emit(`getProjectsOfBusiness-${data.emailBusiness}`, data);
+  static handleGetProjectsOfBusiness(data: any) {
+    SocketGateway.emitToServer(
+      `getProjectsOfBusiness-${data.emailBusiness}`,
+      data,
+    );
   }
 
   @SubscribeMessage('chooseGroup')
-  handleChooseGroup(data: any) {
-    this.server.emit('chooseGroup', data);
+  static handleChooseGroup(data: any) {
+    SocketGateway.emitToServer('chooseGroup', data);
   }
 
   @SubscribeMessage('getPhases')
-  handleGetPhases(data: any) {
-    this.server.emit(`getPhases-${data.projectId}`, data);
+  static handleGetPhases(data: any) {
+    SocketGateway.emitToServer(`getPhases-${data.projectId}`, data);
   }
 
   @SubscribeMessage('getCategories')
-  handleGetCategories(data: any) {
-    this.server.emit(`getCategories-${data.phaseId}`, data);
+  static handleGetCategories(data: any) {
+    SocketGateway.emitToServer(`getCategories-${data.phaseId}`, data);
   }
 
   @SubscribeMessage('changePhaseStatus')
-  handleChangePhaseStatus(data: any) {
-    this.server.emit('changePhaseStatus', data);
+  static handleChangePhaseStatus(data: any) {
+    SocketGateway.emitToServer('changePhaseStatus', data);
   }
 
   @SubscribeMessage('changeCategoryStatus')
-  handleChangeCategoryStatus(data: any) {
-    this.server.emit('changeCategoryStatus', data);
+  static handleChangeCategoryStatus(data: any) {
+    SocketGateway.emitToServer('changeCategoryStatus', data);
   }
 
   @SubscribeMessage('getNotifications')
-  handleGetNotifications(data: any) {
-    this.server.emit(`getNotifications-${data.receiverEmail}`, data);
+  static handleGetNotifications(data: any) {
+    SocketGateway.emitToServer(`getNotifications-${data.receiverEmail}`, data);
   }
 
   @SubscribeMessage('getSummaryReports')
-  handleGetSummaryReports(data: any) {
-    this.server.emit(`getSummaryReports-${data.projectId}`, data);
+  static handleGetSummaryReports(data: any) {
+    SocketGateway.emitToServer(`getSummaryReports-${data.projectId}`, data);
   }
 
   @SubscribeMessage('getAllUserChats')
-  handleGetAllUserChats(data: any) {
-    this.server.emit('getAllUserChats', data);
+  static handleGetAllUserChats(data: any) {
+    SocketGateway.emitToServer('getAllUserChats', data);
   }
 
   @SubscribeMessage('getAllMessage')
-  handleGetAllMessage(data: any) {
-    this.server.emit(`getAllMessage-${data.identifierUserChat}`, data);
+  static handleGetAllMessage(data: any) {
+    SocketGateway.emitToServer(
+      `getAllMessage-${data.identifierUserChat}`,
+      data,
+    );
   }
 
   @SubscribeMessage('getNewMessage')
-  handleGetNewMessage(data: any) {
-    this.server.emit(`getNewMessage-${data.userEmail}`, data);
+  static handleGetNewMessage(data: any) {
+    SocketGateway.emitToServer(`getNewMessage-${data.userEmail}`, data);
   }
 
   @SubscribeMessage('getAllNewMessage')
-  handleGetAllNewMessage(data: any) {
-    this.server.emit(`getAllNewMessage-${data.identifierUserChat}`, data);
+  static handleGetAllNewMessage(data: any) {
+    SocketGateway.emitToServer(
+      `getAllNewMessage-${data.identifierUserChat}`,
+      data,
+    );
   }
 
   @SubscribeMessage('getAllRegisterPitching')
-  handleGetAllRegisterPitching(data: any) {
-    this.server.emit(`getAllRegisterPitching-${data.email}`, data);
+  static handleGetAllRegisterPitching(data: any) {
+    SocketGateway.emitToServer(`getAllRegisterPitching-${data.email}`, data);
   }
 }

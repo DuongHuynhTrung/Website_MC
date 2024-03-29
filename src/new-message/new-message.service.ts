@@ -14,8 +14,6 @@ export class NewMessageService {
   constructor(
     @InjectRepository(NewMessage)
     private readonly newMessageRepository: Repository<NewMessage>,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
   async createNewMessage(
     identifierUserChat: string,
@@ -117,7 +115,7 @@ export class NewMessageService {
           'Có lỗi xảy ra khi cập nhật tin nhắn mới',
         );
       }
-      this.socketGateway.handleGetNewMessage({
+      SocketGateway.handleGetNewMessage({
         newMessage: newMessage,
         userEmail: user.email,
       });
@@ -139,7 +137,7 @@ export class NewMessageService {
           'Có lỗi xảy ra khi truy xuất tất cả tin nhắn mới',
         );
       }
-      this.socketGateway.handleGetAllNewMessage({
+      SocketGateway.handleGetAllNewMessage({
         newMessages: newMessages,
         identifierUserChat: identifierUserChat,
       });

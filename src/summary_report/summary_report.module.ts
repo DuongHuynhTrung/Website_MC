@@ -17,7 +17,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
-import { SocketGateway } from 'socket.gateway';
+
 import { Phase } from 'src/phase/entities/phase.entity';
 import { PhaseService } from 'src/phase/phase.service';
 import { Role } from 'src/role/entities/role.entity';
@@ -49,7 +49,7 @@ import { RoleService } from 'src/role/role.service';
     UserService,
     RegisterPitchingService,
     NotificationService,
-    SocketGateway,
+
     PhaseService,
   ],
 })

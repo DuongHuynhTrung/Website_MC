@@ -16,8 +16,6 @@ export class UserChatService {
   constructor(
     @InjectRepository(UserChat)
     private readonly userChatRepository: Repository<UserChat>,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
   async createUserChat(
     createUserChatDto: CreateUserChatDto,
@@ -98,7 +96,7 @@ export class UserChatService {
           'Có lỗi xảy ra khi truy xuất tất cả tin nhắn',
         );
       }
-      this.socketGateway.handleGetAllUserChats({
+      SocketGateway.handleGetAllUserChats({
         userChats: userChats,
       });
     } catch (error) {

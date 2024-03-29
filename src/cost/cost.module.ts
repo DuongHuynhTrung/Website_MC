@@ -19,7 +19,6 @@ import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
-import { SocketGateway } from 'socket.gateway';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { Role } from 'src/role/entities/role.entity';
@@ -54,7 +53,6 @@ import { RoleService } from 'src/role/role.service';
     GroupService,
     RegisterPitchingService,
     NotificationService,
-    SocketGateway,
   ],
 })
 export class CostModule {}

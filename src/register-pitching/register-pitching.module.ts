@@ -15,7 +15,7 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
-import { SocketGateway } from 'socket.gateway';
+
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 
@@ -42,7 +42,6 @@ import { RoleService } from 'src/role/role.service';
     ResponsiblePersonService,
     UserService,
     NotificationService,
-    SocketGateway,
   ],
 })
 export class RegisterPitchingModule {}

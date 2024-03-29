@@ -18,13 +18,12 @@ import { EvidenceModule } from './evidence/evidence.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { SummaryReportModule } from './summary_report/summary_report.module';
 import { NotificationModule } from './notification/notification.module';
-import { SocketGateway } from 'socket.gateway';
 import * as momentTimezone from 'moment-timezone';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MessageModule } from './message/message.module';
 import { UserChatModule } from './user-chat/user-chat.module';
 import { NewMessageModule } from './new-message/new-message.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SocketGateway } from 'socket.gateway';
 
 @Module({
   imports: [
@@ -66,9 +65,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         },
       }),
       inject: [ConfigService],
-    }),
-    EventEmitterModule.forRoot({
-      maxListeners: 20,
     }),
     AuthModule,
     UserModule,

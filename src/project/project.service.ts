@@ -13,8 +13,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import { GroupService } from 'src/group/group.service';
-import { SocketGateway } from 'socket.gateway';
+
 import { UserService } from 'src/user/user.service';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class ProjectService {
@@ -27,8 +28,6 @@ export class ProjectService {
     private readonly userService: UserService,
 
     private readonly groupService: GroupService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
@@ -363,20 +362,21 @@ export class ProjectService {
         relations: ['business', 'responsible_person'],
       });
       if (!projects || projects.length === 0) {
-        this.socketGateway.handleGetProjects({
+        SocketGateway.handleGetProjects({
           totalProjects: 0,
           projects: [],
         });
+      } else {
+        projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        projects = projects.filter(
+          (project) => project.project_status == ProjectStatusEnum.PUBLIC,
+        );
+        const totalProjects = projects.length;
+        SocketGateway.handleGetProjects({
+          totalProjects: totalProjects,
+          projects: projects,
+        });
       }
-      projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      projects = projects.filter(
-        (project) => project.project_status == ProjectStatusEnum.PUBLIC,
-      );
-      const totalProjects = projects.length;
-      this.socketGateway.handleGetProjects({
-        totalProjects: totalProjects,
-        projects: projects,
-      });
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -391,18 +391,19 @@ export class ProjectService {
         (project) => project.business?.id === business.id,
       );
       if (!projects || projects.length === 0) {
-        this.socketGateway.handleGetProjectsOfBusiness({
+        SocketGateway.handleGetProjectsOfBusiness({
           totalProjects: 0,
           projects: [],
           emailBusiness: business.email,
         });
+      } else {
+        const totalProjects: number = projects.length;
+        SocketGateway.handleGetProjectsOfBusiness({
+          totalProjects: totalProjects,
+          projects: projects,
+          emailBusiness: business.email,
+        });
       }
-      const totalProjects: number = projects.length;
-      this.socketGateway.handleGetProjectsOfBusiness({
-        totalProjects: totalProjects,
-        projects: projects,
-        emailBusiness: business.email,
-      });
     } catch (error) {
       throw new InternalServerErrorException(
         'Something went wrong when trying to retrieve projects of business',

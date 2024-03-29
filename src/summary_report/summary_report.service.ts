@@ -22,10 +22,11 @@ import { RegisterPitchingService } from 'src/register-pitching/register-pitching
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { ConfirmSummaryReportDto } from './dto/confirm-summary_report.dto';
-import { SocketGateway } from 'socket.gateway';
+
 import { ProjectTypeEnum } from 'src/project/enum/project-type.enum';
 import { PhaseService } from 'src/phase/phase.service';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
+import { SocketGateway } from 'socket.gateway';
 
 @Injectable()
 export class SummaryReportService {
@@ -42,8 +43,6 @@ export class SummaryReportService {
     private readonly groupService: GroupService,
 
     private readonly phaseService: PhaseService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createSummaryReport(
@@ -329,7 +328,7 @@ export class SummaryReportService {
           `Không tìm thấy báo cáo tổng hợp với mã số dự án ${projectId}`,
         );
       }
-      this.socketGateway.handleGetSummaryReports({
+      SocketGateway.handleGetSummaryReports({
         summaryReport: summaryReport,
         projectId: projectId,
       });

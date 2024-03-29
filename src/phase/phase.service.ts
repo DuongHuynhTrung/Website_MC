@@ -50,8 +50,6 @@ export class PhaseService {
     private readonly notificationService: NotificationService,
 
     private readonly userService: UserService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createPhase(
@@ -315,7 +313,7 @@ export class PhaseService {
     phase.phase_status = phaseStatus;
     try {
       const result: Phase = await this.phaseRepository.save(phase);
-      this.socketGateway.handleChangePhaseStatus({
+      SocketGateway.handleChangePhaseStatus({
         phase: result,
       });
       return await this.getPhaseById(result.id);
@@ -516,22 +514,23 @@ export class PhaseService {
         relations: ['project'],
       });
       if (phases.length === 0) {
-        this.socketGateway.handleGetPhases({
+        SocketGateway.handleGetPhases({
           totalPhases: 0,
           phases: [],
           projectId: projectId,
         });
+      } else {
+        const result = phases.filter((phase) => phase.project.id == projectId);
+        const totalPhases: number = result.length;
+        result.sort(
+          (phase1, phase2) => phase1.phase_number - phase2.phase_number,
+        );
+        SocketGateway.handleGetPhases({
+          totalPhases: totalPhases,
+          phases: result,
+          projectId: projectId,
+        });
       }
-      const result = phases.filter((phase) => phase.project.id == projectId);
-      const totalPhases: number = result.length;
-      result.sort(
-        (phase1, phase2) => phase1.phase_number - phase2.phase_number,
-      );
-      this.socketGateway.handleGetPhases({
-        totalPhases: totalPhases,
-        phases: result,
-        projectId: projectId,
-      });
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi truy xuất tất cả giai đoạn của project',

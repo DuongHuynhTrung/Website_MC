@@ -30,8 +30,6 @@ export class CategoryService {
     private readonly phaseService: PhaseService,
 
     private readonly userGroupService: UserGroupService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
 
   async createCategory(
@@ -194,7 +192,7 @@ export class CategoryService {
     category.category_status = categoryStatus;
     try {
       const result: Category = await this.categoryRepository.save(category);
-      this.socketGateway.handleChangeCategoryStatus({
+      SocketGateway.handleChangeCategoryStatus({
         category: result,
       });
       return await this.getCategoryById(result.id);
@@ -262,21 +260,22 @@ export class CategoryService {
         relations: ['phase'],
       });
       if (categories.length === 0) {
-        this.socketGateway.handleGetCategories({
+        SocketGateway.handleGetCategories({
           totalCategories: 0,
           categories: [],
           phaseId: phaseId,
         });
+      } else {
+        const result: Category[] = categories.filter(
+          (category) => category.phase.id == phaseId,
+        );
+        const totalCategories: number = result.length;
+        SocketGateway.handleGetCategories({
+          totalCategories: totalCategories,
+          categories: result,
+          phaseId: phaseId,
+        });
       }
-      const result: Category[] = categories.filter(
-        (category) => category.phase.id == phaseId,
-      );
-      const totalCategories: number = result.length;
-      this.socketGateway.handleGetCategories({
-        totalCategories: totalCategories,
-        categories: result,
-        phaseId: phaseId,
-      });
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi truy xuất tất cả hạng mục của giai đoạn',

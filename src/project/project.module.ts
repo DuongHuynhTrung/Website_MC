@@ -12,7 +12,7 @@ import { Group } from 'src/group/entities/group.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
-import { SocketGateway } from 'socket.gateway';
+
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 
@@ -36,7 +36,6 @@ import { RoleService } from 'src/role/role.service';
     ResponsiblePersonService,
     GroupService,
     UserGroupService,
-    SocketGateway,
   ],
 })
 export class ProjectModule {}

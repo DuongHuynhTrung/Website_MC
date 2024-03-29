@@ -19,8 +19,6 @@ export class MessageService {
     private readonly messageRepository: Repository<Message>,
 
     private readonly groupService: GroupService,
-
-    private readonly socketGateway: SocketGateway,
   ) {}
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
     const group: Group = await this.groupService.getGroupByGroupId(
@@ -74,7 +72,7 @@ export class MessageService {
           'Có lỗi xảy ra khi truy xuất tất cả tin nhắn',
         );
       }
-      this.socketGateway.handleGetAllMessage({
+      SocketGateway.handleGetAllMessage({
         messages: messages,
         identifierUserChat: identifierUserChat,
       });
