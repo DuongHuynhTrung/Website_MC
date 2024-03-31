@@ -24,15 +24,30 @@ export class ResponsiblePersonService {
   async createResponsiblePerson(
     createResponsiblePersonDto: CreateResponsiblePersonDto,
   ): Promise<ResponsiblePerson> {
+    const checkExist = await this.responsiblePersonRepository.findOne({
+      where: { email: createResponsiblePersonDto.email },
+    });
+    if (checkExist) {
+      throw new BadRequestException(
+        `Người phụ trách với email ${createResponsiblePersonDto.email} đã tồn tại`,
+      );
+    }
+    const checkExistPhone = await this.responsiblePersonRepository.findOne({
+      where: { phone_number: createResponsiblePersonDto.phone_number },
+    });
+    if (checkExistPhone) {
+      throw new BadRequestException(
+        `Người phụ trách với số điện thoại ${createResponsiblePersonDto.phone_number} đã tồn tại`,
+      );
+    }
     const responsiblePerson = this.responsiblePersonRepository.create(
       createResponsiblePersonDto,
     );
     if (!responsiblePerson) {
       throw new BadRequestException(
-        'Có lỗi khi tạo Người chịu trách nhiệm. Vui lòng kiểm tra lại thông tin!',
+        'Có lỗi khi tạo Người phụ trách. Vui lòng kiểm tra lại thông tin!',
       );
     }
-    console.log(createResponsiblePersonDto);
     const business = await this.userRepository.findOne({
       where: { email: createResponsiblePersonDto.businessEmail },
     });
@@ -47,7 +62,7 @@ export class ResponsiblePersonService {
         await this.responsiblePersonRepository.save(responsiblePerson);
       if (!result) {
         throw new InternalServerErrorException(
-          'Có lỗi khi tạo Người chịu trách nhiệm. Vui lòng kiểm tra lại thông tin!',
+          'Có lỗi khi tạo Người phụ trách. Vui lòng kiểm tra lại thông tin!',
         );
       }
       return result;
@@ -104,7 +119,7 @@ export class ResponsiblePersonService {
       const responsiblePerson =
         await this.responsiblePersonRepository.findOneBy({ email });
       if (!responsiblePerson) {
-        throw new NotFoundException('Không tìm thấy Người chịu trách nhiệm!');
+        throw new NotFoundException('Không tìm thấy Người phụ trách!');
       }
       return responsiblePerson;
     } catch (error) {
@@ -134,7 +149,7 @@ export class ResponsiblePersonService {
       });
       if (!responsiblePerson || responsiblePerson.length === 0) {
         throw new NotFoundException(
-          `Không tìm thấy Người chịu trách nhiệm với tìm kiếm: ${searchEmail}`,
+          `Không tìm thấy Người phụ trách với tìm kiếm: ${searchEmail}`,
         );
       }
       return responsiblePerson;
@@ -158,7 +173,7 @@ export class ResponsiblePersonService {
         );
       if (!updatedResponsiblePerson) {
         throw new InternalServerErrorException(
-          'Có lỗi xảy ra khi cập nhật thông tin của người chịu trách nhiệm',
+          'Có lỗi xảy ra khi cập nhật thông tin của Người phụ trách',
         );
       }
       return await this.getResponsiblePersonByEmail(responsiblePerson.email);

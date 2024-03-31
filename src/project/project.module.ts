@@ -15,6 +15,9 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { EmailService } from 'src/email/email.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { RoleService } from 'src/role/role.service';
     ResponsiblePersonService,
     GroupService,
     UserGroupService,
+    EmailService,
+    JwtService,
+    ConfigService,
   ],
 })
 export class ProjectModule {}

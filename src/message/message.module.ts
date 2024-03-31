@@ -20,6 +20,9 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { EmailService } from 'src/email/email.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -46,6 +49,9 @@ import { RoleService } from 'src/role/role.service';
     ProjectService,
     NotificationService,
     ResponsiblePersonService,
+    EmailService,
+    JwtService,
+    ConfigService,
   ],
 })
 export class MessageModule {}

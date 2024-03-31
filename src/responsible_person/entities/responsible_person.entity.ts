@@ -55,20 +55,12 @@ export class ResponsiblePerson {
   phone_number: string;
 
   @ApiProperty({
-    description: 'Zalo of Responsible Person Information',
+    description: 'Other Contact of Responsible Person Information',
     example: 'Abc',
     nullable: true,
   })
   @Column({ nullable: true })
-  zalo: string;
-
-  @ApiProperty({
-    description: 'Facebook of Responsible Person Information',
-    example: 'Abc',
-    nullable: true,
-  })
-  @Column({ nullable: true })
-  facebook: string;
+  other_contact: string;
 
   @CreateDateColumn()
   createdAt: Date;

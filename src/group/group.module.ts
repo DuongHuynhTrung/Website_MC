@@ -18,6 +18,9 @@ import { Notification } from 'src/notification/entities/notification.entity';
 
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { EmailService } from 'src/email/email.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { RoleService } from 'src/role/role.service';
     GroupService,
     ResponsiblePersonService,
     NotificationService,
+    EmailService,
+    JwtService,
+    ConfigService,
   ],
 })
 export class GroupModule {}

@@ -13,9 +13,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import { GroupService } from 'src/group/group.service';
-
-import { UserService } from 'src/user/user.service';
 import { SocketGateway } from 'socket.gateway';
+import moment from 'moment';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { MyFunctions } from 'src/utils/MyFunctions';
+import { EmailService } from 'src/email/email.service';
+import { RoleEnum } from 'src/role/enum/role.enum';
+import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class ProjectService {
@@ -23,11 +27,17 @@ export class ProjectService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
 
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+
     private readonly responsiblePersonService: ResponsiblePersonService,
 
-    private readonly userService: UserService,
-
     private readonly groupService: GroupService,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
@@ -41,10 +51,42 @@ export class ProjectService {
       );
     }
 
-    const business = await this.userService.getUserByEmail(
-      createProjectDto.businessEmail,
-    );
-
+    let business = await this.userRepository.findOne({
+      where: {
+        email: createProjectDto.businessEmail,
+      },
+    });
+    if (!business) {
+      const passwordGenerated = await MyFunctions.generatePassword(12);
+      const role = await this.roleRepository.findOneBy({
+        role_name: RoleEnum.BUSINESS,
+      });
+      business = this.userRepository.create({
+        fullname: createProjectDto.businessName,
+        email: createProjectDto.businessEmail,
+        password: passwordGenerated.passwordEncoded,
+        status: true,
+        isConfirmByAdmin: false,
+        role: role,
+        role_name: RoleEnum.BUSINESS,
+      });
+      const result = await this.userRepository.save(business);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi tạo doanh nghiệp mới',
+        );
+      }
+      await this.emailService.provideAccount(
+        business.email,
+        business.fullname,
+        passwordGenerated.password,
+      );
+    }
+    if (business.role_name != RoleEnum.BUSINESS) {
+      throw new BadRequestException(
+        `Email đã tồn tại trong hệ thống với vai trò không phải doanh nghiệp. Vui lòng liên hệ với Admin để giải quyết`,
+      );
+    }
     const project = this.projectRepository.create(createProjectDto);
     if (!project) {
       throw new BadRequestException(
@@ -112,15 +154,26 @@ export class ProjectService {
   async getProjects(): Promise<[{ totalProjects: number }, Project[]]> {
     try {
       let projects = await this.projectRepository.find({
+        where: {
+          project_status: ProjectStatusEnum.PUBLIC,
+          is_first_project: false,
+        },
         relations: ['business', 'responsible_person'],
       });
       if (!projects || projects.length === 0) {
         return [{ totalProjects: 0 }, []];
       }
       projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      projects = projects.filter(
-        (project) => project.project_status == ProjectStatusEnum.PUBLIC,
-      );
+      projects = projects.filter((project) => {
+        const parts = this.extractProjectDates(
+          project.project_implement_time,
+        ).project_expected_end_date.split('/');
+        const month = parseInt(parts[0], 10);
+        const year = parseInt(parts[1], 10);
+        const currentDate = new Date();
+        const projectImplementTime = new Date(year, month - 1);
+        if (currentDate <= projectImplementTime) return project;
+      });
       const totalProjects = projects.length;
       await this.handleGetProjects();
       return [{ totalProjects }, projects];
@@ -184,25 +237,14 @@ export class ProjectService {
     }
 
     try {
-      project.name_project = updateProjectDto.name_project;
-      project.business_type = updateProjectDto.business_type;
-      project.purpose = updateProjectDto.purpose;
-      project.target_object = updateProjectDto.target_object;
-      project.note = updateProjectDto.note;
-      project.document_related_link = updateProjectDto?.document_related_link;
-      project.request = updateProjectDto?.request;
-      project.project_implement_time = updateProjectDto.project_implement_time;
-      project.project_start_date = updateProjectDto.project_start_date;
-      project.is_extent = updateProjectDto?.is_extent;
-      project.project_expected_end_date =
-        updateProjectDto.project_expected_end_date;
-      project.expected_budget = updateProjectDto.expected_budget;
-      project.is_first_project = updateProjectDto?.is_first_project;
-      project.responsible_person = responsiblePerson;
-      if (project.project_status == ProjectStatusEnum.PENDING) {
-        project.project_status = ProjectStatusEnum.PUBLIC;
-      }
+      Object.assign(project, updateProjectDto, {
+        responsible_person: responsiblePerson,
+      });
+      project.project_status = ProjectStatusEnum.PENDING
+        ? ProjectStatusEnum.PUBLIC
+        : project.project_status;
       await this.projectRepository.save(project);
+
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(project.business);
       return await this.getProjectById(id);
@@ -218,11 +260,28 @@ export class ProjectService {
         'Chỉ dự án đang chờ phê duyệt mới có thể phê duyệt',
       );
     }
+    if (project.is_first_project) {
+      project.is_first_project = false;
+      try {
+        const business = await this.userRepository.findOne({
+          where: { email: project.business.email },
+        });
+        business.isConfirmByAdmin = true;
+        const result: User = await this.userRepository.save(business);
+        if (!result) {
+          throw new InternalServerErrorException(
+            'Có lỗi khi phê duyệt doanh nghiệp',
+          );
+        }
+      } catch (error) {
+        throw new InternalServerErrorException(error.message);
+      }
+    }
     project.project_status = ProjectStatusEnum.PUBLIC;
     try {
       const result: Project = await this.projectRepository.save(project);
       if (!result) {
-        throw new InternalServerErrorException('Có lỗi khi công bố dự án');
+        throw new InternalServerErrorException('Có lỗi khi phê duyệt dự án');
       }
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(project.business);
@@ -245,16 +304,19 @@ export class ProjectService {
     ) {
       throw new BadRequestException('Trạng thái của dự án không hợp lệ');
     }
+    if (project.is_first_project) {
+      throw new BadRequestException('Dự án chưa được phê duyệt bởi admin');
+    }
     //Business Update Project Status To Processing------------------------------------
     if (
       projectStatus === ProjectStatusEnum.PROCESSING &&
       project.project_status == ProjectStatusEnum.PUBLIC
     ) {
       project.project_status = projectStatus;
-      // project.project_actual_start_date = new Date();
+      const currentDate: string = moment().format('DD/MM/YYYY');
+      project.project_actual_start_date = currentDate;
       try {
         const result: Project = await this.projectRepository.save(project);
-        console.log(result);
         await this.handleGetProjects();
         await this.handleGetProjectsOfBusiness(project.business);
         return await this.getProjectById(result.id);
@@ -272,8 +334,8 @@ export class ProjectService {
       project.project_status == ProjectStatusEnum.PROCESSING
     ) {
       project.project_status = projectStatus;
-      // project.project_actual_end_date = new Date();
-
+      const currentDate: string = moment().format('DD/MM/YYYY');
+      project.project_actual_end_date = currentDate;
       try {
         const result: Project = await this.projectRepository.save(project);
         await this.groupService.changeGroupStatusToFree(groupId);
@@ -328,34 +390,6 @@ export class ProjectService {
     }
   }
 
-  // async statisticsSpecializationField(): Promise<
-  //   {
-  //     key: string;
-  //     value: number;
-  //   }[]
-  // > {
-  //   try {
-  //     const dataProject: Project[] = await this.projectRepository.find();
-
-  //     const tmpCountData: { [key: string]: number } = {};
-
-  //     dataProject.forEach((projects: Project) => {
-  //       const specializationField = projects.specialized_field;
-  //       tmpCountData[specializationField] =
-  //         (tmpCountData[specializationField] || 0) + 1;
-  //     });
-
-  //     const result: { key: string; value: number }[] = Object.keys(
-  //       tmpCountData,
-  //     ).map((key) => ({ key, value: tmpCountData[key] }));
-  //     return result;
-  //   } catch {
-  //     throw new InternalServerErrorException(
-  //       'Có lỗi xảy ra khi thống kê dự án',
-  //     );
-  //   }
-  // }
-
   async handleGetProjects(): Promise<void> {
     try {
       let projects = await this.projectRepository.find({
@@ -408,6 +442,69 @@ export class ProjectService {
       throw new InternalServerErrorException(
         'Something went wrong when trying to retrieve projects of business',
       );
+    }
+  }
+
+  extractProjectDates = (inputString: string): any | null => {
+    const regex = /Từ (\d{1,2}\/\d{4}) tới (\d{1,2}\/\d{4})/;
+    const match = inputString.match(regex);
+
+    if (match) {
+      const [, startDate, endDate] = match;
+      return {
+        project_start_date: startDate,
+        project_expected_end_date: endDate,
+      };
+    } else {
+      return null;
+    }
+  };
+
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  async handleExpectedEndDate() {
+    const projects = await this.projectRepository.find({
+      where: { is_extent: true },
+    });
+    if (projects.length > 0) {
+      projects.forEach(async (project) => {
+        const parts = this.extractProjectDates(
+          project.project_implement_time,
+        ).project_expected_end_date.split('/');
+        const month = parseInt(parts[0], 10);
+        const year = parseInt(parts[1], 10);
+        const currentDate = new Date();
+        const projectImplementTime = new Date(year, month - 1);
+        if (currentDate >= projectImplementTime) {
+          switch (month) {
+            case 4: {
+              project.project_implement_time = `Học kì Hè ${year} (Từ 5/${year} tới 8/${year})`;
+              project.project_start_date = `5/${year}`;
+              project.project_expected_end_date = `8/${year}`;
+              project.is_extent = false;
+              await this.projectRepository.save(project);
+              break;
+            }
+            case 8: {
+              project.project_implement_time = `Học kì Thu ${year} (Từ 9/${year} tới 12/${year})`;
+              project.project_start_date = `9/${year}`;
+              project.project_expected_end_date = `12/${year}`;
+              project.is_extent = false;
+              await this.projectRepository.save(project);
+              break;
+            }
+            case 12: {
+              project.project_implement_time = `Học kì Xuân ${year + 1} (Từ 1/${
+                year + 1
+              } tới 4/${year + 1})`;
+              project.project_start_date = `1/${year + 1}`;
+              project.project_expected_end_date = `4/${year + 1}`;
+              project.is_extent = false;
+              await this.projectRepository.save(project);
+              break;
+            }
+          }
+        }
+      });
     }
   }
 }

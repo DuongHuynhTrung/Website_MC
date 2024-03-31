@@ -21,6 +21,9 @@ import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { EmailService } from 'src/email/email.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -49,6 +52,9 @@ import { RoleService } from 'src/role/role.service';
     GroupService,
     RegisterPitchingService,
     NotificationService,
+    EmailService,
+    JwtService,
+    ConfigService,
   ],
 })
 export class CategoryModule {}

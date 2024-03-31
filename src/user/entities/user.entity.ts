@@ -140,10 +140,10 @@ export class User {
 
   @ApiProperty({
     description: 'Is Confirm By Admin',
-    example: false,
-    nullable: true,
+    example: true,
+    nullable: false,
   })
-  @Column({ default: false })
+  @Column({ nullable: false, default: true })
   isConfirmByAdmin: boolean;
 
   @CreateDateColumn()

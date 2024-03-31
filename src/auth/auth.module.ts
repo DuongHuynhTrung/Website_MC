@@ -10,6 +10,7 @@ import { Role } from 'src/role/entities/role.entity';
 import { UserService } from 'src/user/user.service';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [
@@ -27,6 +28,12 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UserService, ResponsiblePersonService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    UserService,
+    ResponsiblePersonService,
+    EmailService,
+  ],
 })
 export class AuthModule {}

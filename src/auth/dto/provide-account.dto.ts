@@ -4,6 +4,15 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 
 export class ProvideAccountDto {
   @ApiProperty({
+    description: 'Full Name of User',
+    example: 'Abc',
+    nullable: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  fullname: string;
+
+  @ApiProperty({
     description: 'Email of User',
     example: 'trungduong22021619@gmail.com',
     nullable: false,
@@ -11,15 +20,6 @@ export class ProvideAccountDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @ApiProperty({
-    description: 'Password of User',
-    example: 'Dht123!@#',
-    nullable: false,
-  })
-  @IsString()
-  @IsNotEmpty()
-  password: string;
 
   @ApiProperty({
     description: 'Role Name of Account',

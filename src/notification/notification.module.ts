@@ -20,7 +20,6 @@ import { RoleService } from 'src/role/role.service';
     RoleService,
     NotificationService,
     UserService,
-
     ResponsiblePersonService,
   ],
 })

@@ -53,7 +53,7 @@ export class UserService {
       if (!user) {
         throw new Error(`Người dùng với email ${email} không tồn tại`);
       }
-      if (user.role.role_name == RoleEnum.BUSINESS) {
+      if (user.role_name == RoleEnum.BUSINESS) {
         const responsiblePersons = await this.responsiblePersonRepository.find({
           relations: ['business'],
         });
@@ -133,6 +133,9 @@ export class UserService {
       const role = await this.roleRepository.findOne({
         where: { role_name: updateProfileDto.role_name },
       });
+      if (updateProfileDto.role_name == RoleEnum.BUSINESS) {
+        user.isConfirmByAdmin = false;
+      }
       user.role = role;
       await this.userRepository.save(user);
       return await this.getUserByEmail(user.email);
@@ -156,7 +159,7 @@ export class UserService {
       };
 
       users.forEach((user: User) => {
-        const role_name = user.role.role_name;
+        const role_name = user.role_name;
         tmpCountData[role_name] = tmpCountData[role_name] + 1;
       });
 

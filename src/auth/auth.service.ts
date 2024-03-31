@@ -22,6 +22,8 @@ import { ProvideAccountDto } from './dto/provide-account.dto';
 import { UpRoleAccountDto } from './dto/upRole-account.dto';
 import { UserService } from 'src/user/user.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { EmailService } from 'src/email/email.service';
+import { MyFunctions } from 'src/utils/MyFunctions';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +37,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
 
     private readonly userService: UserService,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
@@ -58,30 +62,61 @@ export class AuthService {
         const accessToken = this.jwtService.sign(payload);
         return { accessToken };
       } else {
-        const user = this.userRepository.create({
-          email: googlePayload.email,
-          fullname: googlePayload.name,
-          avatar_url: googlePayload.picture,
-          status: true,
-        });
-        if (!user) {
-          throw new BadRequestException(
-            'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
-          );
+        if (googlePayload.email.endsWith('@fe.edu.vn')) {
+          const role = await this.roleRepository.findOneBy({
+            role_name: RoleEnum.LECTURER,
+          });
+          const user = this.userRepository.create({
+            email: googlePayload.email,
+            fullname: googlePayload.name,
+            avatar_url: googlePayload.picture,
+            role: role,
+            role_name: RoleEnum.LECTURER,
+            status: true,
+          });
+          if (!user) {
+            throw new BadRequestException(
+              'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+            );
+          }
+          await this.userRepository.save(user);
+
+          const payload: PayloadJwtDto = {
+            fullname: user.fullname,
+            email: user.email,
+            status: user.status,
+            role_name: user.role_name,
+            avatar_url: user.avatar_url,
+            isNewUser: true,
+          };
+          const accessToken = this.jwtService.sign(payload);
+          return { accessToken };
+        } else {
+          const user = this.userRepository.create({
+            email: googlePayload.email,
+            fullname: googlePayload.name,
+            avatar_url: googlePayload.picture,
+            status: true,
+          });
+          if (!user) {
+            throw new BadRequestException(
+              'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+            );
+          }
+
+          await this.userRepository.save(user);
+
+          const payload: PayloadJwtDto = {
+            fullname: user.fullname,
+            email: user.email,
+            status: user.status,
+            role_name: user.role_name,
+            avatar_url: user.avatar_url,
+            isNewUser: true,
+          };
+          const accessToken = this.jwtService.sign(payload);
+          return { accessToken };
         }
-
-        await this.userRepository.save(user);
-
-        const payload: PayloadJwtDto = {
-          fullname: user.fullname,
-          email: user.email,
-          status: user.status,
-          role_name: user.role_name,
-          avatar_url: user.avatar_url,
-          isNewUser: true,
-        };
-        const accessToken = this.jwtService.sign(payload);
-        return { accessToken };
       }
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -112,8 +147,12 @@ export class AuthService {
       );
     }
     user.status = false;
-    // const role = await this.roleRepository.findOneByOrFail({ id: 2 });
-    // user.role = role;
+    if (user.email.endsWith('@fe.edu.vn')) {
+      const role = await this.roleRepository.findOneByOrFail({
+        role_name: RoleEnum.LECTURER,
+      });
+      user.role = role;
+    }
     try {
       const salt = await bcrypt.genSalt();
       user.password = await bcrypt.hash(signUpDto.password, salt);
@@ -146,6 +185,7 @@ export class AuthService {
 
   async signIn(signInDto: SignInDto): Promise<{ accessToken: string }> {
     let user: User = null;
+    console.log('Here');
     try {
       user = await this.userRepository.findOne({
         where: { email: signInDto.email },
@@ -159,11 +199,11 @@ export class AuthService {
         `Người dùng với email ${signInDto.email} không tồn tại!`,
       );
     }
-    // if (!user.status) {
-    //   throw new BadRequestException(
-    //     `Tài khoản của người dùng đang ở trạng thái không hoạt động!`,
-    //   );
-    // }
+    if (!user.isConfirmByAdmin) {
+      throw new BadRequestException(
+        `Tài khoản của bạn chưa được admin xét duyệt!`,
+      );
+    }
     try {
       const checkPassword = await bcrypt.compare(
         signInDto.password,
@@ -274,13 +314,16 @@ export class AuthService {
       );
     }
     user.status = true;
+    user.isConfirmByAdmin = true;
+    user.role_name = provideAccountDto.roleName;
     const role = await this.roleRepository.findOneByOrFail({
       role_name: provideAccountDto.roleName,
     });
     user.role = role;
+    user.fullname = provideAccountDto.fullname;
     try {
-      const salt = await bcrypt.genSalt();
-      user.password = await bcrypt.hash(provideAccountDto.password, salt);
+      const passwordGenerated = await MyFunctions.generatePassword(12);
+      user.password = passwordGenerated.passwordEncoded;
 
       const result: User = await this.userRepository.save(user);
       if (!result) {
@@ -288,6 +331,11 @@ export class AuthService {
           'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
         );
       }
+      await this.emailService.provideAccount(
+        provideAccountDto.email,
+        provideAccountDto.fullname,
+        passwordGenerated.password,
+      );
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);

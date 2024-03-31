@@ -30,11 +30,18 @@ import { JwtGuard } from './jwt.guard';
 import { RolesGuard } from './role.guard';
 import { Roles } from './role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { EmailService } from 'src/email/email.service';
+import { ForgotPasswordOtpDto } from 'src/email/dto/forgot-password-otp.dto';
+import { VerifyOtpDto } from 'src/email/dto/verify-otp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+
+    private readonly emailService: EmailService,
+  ) {}
 
   @ApiOperation({ summary: 'Sign In with Google to get Access Token' })
   @ApiOkResponse({
@@ -193,5 +200,41 @@ export class AuthController {
     @GetUser() user: User,
   ): Promise<string> {
     return this.authService.changePassword(changePasswordDto, user);
+  }
+
+  @ApiOperation({ summary: 'Forgot Password' })
+  @ApiOkResponse({
+    description: 'Forgot Password',
+  })
+  @ApiNotFoundResponse({
+    description: 'Người dùng không tồn tại.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Tài khoản đã bị khóa hoặc chưa kích hoạt.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Post('forgot-password')
+  forgotPassword(@Body() forgotPasswordOtpDto: ForgotPasswordOtpDto) {
+    return this.emailService.forgotPassword(forgotPasswordOtpDto);
+  }
+
+  @ApiOperation({ summary: 'Reset Password' })
+  @ApiOkResponse({
+    description: 'Reset Password',
+  })
+  @ApiNotFoundResponse({
+    description: 'Người dùng không tồn tại.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Tài khoản đã bị khóa hoặc chưa kích hoạt.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Post('reset-password')
+  resetPassword(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.emailService.resetPassword(verifyOtpDto);
   }
 }

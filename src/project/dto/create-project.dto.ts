@@ -9,6 +9,15 @@ import {
 
 export class CreateProjectDto {
   @ApiProperty({
+    description: 'Name of Business',
+    example: 'Acb',
+    nullable: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  businessName: string;
+
+  @ApiProperty({
     description: 'Email of Business',
     example: 'Acb',
     nullable: false,

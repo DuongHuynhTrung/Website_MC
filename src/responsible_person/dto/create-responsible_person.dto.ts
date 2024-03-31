@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateResponsiblePersonDto {
   @ApiProperty({
@@ -38,20 +38,12 @@ export class CreateResponsiblePersonDto {
   phone_number: string;
 
   @ApiProperty({
-    description: 'Zalo of Responsible Person Information',
+    description: 'Other Contact of Responsible Person Information',
     example: 'Abc',
     nullable: true,
   })
-  @IsNotEmpty()
-  zalo: string;
-
-  @ApiProperty({
-    description: 'Facebook of Responsible Person Information',
-    example: 'Abc',
-    nullable: true,
-  })
-  @IsNotEmpty()
-  facebook: string;
+  @IsOptional()
+  other_contact: string;
 
   @ApiProperty({
     description: 'Business Email',

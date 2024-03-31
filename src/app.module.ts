@@ -24,6 +24,7 @@ import { MessageModule } from './message/message.module';
 import { UserChatModule } from './user-chat/user-chat.module';
 import { NewMessageModule } from './new-message/new-message.module';
 import { SocketGateway } from 'socket.gateway';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { SocketGateway } from 'socket.gateway';
     MessageModule,
     UserChatModule,
     NewMessageModule,
+    SupportModule,
     // MessageModule,
   ],
   providers: [SocketGateway],
