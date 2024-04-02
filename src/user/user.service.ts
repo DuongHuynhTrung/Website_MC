@@ -180,10 +180,8 @@ export class UserService {
     { key: string; value: number }[]
   > {
     try {
-      const users: User[] = await this.userRepository.find({
-        relations: ['role'],
-      });
-      if (!users || users.length === 0) {
+      const users: User[] = await this.userRepository.find();
+      if (!users || users.length == 0) {
         return null;
       }
       const tmpCountData: { [key: string]: number } = {
@@ -253,9 +251,15 @@ export class UserService {
       };
 
       users.forEach((user: User) => {
-        if (user.role.role_name == RoleEnum.BUSINESS) {
-          const province = user.address_detail.split(',')[0];
-          tmpCountData[province] = tmpCountData[province] + 1;
+        if (user.role_name == RoleEnum.BUSINESS && user.address) {
+          const province = user.address.split(',')[2];
+          if (province) {
+            Object.keys(tmpCountData).forEach((key) => {
+              if (province.includes(key)) {
+                tmpCountData[key] = tmpCountData[key] + 1;
+              }
+            });
+          }
         }
       });
 
