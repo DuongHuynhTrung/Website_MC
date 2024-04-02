@@ -54,8 +54,9 @@ export class UserService {
         throw new Error(`Người dùng với email ${email} không tồn tại`);
       }
       if (user.role_name == RoleEnum.BUSINESS) {
-        const responsiblePersons =
-          await this.responsiblePersonRepository.find();
+        const responsiblePersons = await this.responsiblePersonRepository.find({
+          relations: ['business'],
+        });
         if (responsiblePersons && responsiblePersons.length > 0) {
           const responsiblePerson = responsiblePersons.find(
             (p) => p.business.id == user.id,
