@@ -75,7 +75,9 @@ export class GroupService {
   async getGroups(): Promise<Group[]> {
     try {
       const groups = await this.groupRepository.find();
-      return groups;
+      return groups.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      );
     } catch (error) {
       throw new InternalServerErrorException(
         'Something went wrong while retrieving groups',

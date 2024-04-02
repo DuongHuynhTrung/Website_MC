@@ -238,10 +238,12 @@ export class EmailService {
         html: `<body style="background-color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe
         UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif">
         <div style="width:50vw; margin: 0 auto">
-            <div style="display: flex;justify-content: center;">
+    
+            <div style="width: 100%; height: 200px; margin: 0 auto;">
                 <img src="https://live.staticflickr.com/65535/53614111501_d7d80942ac_w.jpg"
-                    style="width: auto;height:200px;object-fit: cover">
+                    style="width: auto;height:200px;object-fit: cover; margin-left: 35%;">
             </div>
+    
             <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
                 width="100%">
                 <tbody>
@@ -284,13 +286,12 @@ export class EmailService {
                     <tr>
                         <td>
                             <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
-                            Để đảm bảo tính bảo mật, chúng tôi khuyến nghị bạn đổi mật khẩu sau khi đăng nhập lần đầu tiên. Nếu bạn không thực hiện yêu cầu này, vui lòng thông báo cho chúng tôi ngay lập tức.
-                            </p>
-                            <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
                                 Hãy liên lạc với chúng tôi nếu bạn có thắc mắc nào thêm.
                             </p>
                             <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
-                            <p style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">Hoàng
+                            <p
+                                style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
+                                Hoàng
                                 Vũ Quốc
                                 Anh</p>
                         </td>
@@ -306,31 +307,40 @@ export class EmailService {
                             <hr
                                 style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
     
-    
-                            <footer class="relative p-16" style="background-color: rgb(73, 97, 121);">
-                                <div class="container text-white flex flex-col items-center">
-                                    <h5 class="title w-fit relative bottom-3 font-semibold" style="width: 12.5rem;">
+                            <footer style="background-color: rgb(73, 97, 121); padding: 16px">
+                                <div style="color: white;">
+                                    <h5 style="color: white; margin: 0;width: 12.5rem;  font-weight: 500;">
                                         LIÊN HỆ NHANH
                                     </h5>
-                                    <div class="w-full flex">
-                                        <div class="flex flex-col items-center gap-28 section-element"
-                                            style="flex-grow: 1; padding: 10px 0px; border-color: white; border-top-width: 1px;">
-                                            <div class="brand flex align-items-center">
+                                    <div>
+                                        <div style="padding: 10px 0px; border-color: white; border-top-width: 1px;">
+                                            <div style="display:inline;">
                                                 <img alt="logo" loading="lazy" width="100" height="100" decoding="async"
                                                     src="https://firebasestorage.googleapis.com/v0/b/website-for-mc.appspot.com/o/khoduan%2Flogo.png?alt=media&token=07e0dbe7-8844-4c2b-9f34-19ad64c87c19"
-                                                    style="color: transparent;">
-                                                <p class="text-base font-semibold" style="margin-left: 15px;">Kho Dự án
+                                                    style="color: transparent; display:inline-block;">
+                                                <p
+                                                    style="height: 100px;margin-bottom: 0px;margin-top: 0px; font-size: 15px; vertical-align: middle;margin-left: 15px;font-weight: 500; display:inline-block;">
+                                                    Kho Dự án
                                                     Truyền thông - Quảng bá
                                                     <br>Sản phẩm Văn hóa Bản địa Việt Nam
                                                 </p>
-    
                                             </div>
-                                            <div class="info flex flex-col">
-                                                <p class="text-lg font-semibold">Hoàng Vũ Quốc Anh (Mr.) </p>
-                                                <p class="text-sm italic">Quản lý dự án</p>
-                                                <div class="h-3"></div>
-                                                <p>Hotline: <span class="font-semibold">0367082493</span></p>
-                                                <p>Email: <span class="font-semibold">anhhvq@fe.edu.vn</span></p>
+                                            <div style="">
+                                                <p style="font-weight: 500; color: white; margin: 0;">Hoàng Vũ Quốc Anh
+                                                    (Mr.) </p>
+                                                <p style="font-size: 12px; font-style: italic; color: white; margin: 0;">
+                                                    Quản lý dự án</p>
+                                                <div style="height: 5px;"></div>
+                                                <p style=" color: white; margin: 0;">Hotline: <span
+                                                        style="font-weight: 500;">0367082493</span>
+                                                </p>
+                                                <p style=" color: white; margin: 0;">Email:
+                                                    <span
+                                                        style="text-decoration: none; color: white; font-weight: 500; color: white;">
+                                                        <a href="mailto:anhhvq@fe.edu.vn" target="_blank"
+                                                            style="text-decoration: none; color: white;">anhhvq@fe.edu.vn</a>
+                                                    </span>
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -343,7 +353,7 @@ export class EmailService {
                 </tbody>
             </table>
         </div>
-        </body>`,
+              </body>`,
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -394,9 +404,9 @@ export class EmailService {
         html: `<body style="background-color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe
         UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif">
         <div style="width:50vw; margin: 0 auto">
-            <div style="display: flex;justify-content: center;">
+            <div style="width: 100%; height: 200px; margin: 0 auto;">
                 <img src="https://live.staticflickr.com/65535/53614111501_d7d80942ac_w.jpg"
-                    style="width: auto;height:200px;object-fit: cover">
+                    style="width: auto;height:200px;object-fit: cover; margin-left: 35%;">
             </div>
             <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
                 width="100%">
@@ -419,13 +429,13 @@ export class EmailService {
     
                             <div style="margin-left: 25px;">
                                 <p style="font-size:14px;line-height:22px;margin:10px 0;color:#3c4043">EMAIL:
-                                    <a style="text-decoration:none;font-size:14px;line-height:22px">
+                                    <a style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
                                         ${user.email}
                                     </a>
                                 </p>
                                 <p style="font-size:14px;line-height:22px;margin:10px 0px 0px 0px;color:#3c4043">MẬT KHẨU
                                     MỚI:
-                                    <a style="text-decoration:none;font-size:14px;line-height:22px">
+                                    <a style=" font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
                                         ${passwordGenerated.password}
                                     </a>
                                 </p>
@@ -462,43 +472,52 @@ export class EmailService {
                                 style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
     
     
-                            <footer class="relative p-16" style="background-color: rgb(73, 97, 121);">
-                                <div class="container text-white flex flex-col items-center">
-                                    <h5 class="title w-fit relative bottom-3 font-semibold" style="width: 12.5rem;">
+                            <footer style="background-color: rgb(73, 97, 121); padding: 16px">
+                                <div style="color: white;">
+                                    <h5 style="color: white; margin: 0;width: 12.5rem;  font-weight: 500;">
                                         LIÊN HỆ NHANH
                                     </h5>
-                                    <div class="w-full flex">
-                                        <div class="flex flex-col items-center gap-28 section-element"
-                                            style="flex-grow: 1; padding: 10px 0px; border-color: white; border-top-width: 1px;">
-                                            <div class="brand flex align-items-center">
+                                    <div>
+                                        <div style="padding: 10px 0px; border-color: white; border-top-width: 1px;">
+                                            <div style="display:inline;">
                                                 <img alt="logo" loading="lazy" width="100" height="100" decoding="async"
                                                     src="https://firebasestorage.googleapis.com/v0/b/website-for-mc.appspot.com/o/khoduan%2Flogo.png?alt=media&token=07e0dbe7-8844-4c2b-9f34-19ad64c87c19"
-                                                    style="color: transparent;">
-                                                <p class="text-base font-semibold" style="margin-left: 15px;">Kho Dự án
+                                                    style="color: transparent; display:inline-block;">
+                                                <p
+                                                    style="height: 100px;margin-bottom: 0px;margin-top: 0px; font-size: 15px; vertical-align: middle;margin-left: 15px;font-weight: 500; display:inline-block;">
+                                                    Kho Dự án
                                                     Truyền thông - Quảng bá
                                                     <br>Sản phẩm Văn hóa Bản địa Việt Nam
                                                 </p>
-    
                                             </div>
-                                            <div class="info flex flex-col">
-                                                <p class="text-lg font-semibold">Hoàng Vũ Quốc Anh (Mr.) </p>
-                                                <p class="text-sm italic">Quản lý dự án</p>
-                                                <div class="h-3"></div>
-                                                <p>Hotline: <span class="font-semibold">0367082493</span></p>
-                                                <p>Email: <span class="font-semibold">anhhvq@fe.edu.vn</span></p>
+                                            <div style="">
+                                                <p style="font-weight: 500; color: white; margin: 0;">Hoàng Vũ Quốc Anh
+                                                    (Mr.) </p>
+                                                <p style="font-size: 12px; font-style: italic; color: white; margin: 0;">
+                                                    Quản lý dự án</p>
+                                                <div style="height: 5px;"></div>
+                                                <p style=" color: white; margin: 0;">Hotline: <span
+                                                        style="font-weight: 500;">0367082493</span>
+                                                </p>
+                                                <p style=" color: white; margin: 0;">Email:
+                                                    <span
+                                                        style="text-decoration: none; color: white; font-weight: 500; color: white;">
+                                                        <a href="mailto:anhhvq@fe.edu.vn" target="_blank"
+                                                            style="text-decoration: none; color: white;">anhhvq@fe.edu.vn</a>
+                                                    </span>
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </footer>
     
-    
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        </body>`,
+              </body>`,
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);

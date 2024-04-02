@@ -161,6 +161,14 @@ export class User {
   status: boolean;
 
   @ApiProperty({
+    description: 'Is Account Banned',
+    example: false,
+    default: false,
+  })
+  @Column({ nullable: false, default: false })
+  is_ban: boolean;
+
+  @ApiProperty({
     description: 'Role Name of User',
     example: 'Admin',
   })

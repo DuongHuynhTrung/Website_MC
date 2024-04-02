@@ -23,8 +23,8 @@ export class Support {
   @Column({ nullable: false })
   support_content: string;
 
-  @Column({ nullable: true })
-  support_image: string;
+  @Column({ type: 'jsonb', nullable: true })
+  support_image: string[];
 
   @CreateDateColumn()
   createdAt: Date;

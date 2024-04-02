@@ -6,7 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
-  Query,
+  Delete,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -86,10 +86,8 @@ export class ProjectController {
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
-  getProjectsForAdmin(
-    @Query('page') page: number,
-  ): Promise<[{ totalProjects: number }, Project[]]> {
-    return this.projectService.getProjectsForAdmin(page);
+  getProjectsForAdmin(): Promise<[{ totalProjects: number }, Project[]]> {
+    return this.projectService.getProjectsForAdmin();
   }
 
   @ApiOperation({
@@ -135,6 +133,21 @@ export class ProjectController {
   @Get(':id')
   getProjectByID(@Param('id') id: number): Promise<Project> {
     return this.projectService.getProjectById(id);
+  }
+
+  @ApiOperation({
+    summary: 'Delete project By Project ID',
+  })
+  @ApiOkResponse({
+    description: 'Project with ID have been retrieved',
+    type: Project,
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy dự án với mã số ${id} ',
+  })
+  @Delete(':id')
+  deleteProject(@Param('id') id: number): Promise<Project> {
+    return this.projectService.deleteProject(id);
   }
 
   @ApiOperation({
@@ -236,20 +249,20 @@ export class ProjectController {
     return this.projectService.statisticsProject();
   }
 
-  // @ApiOperation({
-  //   summary: 'Admin Statistics Project',
-  // })
-  // @ApiOkResponse({
-  //   description: 'Number Projects follow Status have been retrieved',
-  // })
-  // @ApiInternalServerErrorResponse({
-  //   description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
-  // })
-  // @UseGuards(RolesGuard)
-  // @Roles(RoleEnum.ADMIN)
-  // @UseGuards(JwtGuard)
-  // @Get('admin/statisticsSpecializationField')
-  // statisticsSpecializationField() {
-  //   return this.projectService.statisticsSpecializationField();
-  // }
+  @ApiOperation({
+    summary: 'Admin Statistics Project By BusinessType',
+  })
+  @ApiOkResponse({
+    description: 'Number Projects follow Business Type have been retrieved',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi thống kê dự án theo loại doanh nghiệp',
+  })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  @Get('admin/statisticsProjectByBusinessType')
+  statisticsProjectByBusinessType() {
+    return this.projectService.statisticsProjectByBusinessType();
+  }
 }

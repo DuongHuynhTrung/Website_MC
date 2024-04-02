@@ -199,6 +199,11 @@ export class AuthService {
         `Người dùng với email ${signInDto.email} không tồn tại!`,
       );
     }
+    if (user.is_ban) {
+      throw new BadRequestException(
+        'Tài khoản của bạn đã bị khóa. Hãy liên hệ với admin để mở khóa!',
+      );
+    }
     if (!user.isConfirmByAdmin) {
       throw new BadRequestException(
         `Tài khoản của bạn chưa được admin xét duyệt!`,

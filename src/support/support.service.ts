@@ -41,7 +41,9 @@ export class SupportService {
         'Có lỗi xảy ra khi truy xuất tất cả yêu cầu hỗ trợ',
       );
     }
-    return supports;
+    return supports.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
   }
 
   async getSupportById(id: number): Promise<Support> {

@@ -25,10 +25,7 @@ export class UserService {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  async getUsers(page: number): Promise<[{ totalUsers: number }, User[]]> {
-    const limit = 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+  async getUsers(): Promise<[{ totalUsers: number }, User[]]> {
     try {
       let users = await this.userRepository.find({ relations: ['role'] });
       if (!users || users.length === 0) {
@@ -36,7 +33,10 @@ export class UserService {
       }
       users = users.filter((user) => user.email !== 'admin@gmail.com');
       const totalUsers = users.length;
-      return [{ totalUsers }, users.slice(startIndex, endIndex)];
+      return [
+        { totalUsers },
+        users.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+      ];
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -84,6 +84,80 @@ export class UserService {
       return user;
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+  async banAccount(email: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
+      });
+      if (!user) {
+        throw new Error(`Người dùng với email ${email} không tồn tại`);
+      }
+      if (user.role_name == RoleEnum.ADMIN) {
+        throw new Error('Không thể khóa Admin account');
+      }
+      user.is_ban = true;
+      const result = await this.userRepository.save(user);
+      if (!result) {
+        throw new Error('Có lỗi xảy ra khi khóa tài khoản người dùng');
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async unBanAccount(email: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
+      });
+      if (!user) {
+        throw new Error(`Người dùng với email ${email} không tồn tại`);
+      }
+      if (user.role_name == RoleEnum.ADMIN) {
+        throw new Error('Không thể khóa Admin account');
+      }
+      if (!user.is_ban) {
+        throw new Error('Chỉ có tài khoản đang bị khóa mới cần mở khóa');
+      }
+      user.is_ban = false;
+      const result = await this.userRepository.save(user);
+      if (!result) {
+        throw new Error('Có lỗi xảy ra khi khóa tài khoản người dùng');
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async deleteAccount(email: string): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: ['role'],
+      });
+      if (!user) {
+        throw new Error(`Người dùng với email ${email} không tồn tại`);
+      }
+      if (user.role_name == RoleEnum.ADMIN) {
+        throw new Error('Không thể xóa Admin account');
+      }
+      if (!user.is_ban) {
+        throw new Error('Chỉ có thể xóa tài khoản đang bị khóa');
+      }
+      const result = await this.userRepository.remove(user);
+      if (!result) {
+        throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -160,7 +234,52 @@ export class UserService {
 
       users.forEach((user: User) => {
         const role_name = user.role_name;
-        tmpCountData[role_name] = tmpCountData[role_name] + 1;
+        if (role_name) {
+          tmpCountData[role_name] = tmpCountData[role_name] + 1;
+        }
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result.filter(
+        (value) => value.key != 'Admin' && value.key != 'Staff',
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê tài khoản',
+      );
+    }
+  }
+
+  async statisticsAccountByBusinessSector(): Promise<
+    { key: string; value: number }[]
+  > {
+    try {
+      const users: User[] = await this.userRepository.find({
+        relations: ['role'],
+      });
+      if (!users || users.length === 0) {
+        return null;
+      }
+      const tmpCountData: { [key: string]: number } = {
+        'Nông nghiệp': 0,
+        'Thủ công nghiệp': 0,
+        'Du lịch': 0,
+        Khác: 0,
+      };
+
+      users.forEach((user: User) => {
+        const business_sector = user.business_sector;
+        if (business_sector) {
+          Object.keys(tmpCountData).forEach((key) => {
+            if (key.includes(business_sector)) {
+              tmpCountData[business_sector] = tmpCountData[business_sector] + 1;
+            } else {
+              tmpCountData['Khác'] = tmpCountData['Khác'] + 1;
+            }
+          });
+        }
       });
 
       const result: { key: string; value: number }[] = Object.keys(

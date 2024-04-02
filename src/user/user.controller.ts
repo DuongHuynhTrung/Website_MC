@@ -4,8 +4,8 @@ import {
   Patch,
   Param,
   UseGuards,
-  Query,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
@@ -47,10 +47,8 @@ export class UserController {
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  getAllUsers(
-    @Query('page') page: number,
-  ): Promise<[{ totalUsers: number }, User[]]> {
-    return this.userService.getUsers(page);
+  getAllUsers(): Promise<[{ totalUsers: number }, User[]]> {
+    return this.userService.getUsers();
   }
 
   @ApiOperation({ summary: 'Get a user by email' })
@@ -116,6 +114,30 @@ export class UserController {
     return this.userService.updateProfile(updateProfileDto, user);
   }
 
+  @ApiOperation({ summary: 'Ban Account' })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Patch('banAccount/:email')
+  banAccount(@Param('email') email: string): Promise<User> {
+    return this.userService.banAccount(email);
+  }
+
+  @ApiOperation({ summary: 'Ban Account' })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Patch('unBanAccount/:email')
+  unBanAccount(@Param('email') email: string): Promise<User> {
+    return this.userService.unBanAccount(email);
+  }
+
+  @ApiOperation({ summary: 'Ban Account' })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Delete('deleteAccount/:email')
+  deleteAccount(@Param('email') email: string): Promise<User> {
+    return this.userService.deleteAccount(email);
+  }
+
   @ApiOperation({ summary: 'Admin Statistics Account' })
   @ApiOkResponse({
     description: 'The list user has been successfully retrieved.',
@@ -144,5 +166,22 @@ export class UserController {
     { key: string; value: number }[]
   > {
     return this.userService.statisticsBusinessFollowProvince();
+  }
+
+  @ApiOperation({ summary: 'Admin Statistics Business Business Sector' })
+  @ApiOkResponse({
+    description: 'The list business has been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Có lỗi xảy ra khi thống kê doanh nghiệp theo lĩnh vực kinh doanh',
+  })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Get('/admin/statisticsAccountByBusinessSector')
+  statisticsAccountByBusinessSector(): Promise<
+    { key: string; value: number }[]
+  > {
+    return this.userService.statisticsAccountByBusinessSector();
   }
 }

@@ -68,6 +68,15 @@ export class UpdateProfileDto {
   phone_number: string;
 
   @ApiProperty({
+    description: 'Roll Number of User',
+    example: 'SE150080',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  role_number: string;
+
+  @ApiProperty({
     description: 'Discription of User',
     example: 'Friendly',
     nullable: true,
@@ -93,4 +102,22 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   role_name: string;
+
+  @ApiProperty({
+    description: 'Description of Business',
+    example: 'Friendly',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  business_description: string;
+
+  @ApiProperty({
+    description: 'Business Sector',
+    example: 'Friendly',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  business_sector: string;
 }

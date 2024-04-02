@@ -40,5 +40,5 @@ export class CreateSupportDto {
   })
   @IsOptional()
   @IsString()
-  support_image: string;
+  support_image: string[];
 }

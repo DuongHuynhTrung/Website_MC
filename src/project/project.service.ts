@@ -123,18 +123,15 @@ export class ProjectService {
           'Có lỗi xảy ra khi truy xuất tất cả dự án lần đầu đăng',
         );
       }
-      return projects;
+      return projects.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      );
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async getProjectsForAdmin(
-    page: number,
-  ): Promise<[{ totalProjects: number }, Project[]]> {
-    const limit = 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+  async getProjectsForAdmin(): Promise<[{ totalProjects: number }, Project[]]> {
     try {
       const projects = await this.projectRepository.find({
         relations: ['business', 'responsible_person'],
@@ -145,7 +142,10 @@ export class ProjectService {
       projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       const totalProjects = projects.length;
       await this.handleGetProjects();
-      return [{ totalProjects }, projects.slice(startIndex, endIndex)];
+      return [
+        { totalProjects },
+        projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+      ];
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -215,6 +215,28 @@ export class ProjectService {
       return project;
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+  async deleteProject(id: number): Promise<Project> {
+    try {
+      const project = await this.projectRepository.findOne({
+        where: { id },
+        relations: ['business', 'responsible_person'],
+      });
+      if (!project) {
+        throw new NotFoundException(`Không tìm thấy dự án với mã số ${id} `);
+      }
+      if (project.project_status != ProjectStatusEnum.PENDING) {
+        throw new BadRequestException('Chỉ có thể xóa dự án đang chờ xác thực');
+      }
+      const result = await this.projectRepository.remove(project);
+      if (!result) {
+        throw new InternalServerErrorException('Có lỗi xảy ra khi xóa dự án');
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -354,6 +376,39 @@ export class ProjectService {
     }
   }
 
+  async statisticsProjectByBusinessType(): Promise<
+    {
+      key: string;
+      value: number;
+    }[]
+  > {
+    try {
+      const dataProject: Project[] = await this.projectRepository.find();
+      if (!dataProject || dataProject.length === 0) {
+        return null;
+      }
+      const tmpCountData: { [key: string]: number } = {
+        'Lên ý tưởng': 0,
+        'Triển khai thực tế': 0,
+      };
+
+      dataProject.forEach((project: Project) => {
+        const business_type = project.business_type;
+        if (business_type) {
+          tmpCountData[business_type] = tmpCountData[business_type] + 1;
+        }
+      });
+
+      const result: { key: string; value: number }[] = Object.keys(
+        tmpCountData,
+      ).map((key) => ({ key, value: tmpCountData[key] }));
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi thống kê dự án theo loại doanh nghiệp',
+      );
+    }
+  }
   async statisticsProject(): Promise<
     {
       key: string;
