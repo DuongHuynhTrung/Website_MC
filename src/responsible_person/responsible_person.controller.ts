@@ -41,8 +41,6 @@ export class ResponsiblePersonController {
   @ApiInternalServerErrorResponse({
     description: 'Something went wrong when saving the Responsible Person',
   })
-  @ApiBearerAuth()
-  @UseGuards(JwtGuard)
   @Post()
   createResponsiblePerson(
     @Body() createResponsiblePersonDto: CreateResponsiblePersonDto,
