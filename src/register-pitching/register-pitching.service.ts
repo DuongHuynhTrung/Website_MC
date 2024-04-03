@@ -141,10 +141,7 @@ export class RegisterPitchingService {
           user_group.user.email,
           lecturer.email,
         );
-      await this.notificationService.createNotification(
-        createNotificationDto,
-        user_group.user,
-      );
+      await this.notificationService.createNotification(createNotificationDto);
       // Change status of Group to Active
       await this.groupService.changeGroupStatusToActive(group.id);
 
@@ -359,7 +356,6 @@ export class RegisterPitchingService {
 
         await this.notificationService.createNotification(
           createNotificationDto,
-          project.business,
         );
       } else {
         registerPitching.register_pitching_status =
@@ -379,7 +375,6 @@ export class RegisterPitchingService {
 
         await this.notificationService.createNotification(
           createNotificationDto,
-          project.business,
         );
       }
     });
@@ -485,5 +480,41 @@ export class RegisterPitchingService {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  async checkUserAccessToViewWorkingProcess(
+    user: User,
+    groupId: number,
+    projectId: number,
+  ): Promise<boolean> {
+    await this.groupService.getGroupByGroupId(groupId);
+    await this.projectService.getProjectById(projectId);
+    const userGroup: UserGroup = await this.userGroupService.checkUserInGroup(
+      user.id,
+      groupId,
+    );
+    if (!userGroup) {
+      return false;
+    }
+    if (userGroup.relationship_status != RelationshipStatusEnum.JOINED) {
+      return false;
+    }
+    const registerPitching = await this.registerPitchingRepository
+      .createQueryBuilder('registerPitching')
+      .leftJoinAndSelect('registerPitching.group', 'group')
+      .leftJoinAndSelect('registerPitching.project', 'project')
+      .where('group.id = :groupId', { groupId })
+      .andWhere('project.id = :projectId', { projectId })
+      .getOne();
+    if (!registerPitching) {
+      return false;
+    }
+    if (
+      registerPitching.register_pitching_status !=
+      RegisterPitchingStatusEnum.SELECTED
+    ) {
+      return false;
+    }
+    return true;
   }
 }

@@ -24,8 +24,6 @@ import { UpdateResponsiblePersonDto } from './dto/update-responsible_person.dto'
 import { JwtGuard } from 'src/auth/jwt.guard';
 
 @ApiTags('Responsible Person')
-@ApiBearerAuth()
-@UseGuards(JwtGuard)
 @Controller('responsible-person')
 export class ResponsiblePersonController {
   constructor(
@@ -43,6 +41,8 @@ export class ResponsiblePersonController {
   @ApiInternalServerErrorResponse({
     description: 'Something went wrong when saving the Responsible Person',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Post()
   createResponsiblePerson(
     @Body() createResponsiblePersonDto: CreateResponsiblePersonDto,
@@ -64,6 +64,8 @@ export class ResponsiblePersonController {
     description:
       'Có lỗi xảy ra khi cập nhật thông tin của người chịu trách nhiệm',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch()
   updateResponsiblePersonDto(
     @Body() updateResponsiblePersonDto: UpdateResponsiblePersonDto,
@@ -82,6 +84,8 @@ export class ResponsiblePersonController {
   @ApiBadRequestResponse({
     description: 'Could not find with ${searchEmail}',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('search-responsible-person')
   searchResponsiblePerson(@Query('search-email') searchEmail: string) {
     return this.responsiblePersonService.searchResponsiblePersonByEmail(
@@ -110,6 +114,8 @@ export class ResponsiblePersonController {
   @ApiBadRequestResponse({
     description: 'ResponsiblePerson not found',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('/business/:email')
   getResponsiblePersonOfBusiness(@Param('email') email: string) {
     return this.responsiblePersonService.getResponsiblePersonOfBusiness(email);
@@ -123,6 +129,8 @@ export class ResponsiblePersonController {
   @ApiBadRequestResponse({
     description: 'ResponsiblePerson not found',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get(':email')
   getResponsiblePersonByEmail(@Param('email') email: string) {
     return this.responsiblePersonService.getResponsiblePersonByEmail(email);

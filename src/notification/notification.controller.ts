@@ -23,8 +23,6 @@ import { JwtGuard } from 'src/auth/jwt.guard';
 import { Notification } from './entities/notification.entity';
 
 @Controller('notifications')
-@ApiBearerAuth()
-@UseGuards(JwtGuard)
 @ApiTags('Notification')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
@@ -45,18 +43,16 @@ export class NotificationController {
   @Post()
   create(
     @Body() createNotificationDto: CreateNotificationDto,
-    @GetUser() user: User,
   ): Promise<Notification> {
-    return this.notificationService.createNotification(
-      createNotificationDto,
-      user,
-    );
+    return this.notificationService.createNotification(createNotificationDto);
   }
 
   @ApiOperation({ summary: 'Get All Notifications Of Receiver' })
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi khi truy xuất tất cả thông báo của người nhận',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get()
   getAllNotificationOfReceiver(
     @GetUser() user: User,
@@ -68,6 +64,8 @@ export class NotificationController {
   @ApiNotFoundResponse({
     description: 'Không tìm thấy thông báo',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get(':id')
   getNotificationById(@Param('id') id: number): Promise<Notification> {
     return this.notificationService.getNotificationById(id);
@@ -81,6 +79,8 @@ export class NotificationController {
     description:
       'Có lỗi xảy ra khi đánh dấu người nhận đã đọc tất cả thông báo',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch('read-all')
   updateAllNotificationOfReceiver(
     @GetUser() user: User,
@@ -98,6 +98,8 @@ export class NotificationController {
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi xảy ra khi đánh dấu người nhận đã đọc thông báo',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch('read/:id')
   updateNotificationOfReceiver(
     @Param('id') id: number,

@@ -152,6 +152,7 @@ export class AuthService {
         role_name: RoleEnum.LECTURER,
       });
       user.role = role;
+      user.role_name = RoleEnum.LECTURER;
     }
     try {
       const salt = await bcrypt.genSalt();
@@ -421,6 +422,19 @@ export class AuthService {
 
       await this.userRepository.save(user);
       return 'Đổi mật khẩu thành công!';
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllAdmin(): Promise<string[]> {
+    try {
+      const admins = await this.userRepository.find({
+        where: {
+          role_name: RoleEnum.ADMIN,
+        },
+      });
+      return admins.map((admin) => admin.email);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

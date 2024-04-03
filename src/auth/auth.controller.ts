@@ -109,6 +109,12 @@ export class AuthController {
     return this.authService.signIn(signInDto);
   }
 
+  @ApiOperation({ summary: 'Get All Admin' })
+  @Get('all/admin')
+  getAllAdmin(): Promise<string[]> {
+    return this.authService.getAllAdmin();
+  }
+
   @ApiOperation({ summary: 'Provide Account For User By Admin' })
   @ApiOkResponse({
     description: 'Provide Account Successfully',

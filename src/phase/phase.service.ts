@@ -27,11 +27,11 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { RegisterPitchingStatusEnum } from 'src/register-pitching/enum/register-pitching.enum';
-import { UserService } from 'src/user/user.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 import { SocketGateway } from 'socket.gateway';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PhaseService {
@@ -49,7 +49,7 @@ export class PhaseService {
 
     private readonly notificationService: NotificationService,
 
-    private readonly userService: UserService,
+    private configService: ConfigService,
   ) {}
 
   async createPhase(
@@ -440,19 +440,16 @@ export class PhaseService {
         }
         // Get leader information
         const leader: UserGroup = await this.getLeaderByPhase(phase);
-        const admin: User =
-          await this.userService.getUserByEmail('admin@gmail.com');
         // create notification for leader
         const createNotificationDtoLeader: CreateNotificationDto =
           new CreateNotificationDto(
             NotificationTypeEnum.WARNING_PHASE_STUDENT,
             `Nhóm bạn có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
-            'admin@gmail.com',
+            this.configService.get('MAIL_USER'),
             leader.user.email,
           );
         await this.notificationService.createNotification(
           createNotificationDtoLeader,
-          admin,
         );
         // create notification for lecturer
         const group: Group = await this.groupService.getGroupByGroupId(
@@ -471,12 +468,11 @@ export class PhaseService {
           new CreateNotificationDto(
             NotificationTypeEnum.WARNING_PHASE_LECTURER,
             `Nhóm ${group.group_name} có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
-            'admin@gmail.com',
+            this.configService.get('MAIL_USER'),
             selectedPitching.lecturer.email,
           );
         await this.notificationService.createNotification(
           createNotificationDtoLecturer,
-          admin,
         );
       }
     });

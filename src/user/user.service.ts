@@ -31,7 +31,11 @@ export class UserService {
       if (!users || users.length === 0) {
         return [{ totalUsers: 0 }, []];
       }
-      users = users.filter((user) => user.email !== 'admin@gmail.com');
+      const admins = await this.userRepository.find({
+        where: { role_name: RoleEnum.ADMIN },
+      });
+      const adminEmail: string[] = admins.map((admin) => admin.email);
+      users = users.filter((user) => !adminEmail.includes(user.email));
       const totalUsers = users.length;
       return [
         { totalUsers },
@@ -203,6 +207,12 @@ export class UserService {
     user: User,
   ): Promise<User> {
     try {
+      if (
+        updateProfileDto.role_name &&
+        updateProfileDto.role_name == RoleEnum.ADMIN
+      ) {
+        throw new Error('Không thể cập nhật vai trò thành admin');
+      }
       Object.assign(user, updateProfileDto);
       const role = await this.roleRepository.findOne({
         where: { role_name: updateProfileDto.role_name },

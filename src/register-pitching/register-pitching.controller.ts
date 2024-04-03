@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { RegisterPitchingService } from './register-pitching.service';
 import { CreateRegisterPitchingDto } from './dto/create-register-pitching.dto';
@@ -84,6 +85,20 @@ export class RegisterPitchingController {
     @GetUser() user: User,
   ): Promise<RegisterPitching[]> {
     return this.registerPitchingService.getAllRegisterPitchingOfUser(user);
+  }
+
+  @ApiOperation({ summary: 'Check User Access To View Working Process' })
+  @Get('checkUserAccessToViewWorkingProcess')
+  checkUserAccessToViewWorkingProcess(
+    @GetUser() user: User,
+    @Query('groupId') groupId: number,
+    @Query('projectId') projectId: number,
+  ): Promise<boolean> {
+    return this.registerPitchingService.checkUserAccessToViewWorkingProcess(
+      user,
+      groupId,
+      projectId,
+    );
   }
 
   @ApiOperation({ summary: 'Get All Register Pitching Of Business' })

@@ -22,16 +22,12 @@ export class NotificationService {
   ) {}
   async createNotification(
     createNotificationDto: CreateNotificationDto,
-    user: User,
   ): Promise<Notification> {
     const sender: User = await this.userService.getUserByEmail(
       createNotificationDto.sender_email,
     );
     if (!sender.status) {
       throw new BadGatewayException('Tài khoản gửi thông báo không hoạt động');
-    }
-    if (sender.id != user.id) {
-      throw new BadGatewayException('Không thể tạo thông báo cho người khác');
     }
     const receiver: User = await this.userService.getUserByEmail(
       createNotificationDto.receiver_email,
