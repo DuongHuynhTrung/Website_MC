@@ -91,6 +91,18 @@ export class ResponsiblePersonController {
     );
   }
 
+  @ApiOperation({ summary: 'Check Responsible Person Belongs To Business' })
+  @Get('checkResponsiblePersonBelongsToBusiness')
+  checkResponsiblePersonBelongsToBusiness(
+    @Query('responsiblePersonEmail') responsiblePersonEmail: string,
+    @Query('businessEmail') businessEmail: string,
+  ) {
+    return this.responsiblePersonService.checkResponsiblePersonBelongsToBusiness(
+      responsiblePersonEmail,
+      businessEmail,
+    );
+  }
+
   @ApiOperation({ summary: 'Check Exist Responsible Person By Email' })
   @ApiOkResponse({
     description: 'The Responsible Person has been successfully retrieved.',

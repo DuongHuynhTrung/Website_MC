@@ -181,4 +181,20 @@ export class ResponsiblePersonService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async checkResponsiblePersonBelongsToBusiness(
+    responsiblePersonEmail: string,
+    businessEmail: string,
+  ) {
+    const responsiblePerson = await this.responsiblePersonRepository
+      .createQueryBuilder('responsible_person')
+      .leftJoin('responsible_person.business', 'business')
+      .where('responsible_person.email = :responsiblePersonEmail', {
+        responsiblePersonEmail,
+      })
+      .andWhere('business.email = :businessEmail', { businessEmail })
+      .getOne();
+
+    return responsiblePerson ? true : false;
+  }
 }
