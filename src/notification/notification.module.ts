@@ -12,6 +12,12 @@ import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { Project } from 'src/project/entities/project.entity';
+import { ProjectService } from 'src/project/project.service';
+import { Group } from 'src/group/entities/group.entity';
+import { GroupService } from 'src/group/group.service';
 
 @Module({
   imports: [
@@ -21,6 +27,9 @@ import { UserGroupService } from 'src/user-group/user-group.service';
       ResponsiblePerson,
       Role,
       UserGroup,
+      RegisterPitching,
+      Project,
+      Group,
     ]),
   ],
   controllers: [NotificationController],
@@ -30,6 +39,9 @@ import { UserGroupService } from 'src/user-group/user-group.service';
     UserService,
     ResponsiblePersonService,
     UserGroupService,
+    RegisterPitchingService,
+    ProjectService,
+    GroupService,
   ],
 })
 export class NotificationModule {}

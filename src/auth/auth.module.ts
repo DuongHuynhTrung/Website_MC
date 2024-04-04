@@ -13,11 +13,28 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { EmailService } from 'src/email/email.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { Project } from 'src/project/entities/project.entity';
+import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
+import { ProjectService } from 'src/project/project.service';
+import { Group } from 'src/group/entities/group.entity';
+import { GroupService } from 'src/group/group.service';
+import { NotificationService } from 'src/notification/notification.service';
+import { Notification } from 'src/notification/entities/notification.entity';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([User, Role, ResponsiblePerson, UserGroup]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      ResponsiblePerson,
+      UserGroup,
+      RegisterPitching,
+      Project,
+      Group,
+      Notification,
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -37,6 +54,10 @@ import { UserGroupService } from 'src/user-group/user-group.service';
     ResponsiblePersonService,
     EmailService,
     UserGroupService,
+    RegisterPitchingService,
+    ProjectService,
+    GroupService,
+    NotificationService,
   ],
 })
 export class AuthModule {}

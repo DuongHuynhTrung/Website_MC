@@ -13,6 +13,10 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { Role } from 'src/role/entities/role.entity';
 import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { Project } from 'src/project/entities/project.entity';
+import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
+import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 
 @Injectable()
 export class UserService {
@@ -28,6 +32,12 @@ export class UserService {
 
     @InjectRepository(UserGroup)
     private readonly userGroupRepository: Repository<UserGroup>,
+
+    @InjectRepository(RegisterPitching)
+    private readonly registerPitchingRepository: Repository<RegisterPitching>,
+
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
   ) {}
 
   async getUsers(): Promise<[{ totalUsers: number }, User[]]> {
@@ -160,6 +170,8 @@ export class UserService {
       if (!user.is_ban) {
         throw new Error('Chỉ có thể xóa tài khoản đang bị khóa');
       }
+      if (user.role_name == RoleEnum.BUSINESS) {
+      }
       switch (user.role_name) {
         case RoleEnum.STUDENT: {
           const userId = user.id;
@@ -167,27 +179,146 @@ export class UserService {
             .createQueryBuilder('user_group')
             .leftJoinAndSelect('user_group.user', 'user')
             .leftJoinAndSelect('user_group.group', 'group')
-            .leftJoinAndSelect('user.role', 'role')
             .where('user.id = :userId', { userId })
+            .andWhere('user_group.relationship_status = :status', {
+              status: RelationshipStatusEnum.JOINED,
+            })
             .getMany();
+          if (!user_group || user_group.length == 0) {
+            const result = await this.userRepository.remove(user);
+            if (!result) {
+              throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+            }
+            return result;
+          }
           const groupId: number[] = user_group.map(
             (user_group) => user_group.group.id,
           );
+          const registerPitchingsWithGroupId: RegisterPitching[] =
+            await this.registerPitchingRepository
+              .createQueryBuilder('registerPitching')
+              .leftJoinAndSelect('registerPitching.group', 'group')
+              .leftJoinAndSelect('registerPitching.project', 'project')
+              .where('group.id IN (:...groupId)', { groupId: groupId })
+              .andWhere('registerPitching.register_pitching_status = :status', {
+                status: 'Selected',
+              })
+              .getMany();
+          if (
+            !registerPitchingsWithGroupId ||
+            registerPitchingsWithGroupId.length == 0
+          ) {
+            const userGroups = await this.userGroupRepository.find({
+              where: {
+                user: { id: userId },
+              },
+            });
+            await this.userGroupRepository.remove(userGroups);
 
+            const result = await this.userRepository.remove(user);
+            if (!result) {
+              throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+            }
+            return result;
+          }
+          const projectId: number[] = registerPitchingsWithGroupId.map(
+            (registerPitching) => registerPitching.project.id,
+          );
+          const projects = await this.projectRepository
+            .createQueryBuilder('project')
+            .where('project.id IN (:...projectId)', { projectId: projectId })
+            .andWhere('project.project_status = :status', {
+              status: ProjectStatusEnum.PROCESSING,
+            })
+            .getMany();
+          if (!projects || projects.length == 0) {
+            const userGroups = await this.userGroupRepository.find({
+              where: {
+                user: { id: userId },
+              },
+            });
+            await this.userGroupRepository.remove(userGroups);
+
+            const result = await this.userRepository.remove(user);
+            if (!result) {
+              throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+            }
+            return result;
+          } else {
+            throw new Error(
+              'Sinh viên vẫn đang trong quá trình thực hiện dự án không thể xóa',
+            );
+          }
           break;
         }
         case RoleEnum.LECTURER: {
+          const userId = user.id;
+          const user_group: UserGroup[] = await this.userGroupRepository
+            .createQueryBuilder('user_group')
+            .leftJoinAndSelect('user_group.user', 'user')
+            .leftJoinAndSelect('user_group.group', 'group')
+            .where('user.id = :userId', { userId })
+            .andWhere('user_group.relationship_status = :status', {
+              status: RelationshipStatusEnum.JOINED,
+            })
+            .getMany();
+          if (!user_group || user_group.length == 0) {
+            const result = await this.userRepository.remove(user);
+            if (!result) {
+              throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+            }
+            return result;
+          } else {
+            throw new Error(
+              'Giảng viên đang tham gia hướng dẫn nhóm không thể xóa!',
+            );
+          }
           break;
         }
         case RoleEnum.BUSINESS: {
+          const projects = await this.projectRepository.find({
+            where: {
+              business: { id: user.id },
+            },
+          });
+          const responsiblePersons =
+            await this.responsiblePersonRepository.find({
+              where: {
+                business: { id: user.id },
+              },
+            });
+          // Check xem responsiblePersons.length == 0 thì có chạy đc ko
+          if (!projects || projects.length == 0) {
+            await this.responsiblePersonRepository.remove(responsiblePersons);
+
+            const result = await this.userRepository.remove(user);
+            if (!result) {
+              throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+            }
+            return result;
+          }
+          const projectPending = projects.filter(
+            (project) => project.project_status == ProjectStatusEnum.PENDING,
+          );
+          const otherProject = projects.filter(
+            (project) => project.project_status != ProjectStatusEnum.PENDING,
+          );
+          if (otherProject.length > 0) {
+            throw new Error(
+              'Doanh nghiệp đang hoạt động trong hệ thống. Không thể xóa',
+            );
+          }
+          await this.responsiblePersonRepository.remove(responsiblePersons);
+          await this.projectRepository.remove(projectPending);
+
+          const result = await this.userRepository.remove(user);
+          if (!result) {
+            throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+          }
+          return result;
           break;
         }
       }
-      const result = await this.userRepository.remove(user);
-      if (!result) {
-        throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
-      }
-      return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -263,6 +394,7 @@ export class UserService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
   async updateProfile(
     updateProfileDto: UpdateProfileDto,
     user: User,
