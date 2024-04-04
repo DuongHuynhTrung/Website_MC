@@ -1,7 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateNewBusinessDto {
+  @ApiProperty({
+    description: 'Is Create By Admin',
+    example: true,
+    nullable: false,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  is_create_by_admin: boolean;
+
   @ApiProperty({
     description: 'Name of Business',
     example: 'Acb',

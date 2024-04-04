@@ -17,6 +17,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 import { Project } from 'src/project/entities/project.entity';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
+import { Notification } from 'src/notification/entities/notification.entity';
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,9 @@ export class UserService {
 
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
   ) {}
 
   async getUsers(): Promise<[{ totalUsers: number }, User[]]> {
@@ -185,6 +189,18 @@ export class UserService {
             })
             .getMany();
           if (!user_group || user_group.length == 0) {
+            const notifications = await this.notificationRepository.find({
+              relations: ['sender', 'receiver'],
+            });
+            const notificationsOfSender = notifications.filter(
+              (notification) => notification.sender.id == user.id,
+            );
+            const notificationsOfReceiver = notifications.filter(
+              (notification) => notification.receiver.id == user.id,
+            );
+            await this.notificationRepository.remove(notificationsOfSender);
+            await this.notificationRepository.remove(notificationsOfReceiver);
+
             const result = await this.userRepository.remove(user);
             if (!result) {
               throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
@@ -208,6 +224,18 @@ export class UserService {
             !registerPitchingsWithGroupId ||
             registerPitchingsWithGroupId.length == 0
           ) {
+            const notifications = await this.notificationRepository.find({
+              relations: ['sender', 'receiver'],
+            });
+            const notificationsOfSender = notifications.filter(
+              (notification) => notification.sender.id == user.id,
+            );
+            const notificationsOfReceiver = notifications.filter(
+              (notification) => notification.receiver.id == user.id,
+            );
+            await this.notificationRepository.remove(notificationsOfSender);
+            await this.notificationRepository.remove(notificationsOfReceiver);
+
             const userGroups = await this.userGroupRepository.find({
               where: {
                 user: { id: userId },
@@ -232,6 +260,18 @@ export class UserService {
             })
             .getMany();
           if (!projects || projects.length == 0) {
+            const notifications = await this.notificationRepository.find({
+              relations: ['sender', 'receiver'],
+            });
+            const notificationsOfSender = notifications.filter(
+              (notification) => notification.sender.id == user.id,
+            );
+            const notificationsOfReceiver = notifications.filter(
+              (notification) => notification.receiver.id == user.id,
+            );
+            await this.notificationRepository.remove(notificationsOfSender);
+            await this.notificationRepository.remove(notificationsOfReceiver);
+
             const userGroups = await this.userGroupRepository.find({
               where: {
                 user: { id: userId },
@@ -263,6 +303,18 @@ export class UserService {
             })
             .getMany();
           if (!user_group || user_group.length == 0) {
+            const notifications = await this.notificationRepository.find({
+              relations: ['sender', 'receiver'],
+            });
+            const notificationsOfSender = notifications.filter(
+              (notification) => notification.sender.id == user.id,
+            );
+            const notificationsOfReceiver = notifications.filter(
+              (notification) => notification.receiver.id == user.id,
+            );
+            await this.notificationRepository.remove(notificationsOfSender);
+            await this.notificationRepository.remove(notificationsOfReceiver);
+
             const result = await this.userRepository.remove(user);
             if (!result) {
               throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
@@ -289,6 +341,18 @@ export class UserService {
             });
           // Check xem responsiblePersons.length == 0 thì có chạy đc ko
           if (!projects || projects.length == 0) {
+            const notifications = await this.notificationRepository.find({
+              relations: ['sender', 'receiver'],
+            });
+            const notificationsOfSender = notifications.filter(
+              (notification) => notification.sender.id == user.id,
+            );
+            const notificationsOfReceiver = notifications.filter(
+              (notification) => notification.receiver.id == user.id,
+            );
+            await this.notificationRepository.remove(notificationsOfSender);
+            await this.notificationRepository.remove(notificationsOfReceiver);
+
             await this.responsiblePersonRepository.remove(responsiblePersons);
 
             const result = await this.userRepository.remove(user);
@@ -297,6 +361,18 @@ export class UserService {
             }
             return result;
           }
+          const notifications = await this.notificationRepository.find({
+            relations: ['sender', 'receiver'],
+          });
+          const notificationsOfSender = notifications.filter(
+            (notification) => notification.sender.id == user.id,
+          );
+          const notificationsOfReceiver = notifications.filter(
+            (notification) => notification.receiver.id == user.id,
+          );
+          await this.notificationRepository.remove(notificationsOfSender);
+          await this.notificationRepository.remove(notificationsOfReceiver);
+
           const projectPending = projects.filter(
             (project) => project.project_status == ProjectStatusEnum.PENDING,
           );
@@ -308,8 +384,10 @@ export class UserService {
               'Doanh nghiệp đang hoạt động trong hệ thống. Không thể xóa',
             );
           }
-          await this.responsiblePersonRepository.remove(responsiblePersons);
+
           await this.projectRepository.remove(projectPending);
+
+          await this.responsiblePersonRepository.remove(responsiblePersons);
 
           const result = await this.userRepository.remove(user);
           if (!result) {

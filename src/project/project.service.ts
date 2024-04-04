@@ -65,6 +65,10 @@ export class ProjectService {
         'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
       );
     }
+    if (createProjectDto.is_created_by_admin) {
+      project.project_status = ProjectStatusEnum.PUBLIC;
+      project.is_first_project = false;
+    }
     project.responsible_person = responsiblePerson;
     project.business = business;
     try {

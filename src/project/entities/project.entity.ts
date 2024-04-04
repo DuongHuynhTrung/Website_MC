@@ -136,7 +136,7 @@ export class Project {
     nullable: false,
   })
   @Column({ nullable: false })
-  expected_budget: number;
+  expected_budget: string;
 
   @ApiProperty({
     description: 'Project Status',

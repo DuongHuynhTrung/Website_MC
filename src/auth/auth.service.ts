@@ -52,6 +52,16 @@ export class AuthService {
         relations: ['role'],
       });
       if (user) {
+        if (user.is_ban) {
+          throw new BadRequestException(
+            'Tài khoản của bạn đã bị khóa. Hãy liên hệ với admin để mở khóa!',
+          );
+        }
+        if (!user.isConfirmByAdmin) {
+          throw new BadRequestException(
+            `Tài khoản của bạn chưa được admin xét duyệt!`,
+          );
+        }
         const payload: PayloadJwtDto = {
           fullname: user.fullname,
           email: user.email,
@@ -74,6 +84,7 @@ export class AuthService {
             role: role,
             role_name: RoleEnum.LECTURER,
             status: true,
+            isConfirmByAdmin: true,
           });
           if (!user) {
             throw new BadRequestException(
@@ -187,7 +198,6 @@ export class AuthService {
 
   async signIn(signInDto: SignInDto): Promise<{ accessToken: string }> {
     let user: User = null;
-    console.log('Here');
     try {
       user = await this.userRepository.findOne({
         where: { email: signInDto.email },
@@ -466,6 +476,9 @@ export class AuthService {
       role: role,
       role_name: RoleEnum.BUSINESS,
     });
+    if (createNewBusinessDto.is_create_by_admin) {
+      business.isConfirmByAdmin = true;
+    }
     const result = await this.userRepository.save(business);
     if (!result) {
       throw new InternalServerErrorException(

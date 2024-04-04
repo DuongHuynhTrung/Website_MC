@@ -18,6 +18,8 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { ConfigService } from '@nestjs/config';
       Group,
       UserGroup,
       Role,
+      Notification,
     ]),
   ],
   controllers: [ProjectController],
@@ -42,6 +45,7 @@ import { ConfigService } from '@nestjs/config';
     EmailService,
     JwtService,
     ConfigService,
+    NotificationService,
   ],
 })
 export class ProjectModule {}

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -8,6 +9,15 @@ import {
 } from 'class-validator';
 
 export class CreateProjectDto {
+  @ApiProperty({
+    description: 'Is Admin Create Project',
+    example: true,
+    nullable: false,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  is_created_by_admin: boolean;
+
   @ApiProperty({
     description: 'Name of Business',
     example: 'Acb',
@@ -132,7 +142,7 @@ export class CreateProjectDto {
     nullable: false,
   })
   @IsNotEmpty()
-  expected_budget: number;
+  expected_budget: string;
 
   @ApiProperty({
     description: 'Is First Project',
