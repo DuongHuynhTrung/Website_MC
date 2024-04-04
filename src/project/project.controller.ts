@@ -30,7 +30,6 @@ import { Project } from './entities/project.entity';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 
 @ApiTags('Project')
-@ApiBearerAuth()
 @Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
@@ -53,9 +52,6 @@ export class ProjectController {
     description: 'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
   })
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS, RoleEnum.ADMIN)
-  @UseGuards(JwtGuard)
   createProject(@Body() createProjectDto: CreateProjectDto): Promise<Project> {
     return this.projectService.createProject(createProjectDto);
   }
@@ -68,6 +64,7 @@ export class ProjectController {
     type: [Project],
   })
   @Get('firstProject')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
@@ -83,6 +80,7 @@ export class ProjectController {
     type: [Project],
   })
   @Get('admin')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
@@ -113,6 +111,7 @@ export class ProjectController {
     description: 'Hệ thống không có dự án nào!',
   })
   @Get('business')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS)
   @UseGuards(JwtGuard)
@@ -130,6 +129,7 @@ export class ProjectController {
   @ApiNotFoundResponse({
     description: 'Không tìm thấy dự án với mã số ${id} ',
   })
+  @ApiBearerAuth()
   @Get(':id')
   getProjectByID(@Param('id') id: number): Promise<Project> {
     return this.projectService.getProjectById(id);
@@ -145,6 +145,7 @@ export class ProjectController {
   @ApiNotFoundResponse({
     description: 'Không tìm thấy dự án với mã số ${id} ',
   })
+  @ApiBearerAuth()
   @Delete(':id')
   deleteProject(@Param('id') id: number): Promise<Project> {
     return this.projectService.deleteProject(id);
@@ -164,6 +165,7 @@ export class ProjectController {
     description: 'Có lỗi khi công bố dự án',
   })
   @Patch('confirm-project/:id')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
@@ -188,6 +190,7 @@ export class ProjectController {
     description: 'Có lỗi khi công bố dự án',
   })
   @Patch(':id')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
@@ -212,6 +215,7 @@ export class ProjectController {
     description: 'Có lỗi khi thay đổi trạng thái của dự án',
   })
   @Patch('changeStatus/:projectId/:projectStatus/:groupId')
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS)
   @UseGuards(JwtGuard)
@@ -236,6 +240,7 @@ export class ProjectController {
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi xảy ra khi thống kê dự án theo trạng thái',
   })
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
@@ -258,6 +263,7 @@ export class ProjectController {
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi xảy ra khi thống kê dự án theo loại doanh nghiệp',
   })
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.ADMIN)
   @UseGuards(JwtGuard)
