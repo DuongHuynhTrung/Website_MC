@@ -10,10 +10,18 @@ import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_p
 import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { UserGroup } from 'src/user-group/entities/user-group.entity';
+import { UserGroupService } from 'src/user-group/user-group.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, User, ResponsiblePerson, Role]),
+    TypeOrmModule.forFeature([
+      Notification,
+      User,
+      ResponsiblePerson,
+      Role,
+      UserGroup,
+    ]),
   ],
   controllers: [NotificationController],
   providers: [
@@ -21,6 +29,7 @@ import { RoleService } from 'src/role/role.service';
     NotificationService,
     UserService,
     ResponsiblePersonService,
+    UserGroupService,
   ],
 })
 export class NotificationModule {}

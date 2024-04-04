@@ -14,11 +14,9 @@ import { ResponsiblePersonService } from 'src/responsible_person/responsible_per
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import { GroupService } from 'src/group/group.service';
 import { SocketGateway } from 'socket.gateway';
-import moment from 'moment';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { EmailService } from 'src/email/email.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
-import { Role } from 'src/role/entities/role.entity';
+import * as moment from 'moment';
 
 @Injectable()
 export class ProjectService {
@@ -29,14 +27,9 @@ export class ProjectService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
 
-    @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
-
     private readonly responsiblePersonService: ResponsiblePersonService,
 
     private readonly groupService: GroupService,
-
-    private readonly emailService: EmailService,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {

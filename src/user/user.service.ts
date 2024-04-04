@@ -12,6 +12,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { Role } from 'src/role/entities/role.entity';
 import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
+import { UserGroup } from 'src/user-group/entities/user-group.entity';
 
 @Injectable()
 export class UserService {
@@ -24,6 +25,9 @@ export class UserService {
 
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+
+    @InjectRepository(UserGroup)
+    private readonly userGroupRepository: Repository<UserGroup>,
   ) {}
 
   async getUsers(): Promise<[{ totalUsers: number }, User[]]> {
@@ -155,6 +159,29 @@ export class UserService {
       }
       if (!user.is_ban) {
         throw new Error('Chỉ có thể xóa tài khoản đang bị khóa');
+      }
+      switch (user.role_name) {
+        case RoleEnum.STUDENT: {
+          const userId = user.id;
+          const user_group: UserGroup[] = await this.userGroupRepository
+            .createQueryBuilder('user_group')
+            .leftJoinAndSelect('user_group.user', 'user')
+            .leftJoinAndSelect('user_group.group', 'group')
+            .leftJoinAndSelect('user.role', 'role')
+            .where('user.id = :userId', { userId })
+            .getMany();
+          const groupId: number[] = user_group.map(
+            (user_group) => user_group.group.id,
+          );
+
+          break;
+        }
+        case RoleEnum.LECTURER: {
+          break;
+        }
+        case RoleEnum.BUSINESS: {
+          break;
+        }
       }
       const result = await this.userRepository.remove(user);
       if (!result) {
