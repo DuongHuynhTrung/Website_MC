@@ -25,10 +25,9 @@ import { RoleEnum } from '../role/enum/role.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
 
-@UseGuards(JwtGuard)
 @ApiTags('User')
-@ApiBearerAuth()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -46,6 +45,8 @@ export class UserController {
   })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get()
   getAllUsers(): Promise<[{ totalUsers: number }, User[]]> {
     return this.userService.getUsers();
@@ -62,6 +63,8 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error.',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get(':email')
   getUserByEmail(
     @Param('email') email: string,
@@ -77,6 +80,8 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error.',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('/search/:roleName/:searchEmail')
   searchUserByEmail(
     @GetUser() user: User,
@@ -106,6 +111,8 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Internal server error.',
   })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch('update-profile')
   updateProfile(
     @Body() updateProfileDto: UpdateProfileDto,
@@ -114,9 +121,34 @@ export class UserController {
     return this.userService.updateProfile(updateProfileDto, user);
   }
 
+  @ApiOperation({ summary: 'Update Profile No Auth' })
+  @ApiOkResponse({
+    description: 'UserName has been changed',
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found.',
+  })
+  @ApiBadRequestResponse({
+    description: 'User status is false.',
+  })
+  @ApiBadRequestResponse({
+    description: 'UserName is not following regex pattern.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Patch('update-profile-not-auth')
+  updateProfileNoAuth(
+    @Body() updateProfileDto: UpdateProfileNoAuthDto,
+  ): Promise<User> {
+    return this.userService.updateProfileNoAuth(updateProfileDto);
+  }
+
   @ApiOperation({ summary: 'Ban Account' })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch('banAccount/:email')
   banAccount(@Param('email') email: string): Promise<User> {
     return this.userService.banAccount(email);
@@ -125,6 +157,8 @@ export class UserController {
   @ApiOperation({ summary: 'Ban Account' })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Patch('unBanAccount/:email')
   unBanAccount(@Param('email') email: string): Promise<User> {
     return this.userService.unBanAccount(email);
@@ -133,6 +167,8 @@ export class UserController {
   @ApiOperation({ summary: 'Ban Account' })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Delete('deleteAccount/:email')
   deleteAccount(@Param('email') email: string): Promise<User> {
     return this.userService.deleteAccount(email);
@@ -147,6 +183,8 @@ export class UserController {
   })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('/admin/statisticsAccount')
   statisticsAccount(): Promise<{ key: string; value: number }[]> {
     return this.userService.statisticsAccount();
@@ -161,6 +199,8 @@ export class UserController {
   })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('/admin/statisticsBusinessFollowProvince')
   statisticsBusinessFollowProvince(): Promise<
     { key: string; value: number }[]
@@ -178,6 +218,8 @@ export class UserController {
   })
   @Roles(RoleEnum.ADMIN)
   @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
   @Get('/admin/statisticsAccountByBusinessSector')
   statisticsAccountByBusinessSector(): Promise<
     { key: string; value: number }[]
