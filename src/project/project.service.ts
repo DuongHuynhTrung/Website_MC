@@ -16,7 +16,6 @@ import { GroupService } from 'src/group/group.service';
 import { SocketGateway } from 'socket.gateway';
 import moment from 'moment';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { MyFunctions } from 'src/utils/MyFunctions';
 import { EmailService } from 'src/email/email.service';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { Role } from 'src/role/entities/role.entity';
@@ -51,37 +50,17 @@ export class ProjectService {
       );
     }
 
-    let business = await this.userRepository.findOne({
+    const business = await this.userRepository.findOne({
       where: {
         email: createProjectDto.businessEmail,
       },
     });
     if (!business) {
-      const passwordGenerated = await MyFunctions.generatePassword(12);
-      const role = await this.roleRepository.findOneBy({
-        role_name: RoleEnum.BUSINESS,
-      });
-      business = this.userRepository.create({
-        fullname: createProjectDto.businessName,
-        email: createProjectDto.businessEmail,
-        password: passwordGenerated.passwordEncoded,
-        status: true,
-        isConfirmByAdmin: false,
-        role: role,
-        role_name: RoleEnum.BUSINESS,
-      });
-      const result = await this.userRepository.save(business);
-      if (!result) {
-        throw new InternalServerErrorException(
-          'Có lỗi xảy ra khi tạo doanh nghiệp mới',
-        );
-      }
-      await this.emailService.provideAccount(
-        business.email,
-        business.fullname,
-        passwordGenerated.password,
+      throw new BadRequestException(
+        `Không tìm thấy doannh nghiệp với email ${createProjectDto.businessEmail}`,
       );
     }
+
     if (business.role_name != RoleEnum.BUSINESS) {
       throw new BadRequestException(
         `Email đã tồn tại trong hệ thống với vai trò không phải doanh nghiệp. Vui lòng liên hệ với Admin để giải quyết`,

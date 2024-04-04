@@ -207,10 +207,7 @@ export class UserService {
     updateProfileDto: UpdateProfileNoAuthDto,
   ): Promise<User> {
     try {
-      if (
-        updateProfileDto.role_name &&
-        updateProfileDto.role_name == RoleEnum.ADMIN
-      ) {
+      if (updateProfileDto.role_name == RoleEnum.ADMIN) {
         throw new Error('Không thể cập nhật vai trò thành admin');
       }
       const user = await this.userRepository.findOneBy({
@@ -222,13 +219,17 @@ export class UserService {
         );
       }
       Object.assign(user, updateProfileDto);
-      const role = await this.roleRepository.findOne({
-        where: { role_name: updateProfileDto.role_name },
-      });
       if (updateProfileDto.role_name == RoleEnum.BUSINESS) {
         user.isConfirmByAdmin = false;
       }
-      user.role = role;
+      if (updateProfileDto.role_name) {
+        const role = await this.roleRepository.findOne({
+          where: { role_name: updateProfileDto.role_name },
+        });
+        if (role) {
+          user.role = role;
+        }
+      }
       await this.userRepository.save(user);
       return await this.getUserByEmail(user.email);
     } catch (error) {
@@ -240,20 +241,21 @@ export class UserService {
     user: User,
   ): Promise<User> {
     try {
-      if (
-        updateProfileDto.role_name &&
-        updateProfileDto.role_name == RoleEnum.ADMIN
-      ) {
+      if (updateProfileDto.role_name == RoleEnum.ADMIN) {
         throw new Error('Không thể cập nhật vai trò thành admin');
       }
       Object.assign(user, updateProfileDto);
-      const role = await this.roleRepository.findOne({
-        where: { role_name: updateProfileDto.role_name },
-      });
       if (updateProfileDto.role_name == RoleEnum.BUSINESS) {
         user.isConfirmByAdmin = false;
       }
-      user.role = role;
+      if (updateProfileDto.role_name) {
+        const role = await this.roleRepository.findOne({
+          where: { role_name: updateProfileDto.role_name },
+        });
+        if (role) {
+          user.role = role;
+        }
+      }
       await this.userRepository.save(user);
       return await this.getUserByEmail(user.email);
     } catch (error) {

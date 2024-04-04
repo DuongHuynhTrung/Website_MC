@@ -33,6 +33,7 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { EmailService } from 'src/email/email.service';
 import { ForgotPasswordOtpDto } from 'src/email/dto/forgot-password-otp.dto';
 import { VerifyOtpDto } from 'src/email/dto/verify-otp.dto';
+import { CreateNewBusinessDto } from './dto/create-new-business.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -107,6 +108,17 @@ export class AuthController {
   @Post('signin')
   signIn(@Body() signInDto: SignInDto): Promise<{ accessToken: string }> {
     return this.authService.signIn(signInDto);
+  }
+
+  @ApiOperation({ summary: 'Create new Business' })
+  @ApiCreatedResponse({
+    description: 'Sign up successfully',
+  })
+  @Post('createNewBusiness')
+  createNewBusiness(
+    @Body() createNewBusinessDto: CreateNewBusinessDto,
+  ): Promise<User> {
+    return this.authService.createNewBusiness(createNewBusinessDto);
   }
 
   @ApiOperation({ summary: 'Get All Admin' })

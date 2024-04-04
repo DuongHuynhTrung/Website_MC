@@ -24,6 +24,7 @@ import { UserService } from 'src/user/user.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { EmailService } from 'src/email/email.service';
 import { MyFunctions } from 'src/utils/MyFunctions';
+import { CreateNewBusinessDto } from './dto/create-new-business.dto';
 
 @Injectable()
 export class AuthService {
@@ -438,5 +439,44 @@ export class AuthService {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  async createNewBusiness(createNewBusinessDto: CreateNewBusinessDto) {
+    let business = await this.userRepository.findOne({
+      where: {
+        email: createNewBusinessDto.businessEmail,
+      },
+    });
+    if (business) {
+      throw new BadRequestException(
+        `Email ${createNewBusinessDto.businessEmail} đã tồn tại trong hệ thống`,
+      );
+    }
+
+    const passwordGenerated = await MyFunctions.generatePassword(12);
+    const role = await this.roleRepository.findOneBy({
+      role_name: RoleEnum.BUSINESS,
+    });
+    business = this.userRepository.create({
+      fullname: createNewBusinessDto.businessName,
+      email: createNewBusinessDto.businessEmail,
+      password: passwordGenerated.passwordEncoded,
+      status: true,
+      isConfirmByAdmin: false,
+      role: role,
+      role_name: RoleEnum.BUSINESS,
+    });
+    const result = await this.userRepository.save(business);
+    if (!result) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi tạo doanh nghiệp mới',
+      );
+    }
+    await this.emailService.provideAccount(
+      business.email,
+      business.fullname,
+      passwordGenerated.password,
+    );
+    return result;
   }
 }
