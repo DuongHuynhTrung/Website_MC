@@ -9,7 +9,7 @@ export class CreateNewBusinessDto {
   })
   @IsBoolean()
   @IsNotEmpty()
-  is_create_by_admin: boolean;
+  is_created_by_admin: boolean;
 
   @ApiProperty({
     description: 'Name of Business',

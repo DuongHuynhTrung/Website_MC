@@ -476,7 +476,7 @@ export class AuthService {
       role: role,
       role_name: RoleEnum.BUSINESS,
     });
-    if (createNewBusinessDto.is_create_by_admin) {
+    if (createNewBusinessDto.is_created_by_admin) {
       business.isConfirmByAdmin = true;
     }
     const result = await this.userRepository.save(business);
