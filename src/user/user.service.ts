@@ -174,7 +174,12 @@ export class UserService {
       if (!user.is_ban) {
         throw new Error('Chỉ có thể xóa tài khoản đang bị khóa');
       }
-      if (user.role_name == RoleEnum.BUSINESS) {
+      if (user.role == null) {
+        const result = await this.userRepository.remove(user);
+        if (!result) {
+          throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+        }
+        return result;
       }
       switch (user.role_name) {
         case RoleEnum.STUDENT: {
@@ -289,7 +294,6 @@ export class UserService {
               'Sinh viên vẫn đang trong quá trình thực hiện dự án không thể xóa',
             );
           }
-          break;
         }
         case RoleEnum.LECTURER: {
           const userId = user.id;
@@ -325,7 +329,6 @@ export class UserService {
               'Giảng viên đang tham gia hướng dẫn nhóm không thể xóa!',
             );
           }
-          break;
         }
         case RoleEnum.BUSINESS: {
           const projects = await this.projectRepository.find({
@@ -394,7 +397,6 @@ export class UserService {
             throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
           }
           return result;
-          break;
         }
       }
     } catch (error) {
