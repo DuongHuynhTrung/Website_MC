@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import { UserGroup } from './entities/user-group.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { RoleEnum } from 'src/role/enum/role.enum';
 import { RoleInGroupEnum } from './enum/role-in-group.enum';
 
 @Injectable()
@@ -129,17 +128,16 @@ export class UserGroupService {
     }
   }
 
-  async checkGroupHasLecturer(groupId: number): Promise<UserGroup> {
+  async checkGroupHasLecturer(groupId: number): Promise<UserGroup[]> {
     try {
-      const roleName = RoleEnum.LECTURER;
-      const userGroup: UserGroup = await this.userGroupRepository
+      const roleName = RoleInGroupEnum.LECTURER;
+      const userGroup: UserGroup[] = await this.userGroupRepository
         .createQueryBuilder('user_group')
         .leftJoinAndSelect('user_group.user', 'user')
         .leftJoinAndSelect('user_group.group', 'group')
-        .leftJoinAndSelect('user.role', 'role')
         .where('group.id = :groupId', { groupId })
-        .andWhere('role.role_name = :roleName', { roleName })
-        .getOne();
+        .andWhere('user_group.role_in_group = :roleName', { roleName })
+        .getMany();
       if (!userGroup) {
         return null;
       }

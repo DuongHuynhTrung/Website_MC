@@ -17,8 +17,6 @@ import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
-import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
-import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { ConfirmSummaryReportDto } from './dto/confirm-summary_report.dto';
@@ -37,8 +35,6 @@ export class SummaryReportService {
     private readonly projectService: ProjectService,
 
     private readonly userGroupService: UserGroupService,
-
-    private readonly registerPitchingService: RegisterPitchingService,
 
     private readonly groupService: GroupService,
 
@@ -216,12 +212,15 @@ export class SummaryReportService {
       const project: Project = await this.projectService.getProjectById(
         confirmSummaryReportDto.project_id,
       );
-      const registerPitching: RegisterPitching =
-        await this.registerPitchingService.getRegisterPitchingByGroupIdAndProjectId(
-          group.id,
-          project.id,
-        );
-      if (registerPitching.lecturer.id != user.id) {
+      const lecturerOfGroup = await this.userGroupService.checkGroupHasLecturer(
+        group.id,
+      );
+      let checkPermission: boolean = false;
+      lecturerOfGroup.forEach(
+        (lecturer) => (checkPermission = lecturer.user.id === user.id),
+      );
+
+      if (!checkPermission) {
         throw new BadGatewayException(
           'Chỉ có giảng viên hướng dẫn dự án mới có thể xác nhận báo cáo tổng hợp',
         );

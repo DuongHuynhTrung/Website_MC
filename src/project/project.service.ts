@@ -255,20 +255,22 @@ export class ProjectService {
             );
 
             //Send mail to Lecturer of Group
-            const lecturer: UserGroup =
+            const lecturers: UserGroup[] =
               await this.userGroupService.checkGroupHasLecturer(
                 registerPitching.group.id,
               );
-            const createNotificationToLecturerDto: CreateNotificationDto =
-              new CreateNotificationDto(
-                NotificationTypeEnum.DELETE_PROJECT,
-                `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
-                this.configService.get('MAIL_USER'),
-                lecturer.user.email,
+            lecturers.forEach(async (lecturer) => {
+              const createNotificationToLecturerDto: CreateNotificationDto =
+                new CreateNotificationDto(
+                  NotificationTypeEnum.DELETE_PROJECT,
+                  `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
+                  this.configService.get('MAIL_USER'),
+                  lecturer.user.email,
+                );
+              await this.notificationService.createNotification(
+                createNotificationToLecturerDto,
               );
-            await this.notificationService.createNotification(
-              createNotificationToLecturerDto,
-            );
+            });
           });
           const deleteRegisterPitching =
             await this.registerPitchingRepository.remove(

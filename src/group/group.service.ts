@@ -130,25 +130,14 @@ export class GroupService {
         'Sinh viên hoặc giảng viên đã trong nhóm hoặc đang chờ phản hồi',
       );
     }
-    const checkGroupHasLecturer: UserGroup =
+    const checkGroupHasLecturer: UserGroup[] =
       await this.userGroupService.checkGroupHasLecturer(groupId);
-    if (
-      checkGroupHasLecturer &&
-      checkGroupHasLecturer.relationship_status == RelationshipStatusEnum.JOINED
-    ) {
+    if (checkGroupHasLecturer && checkGroupHasLecturer.length >= 2) {
       throw new BadRequestException(
-        'Nhóm đã có giáo viên hướng dẫn. Không thể mời thêm',
+        'Nhóm đã có 2 giáo viên hướng dẫn. Không thể mời thêm',
       );
     }
-    if (
-      checkGroupHasLecturer &&
-      checkGroupHasLecturer.relationship_status ==
-        RelationshipStatusEnum.PENDING
-    ) {
-      throw new BadRequestException(
-        'Nhóm đã mời giáo viên hướng dẫn. Hãy đợi hồi đáp',
-      );
-    }
+
     if (member.role.role_name == RoleEnum.STUDENT) {
       const createUserGroupDto = new CreateUserGroupDto({
         role_in_group: RoleInGroupEnum.MEMBER,
@@ -160,11 +149,24 @@ export class GroupService {
         await this.userGroupService.createUserGroup(createUserGroupDto);
       } catch (error) {
         throw new InternalServerErrorException(
-          'Có lỗi xảy ra khi invite member',
+          'Có lỗi xảy ra khi mời thành viên',
         );
       }
       return 'Mời thành viên thành công!';
     } else {
+      const isInviteLecturer = await this.userGroupService.checkUserInGroup(
+        member.id,
+        groupId,
+      );
+      if (
+        isInviteLecturer &&
+        isInviteLecturer.relationship_status == RelationshipStatusEnum.PENDING
+      ) {
+        throw new BadRequestException(
+          'Nhóm đã mời giáo viên hướng dẫn. Hãy đợi hồi đáp',
+        );
+      }
+
       const createUserGroupDto = new CreateUserGroupDto({
         role_in_group: RoleInGroupEnum.LECTURER,
         user: member,
@@ -175,10 +177,10 @@ export class GroupService {
         await this.userGroupService.createUserGroup(createUserGroupDto);
       } catch (error) {
         throw new InternalServerErrorException(
-          'Có lỗi xảy ra khi invite member',
+          'Có lỗi xảy ra khi mời giảng viên',
         );
       }
-      return 'Mời thành viên thành công!';
+      return 'Mời giảng viên thành công!';
     }
   }
 
@@ -306,7 +308,7 @@ export class GroupService {
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
+          relations: ['group', 'project'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         return [];

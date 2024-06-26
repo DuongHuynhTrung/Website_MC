@@ -464,16 +464,21 @@ export class PhaseService {
             registerpitching.register_pitching_status ==
             RegisterPitchingStatusEnum.SELECTED,
         );
-        const createNotificationDtoLecturer: CreateNotificationDto =
-          new CreateNotificationDto(
-            NotificationTypeEnum.WARNING_PHASE_LECTURER,
-            `Nhóm ${group.group_name} có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
-            this.configService.get('MAIL_USER'),
-            selectedPitching.lecturer.email,
+        //Send notification to lecturer
+        const lecturerOfGroup =
+          await this.userGroupService.checkGroupHasLecturer(group.id);
+        lecturerOfGroup.forEach(async (lecturer) => {
+          const createNotificationDtoLecturer: CreateNotificationDto =
+            new CreateNotificationDto(
+              NotificationTypeEnum.WARNING_PHASE_LECTURER,
+              `Nhóm ${group.group_name} có giai đoạn ${phase.phase_number} của dự án ${phase.project.name_project} quá thời hạn dự kiến kết thúc`,
+              this.configService.get('MAIL_USER'),
+              lecturer.user.email,
+            );
+          await this.notificationService.createNotification(
+            createNotificationDtoLecturer,
           );
-        await this.notificationService.createNotification(
-          createNotificationDtoLecturer,
-        );
+        });
       }
     });
   }

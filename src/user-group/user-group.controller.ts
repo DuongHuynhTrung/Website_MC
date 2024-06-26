@@ -39,7 +39,9 @@ export class UserGroupController {
   }
 
   @Get('lecturer/:groupId')
-  findUserGroupByGroup(@Param('groupId') groupId: number) {
+  findLecturerByGroupId(
+    @Param('groupId') groupId: number,
+  ): Promise<UserGroup[]> {
     return this.userGroupService.checkGroupHasLecturer(groupId);
   }
 }

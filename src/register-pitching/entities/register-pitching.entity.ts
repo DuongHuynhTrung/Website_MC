@@ -9,7 +9,6 @@ import {
 import { RegisterPitchingStatusEnum } from '../enum/register-pitching.enum';
 import { Group } from 'src/group/entities/group.entity';
 import { Project } from 'src/project/entities/project.entity';
-import { User } from 'src/user/entities/user.entity';
 import { SubjectCodeEnum } from '../enum/subject-code.enum';
 
 @Entity()
@@ -31,9 +30,6 @@ export class RegisterPitching {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @ManyToOne(() => User, (lecturer) => lecturer.register_pitchings)
-  lecturer: User;
 
   @ManyToOne(() => Group, (group) => group.register_pitchings)
   group: Group;

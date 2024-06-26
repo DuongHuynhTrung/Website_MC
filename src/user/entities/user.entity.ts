@@ -12,7 +12,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/role/entities/role.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
-import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 
@@ -187,12 +186,6 @@ export class User {
 
   @OneToMany(() => UserGroup, (user_group) => user_group.user)
   user_groups: UserGroup[];
-
-  @OneToMany(
-    () => RegisterPitching,
-    (register_pitchings) => register_pitchings.lecturer,
-  )
-  register_pitchings: RegisterPitching;
 
   @OneToMany(() => Notification, (notification) => notification.sender)
   sender_notifications: Notification[];

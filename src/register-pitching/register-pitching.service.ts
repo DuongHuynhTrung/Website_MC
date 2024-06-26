@@ -80,17 +80,13 @@ export class RegisterPitchingService {
     if (checkGroupRegisterPitchingProject) {
       throw new BadRequestException('Nhóm đã đăng ký pitching dự án này');
     }
-    const checkGroupHasLecturer: UserGroup =
+    const checkGroupHasLecturer: UserGroup[] =
       await this.userGroupService.checkGroupHasLecturer(group.id);
-    if (checkGroupHasLecturer) {
-      const lecturer: User = await this.userService.getUserByEmail(
-        checkGroupHasLecturer.user.email,
-      );
+    if (checkGroupHasLecturer && checkGroupHasLecturer.length > 0) {
       const registerPitching: RegisterPitching =
         this.registerPitchingRepository.create(createRegisterPitchingDto);
       registerPitching.group = group;
       registerPitching.project = project;
-      registerPitching.lecturer = lecturer;
       let result: RegisterPitching = null;
       try {
         result = await this.registerPitchingRepository.save(registerPitching);
@@ -104,19 +100,37 @@ export class RegisterPitchingService {
 
       return await this.getRegisterPitchingById(result.id);
     } else {
-      const lecturer: User = await this.userService.getUserByEmail(
-        createRegisterPitchingDto.lecturer_email,
-      );
-      if (lecturer.role.role_name != RoleEnum.LECTURER) {
-        throw new BadRequestException(
-          'Chỉ có thể mời giảng viên khi đăng ký pitching',
+      createRegisterPitchingDto.lecturer_email.forEach(async (email) => {
+        const lecturer: User = await this.userService.getUserByEmail(email);
+        if (lecturer.role.role_name != RoleEnum.LECTURER) {
+          throw new BadRequestException(
+            'Chỉ có thể mời giảng viên khi đăng ký pitching',
+          );
+        }
+        // Create UserGroup for Lecturer and Group
+        const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto({
+          group: group,
+          relationship_status: RelationshipStatusEnum.PENDING,
+          role_in_group: RoleInGroupEnum.LECTURER,
+          user: lecturer,
+        });
+        await this.userGroupService.createUserGroup(createUserGroupDto);
+        // Sent Notification to Lecturer
+        const createNotificationDto: CreateNotificationDto =
+          new CreateNotificationDto(
+            NotificationTypeEnum.INVITE_LECTURER,
+            `${group.group_name} đã gửi lời mời bạn làm Mentor cho dự án ${project.name_project}`,
+            user_group.user.email,
+            lecturer.email,
+          );
+        await this.notificationService.createNotification(
+          createNotificationDto,
         );
-      }
+      });
       const registerPitching: RegisterPitching =
         this.registerPitchingRepository.create(createRegisterPitchingDto);
       registerPitching.group = group;
       registerPitching.project = project;
-      registerPitching.lecturer = lecturer;
       let result: RegisterPitching = null;
       try {
         result = await this.registerPitchingRepository.save(registerPitching);
@@ -125,23 +139,6 @@ export class RegisterPitchingService {
           'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',
         );
       }
-      // Create UserGroup for Lecturer and Group
-      const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto({
-        group: group,
-        relationship_status: RelationshipStatusEnum.PENDING,
-        role_in_group: RoleInGroupEnum.LECTURER,
-        user: lecturer,
-      });
-      await this.userGroupService.createUserGroup(createUserGroupDto);
-      // Sent Notification to Lecturer
-      const createNotificationDto: CreateNotificationDto =
-        new CreateNotificationDto(
-          NotificationTypeEnum.INVITE_LECTURER,
-          `${group.group_name} đã gửi lời mời bạn làm Mentor cho dự án ${project.name_project}`,
-          user_group.user.email,
-          lecturer.email,
-        );
-      await this.notificationService.createNotification(createNotificationDto);
       // Change status of Group to Active
       await this.groupService.changeGroupStatusToActive(group.id);
 
@@ -152,7 +149,7 @@ export class RegisterPitchingService {
   async getAllRegisterPitchingOfUser(user: User): Promise<RegisterPitching[]> {
     const registerPitchings: RegisterPitching[] =
       await this.registerPitchingRepository.find({
-        relations: ['group', 'project', 'lecturer'],
+        relations: ['group', 'project'],
       });
     if (registerPitchings.length === 0) {
       return [];
@@ -176,7 +173,7 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching[]> {
     const registerPitchings: RegisterPitching[] =
       await this.registerPitchingRepository.find({
-        relations: ['group', 'project', 'lecturer'],
+        relations: ['group', 'project'],
       });
     if (registerPitchings.length === 0) {
       return [];
@@ -193,7 +190,7 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching[]> {
     const registerPitchings: RegisterPitching[] =
       await this.registerPitchingRepository.find({
-        relations: ['group', 'project', 'lecturer'],
+        relations: ['group', 'project'],
       });
     if (registerPitchings.length === 0) {
       return [];
@@ -242,7 +239,7 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
+          relations: ['group', 'project'],
         });
       if (!registerPitchings) {
         throw new NotFoundException('Hệ thống không có registerPitching nào');
@@ -265,7 +262,7 @@ export class RegisterPitchingService {
     try {
       let registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
+          relations: ['group', 'project'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         throw new NotFoundException('Không có một đăng ký pitching nào');
@@ -289,7 +286,7 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer'],
+          relations: ['group', 'project'],
         });
       if (!registerPitchings || registerPitchings.length === 0) {
         return null;
@@ -443,7 +440,7 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'lecturer', 'project.business'],
+          relations: ['group', 'project', 'project.business'],
         });
       if (registerPitchings.length === 0) {
         SocketGateway.handleGetAllRegisterPitching({

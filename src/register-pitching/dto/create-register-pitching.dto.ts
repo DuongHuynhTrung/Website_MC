@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SubjectCodeEnum } from '../enum/subject-code.enum';
 
@@ -28,11 +34,12 @@ export class CreateRegisterPitchingDto {
 
   @ApiProperty({
     description: 'Lecturer Email',
-    example: 'lecturer@gmail.com',
+    example: ['lecturer@gmail.com'],
   })
   @IsNotEmpty()
+  @IsArray()
   @IsString()
-  lecturer_email: string;
+  lecturer_email: string[];
 
   @ApiProperty({
     description: 'Project ID',
