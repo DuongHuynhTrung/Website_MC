@@ -18,6 +18,7 @@ import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { GroupService } from 'src/group/group.service';
     RegisterPitchingService,
     ProjectService,
     GroupService,
+    ConfigService,
   ],
 })
 export class NotificationModule {}

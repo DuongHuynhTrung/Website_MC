@@ -17,6 +17,7 @@ import { GroupService } from 'src/group/group.service';
 import { Group } from 'src/group/entities/group.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { Notification } from 'src/notification/entities/notification.entity';
     ProjectService,
     GroupService,
     NotificationService,
+    ConfigService,
   ],
 })
 export class ResponsiblePersonModule {}

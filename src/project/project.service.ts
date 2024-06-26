@@ -17,6 +17,13 @@ import { SocketGateway } from 'socket.gateway';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import * as moment from 'moment';
+import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
+import { UserGroupService } from 'src/user-group/user-group.service';
+import { UserGroup } from 'src/user-group/entities/user-group.entity';
+import { NotificationService } from 'src/notification/notification.service';
+import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
+import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProjectService {
@@ -27,9 +34,18 @@ export class ProjectService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
 
+    @InjectRepository(RegisterPitching)
+    private readonly registerPitchingRepository: Repository<RegisterPitching>,
+
     private readonly responsiblePersonService: ResponsiblePersonService,
 
     private readonly groupService: GroupService,
+
+    private readonly userGroupService: UserGroupService,
+
+    private readonly notificationService: NotificationService,
+
+    private readonly configService: ConfigService,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
@@ -203,8 +219,67 @@ export class ProjectService {
       if (!project) {
         throw new NotFoundException(`Không tìm thấy dự án với mã số ${id} `);
       }
-      if (project.project_status != ProjectStatusEnum.PENDING) {
-        throw new BadRequestException('Chỉ có thể xóa dự án đang chờ xác thực');
+      if (
+        project.project_status != ProjectStatusEnum.PENDING &&
+        project.project_status != ProjectStatusEnum.PUBLIC
+      ) {
+        throw new BadRequestException(
+          'Chỉ có thể xóa dự án đang chờ xác thực và công khai',
+        );
+      }
+      if (project.project_status == ProjectStatusEnum.PUBLIC) {
+        const projectId = project.id;
+        const checkProjectHaveRegisterPitching: RegisterPitching[] =
+          await this.registerPitchingRepository
+            .createQueryBuilder('registerPitching')
+            .leftJoinAndSelect('registerPitching.group', 'group')
+            .leftJoinAndSelect('registerPitching.project', 'project')
+            .where('project.id = :projectId', { projectId })
+            .getMany();
+        if (checkProjectHaveRegisterPitching.length > 0) {
+          checkProjectHaveRegisterPitching.forEach(async (registerPitching) => {
+            const leader: UserGroup =
+              await this.userGroupService.getLeaderOfGroup(
+                registerPitching.group.id,
+              );
+            //Send mail to Leader of group
+            const createNotificationToLeaderDto: CreateNotificationDto =
+              new CreateNotificationDto(
+                NotificationTypeEnum.DELETE_PROJECT,
+                `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
+                this.configService.get('MAIL_USER'),
+                leader.user.email,
+              );
+            await this.notificationService.createNotification(
+              createNotificationToLeaderDto,
+            );
+
+            //Send mail to Lecturer of Group
+            const lecturer: UserGroup =
+              await this.userGroupService.checkGroupHasLecturer(
+                registerPitching.group.id,
+              );
+            const createNotificationToLecturerDto: CreateNotificationDto =
+              new CreateNotificationDto(
+                NotificationTypeEnum.DELETE_PROJECT,
+                `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
+                this.configService.get('MAIL_USER'),
+                lecturer.user.email,
+              );
+            await this.notificationService.createNotification(
+              createNotificationToLecturerDto,
+            );
+          });
+          const deleteRegisterPitching =
+            await this.registerPitchingRepository.remove(
+              checkProjectHaveRegisterPitching,
+            );
+          if (!deleteRegisterPitching) {
+            throw new InternalServerErrorException(
+              'Có lỗi xảy ra khi xóa đăng ký pitching',
+            );
+          }
+        }
       }
       const result = await this.projectRepository.remove(project);
       if (!result) {
@@ -385,6 +460,7 @@ export class ProjectService {
       );
     }
   }
+
   async statisticsProject(): Promise<
     {
       key: string;
