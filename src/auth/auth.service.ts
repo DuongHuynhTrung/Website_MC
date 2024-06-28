@@ -25,6 +25,8 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { EmailService } from 'src/email/email.service';
 import { MyFunctions } from 'src/utils/MyFunctions';
 import { CreateNewBusinessDto } from './dto/create-new-business.dto';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 @Injectable()
 export class AuthService {
@@ -40,6 +42,8 @@ export class AuthService {
     private readonly userService: UserService,
 
     private readonly emailService: EmailService,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
@@ -316,13 +320,58 @@ export class AuthService {
       const isExist = await this.userRepository.findOneBy({
         email: provideAccountDto.email,
       });
-      if (isExist) {
+      if (
+        isExist &&
+        provideAccountDto.roleName !== RoleEnum.RESPONSIBLE_PERSON
+      ) {
         throw new BadRequestException(
           `Email ${provideAccountDto.email} đã tồn tại trong hệ thống`,
         );
+      } else if (
+        isExist &&
+        provideAccountDto.roleName === RoleEnum.RESPONSIBLE_PERSON
+      ) {
+        isExist.status = true;
+        isExist.isConfirmByAdmin = true;
+        isExist.role_name = provideAccountDto.roleName;
+        const role = await this.roleRepository.findOneByOrFail({
+          role_name: provideAccountDto.roleName,
+        });
+        isExist.role = role;
+
+        const checkUserInProject =
+          await this.userProjectService.checkUserInProject(
+            isExist.id,
+            provideAccountDto.projectId,
+          );
+        if (!checkUserInProject) {
+          throw new NotFoundException(
+            'Không tìm thấy người phụ trách trong dự án',
+          );
+        }
+
+        checkUserInProject.user_project_status = UserProjectStatusEnum.EDIT;
+
+        await this.userProjectService.saveUserProject(checkUserInProject);
+
+        const passwordGenerated = await MyFunctions.generatePassword(12);
+        isExist.password = passwordGenerated.passwordEncoded;
+
+        const result: User = await this.userRepository.save(isExist);
+        if (!result) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
+          );
+        }
+        await this.emailService.provideAccount(
+          isExist.email,
+          isExist.fullname,
+          passwordGenerated.password,
+        );
+        return result;
       }
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new InternalServerErrorException(error.message);
     }
     const user = this.userRepository.create(provideAccountDto);
     if (!user) {

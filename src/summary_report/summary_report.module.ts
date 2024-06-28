@@ -5,8 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SummaryReport } from './entities/summary_report.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
@@ -25,13 +23,14 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       SummaryReport,
       Project,
-      ResponsiblePerson,
       Group,
       UserGroup,
       User,
@@ -39,6 +38,7 @@ import { ConfigService } from '@nestjs/config';
       Notification,
       Phase,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [SummaryReportController],
@@ -46,7 +46,6 @@ import { ConfigService } from '@nestjs/config';
     RoleService,
     SummaryReportService,
     ProjectService,
-    ResponsiblePersonService,
     GroupService,
     UserGroupService,
     UserService,
@@ -56,6 +55,7 @@ import { ConfigService } from '@nestjs/config';
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class SummaryReportModule {}

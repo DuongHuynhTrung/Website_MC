@@ -16,10 +16,6 @@ export class UserGroupService {
   constructor(
     @InjectRepository(UserGroup)
     private readonly userGroupRepository: Repository<UserGroup>,
-
-    // private readonly userService: UserService,
-
-    // private readonly groupService: GroupService,
   ) {}
   async createUserGroup(
     createUserGroupDto: CreateUserGroupDto,
@@ -186,6 +182,33 @@ export class UserGroupService {
         );
       }
       return userGroup;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async removeUserFromUserGroup(
+    userId: number,
+    groupId: number,
+  ): Promise<UserGroup> {
+    try {
+      const userGroup: UserGroup = await this.userGroupRepository
+        .createQueryBuilder('user_group')
+        .leftJoinAndSelect('user_group.user', 'user')
+        .leftJoinAndSelect('user_group.group', 'group')
+        .where('group.id = :groupId', { groupId })
+        .andWhere('user.id = :userId', { userId })
+        .getOne();
+      if (!userGroup) {
+        throw new NotFoundException('Không tìm thấy người dùng trong nhóm');
+      }
+      const removeUserGroup = await this.userGroupRepository.remove(userGroup);
+      if (!removeUserGroup) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi xóa thành viên khỏi nhóm',
+        );
+      }
+      return removeUserGroup;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

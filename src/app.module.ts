@@ -7,7 +7,6 @@ import { RoleModule } from './role/role.module';
 import { ProjectModule } from './project/project.module';
 import { EmailModule } from './email/email.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ResponsiblePersonModule } from './responsible_person/responsible_person.module';
 import { GroupModule } from './group/group.module';
 import { UserGroupModule } from './user-group/user-group.module';
 import { RegisterPitchingModule } from './register-pitching/register-pitching.module';
@@ -25,6 +24,7 @@ import { UserChatModule } from './user-chat/user-chat.module';
 import { NewMessageModule } from './new-message/new-message.module';
 import { SocketGateway } from 'socket.gateway';
 import { SupportModule } from './support/support.module';
+import { UserProjectModule } from './user-project/user-project.module';
 
 @Module({
   imports: [
@@ -72,7 +72,6 @@ import { SupportModule } from './support/support.module';
     RoleModule,
     ProjectModule,
     EmailModule,
-    ResponsiblePersonModule,
     GroupModule,
     UserGroupModule,
     RegisterPitchingModule,
@@ -87,6 +86,7 @@ import { SupportModule } from './support/support.module';
     UserChatModule,
     NewMessageModule,
     SupportModule,
+    UserProjectModule,
     // MessageModule,
   ],
   providers: [SocketGateway],

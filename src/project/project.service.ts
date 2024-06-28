@@ -10,7 +10,6 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import { GroupService } from 'src/group/group.service';
 import { SocketGateway } from 'socket.gateway';
@@ -24,6 +23,10 @@ import { NotificationService } from 'src/notification/notification.service';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { CreateUserProjectDto } from 'src/user-project/dto/create-user-project.dto';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Injectable()
 export class ProjectService {
@@ -37,8 +40,6 @@ export class ProjectService {
     @InjectRepository(RegisterPitching)
     private readonly registerPitchingRepository: Repository<RegisterPitching>,
 
-    private readonly responsiblePersonService: ResponsiblePersonService,
-
     private readonly groupService: GroupService,
 
     private readonly userGroupService: UserGroupService,
@@ -46,16 +47,23 @@ export class ProjectService {
     private readonly notificationService: NotificationService,
 
     private readonly configService: ConfigService,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
-    const responsiblePerson =
-      await this.responsiblePersonService.getResponsiblePerson(
-        createProjectDto.email_responsible_person,
-      );
+    const responsiblePerson = await this.userRepository.findOne({
+      where: { email: createProjectDto.email_responsible_person },
+    });
     if (!responsiblePerson) {
       throw new NotFoundException(
         `Không tìm thấy người phụ trách với email ${createProjectDto.email_responsible_person}`,
+      );
+    }
+
+    if (responsiblePerson.role_name != RoleEnum.RESPONSIBLE_PERSON) {
+      throw new BadRequestException(
+        `Email đã tồn tại trong hệ thống với vai trò không phải người phụ trách. Vui lòng liên hệ với Admin để giải quyết`,
       );
     }
 
@@ -75,6 +83,7 @@ export class ProjectService {
         `Email đã tồn tại trong hệ thống với vai trò không phải doanh nghiệp. Vui lòng liên hệ với Admin để giải quyết`,
       );
     }
+
     const project = this.projectRepository.create(createProjectDto);
     if (!project) {
       throw new BadRequestException(
@@ -85,10 +94,38 @@ export class ProjectService {
       project.project_status = ProjectStatusEnum.PUBLIC;
       project.is_first_project = false;
     }
-    project.responsible_person = responsiblePerson;
-    project.business = business;
     try {
       const result = await this.projectRepository.save(project);
+      // Add responsible person to project
+      const createUserProjectResponsibleDto = new CreateUserProjectDto({
+        project: result,
+        user: responsiblePerson,
+        user_project_status: UserProjectStatusEnum.VIEW,
+      });
+      const userProjectResponsible =
+        await this.userProjectService.createUserProject(
+          createUserProjectResponsibleDto,
+        );
+      if (!userProjectResponsible) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thêm người phụ trách vào dự án',
+        );
+      }
+      // Add business to project
+      const createUserProjectBusinessDto = new CreateUserProjectDto({
+        project: result,
+        user: business,
+        user_project_status: UserProjectStatusEnum.OWNER,
+      });
+      const userProjectBusiness =
+        await this.userProjectService.createUserProject(
+          createUserProjectBusinessDto,
+        );
+      if (!userProjectBusiness) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thêm doanh nghiệp vào dự án',
+        );
+      }
       if (!result) {
         throw new InternalServerErrorException(
           'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
@@ -108,7 +145,6 @@ export class ProjectService {
         where: {
           is_first_project: true,
         },
-        relations: ['business', 'responsible_person'],
       });
       if (!projects) {
         throw new InternalServerErrorException(
@@ -125,9 +161,7 @@ export class ProjectService {
 
   async getProjectsForAdmin(): Promise<[{ totalProjects: number }, Project[]]> {
     try {
-      const projects = await this.projectRepository.find({
-        relations: ['business', 'responsible_person'],
-      });
+      const projects = await this.projectRepository.find();
       if (!projects || projects.length === 0) {
         return [{ totalProjects: 0 }, []];
       }
@@ -150,7 +184,6 @@ export class ProjectService {
           project_status: ProjectStatusEnum.PUBLIC,
           is_first_project: false,
         },
-        relations: ['business', 'responsible_person'],
       });
       if (!projects || projects.length === 0) {
         return [{ totalProjects: 0 }, []];
@@ -176,12 +209,14 @@ export class ProjectService {
 
   async getProjectsOfBusiness(business: User): Promise<Project[]> {
     try {
-      let projects = await this.projectRepository.find({
-        relations: ['business', 'responsible_person'],
-      });
-      projects = projects.filter(
-        (project) => project.business?.id === business.id,
-      );
+      const projects: Project[] = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.user_projects', 'user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('user.id = :businessId', {
+          businessId: business.id,
+        })
+        .getMany();
       if (!projects || projects.length === 0) {
         return [];
       }
@@ -198,7 +233,6 @@ export class ProjectService {
     try {
       const project = await this.projectRepository.findOne({
         where: { id },
-        relations: ['business', 'responsible_person'],
       });
 
       if (!project) {
@@ -214,7 +248,6 @@ export class ProjectService {
     try {
       const project = await this.projectRepository.findOne({
         where: { id },
-        relations: ['business', 'responsible_person'],
       });
       if (!project) {
         throw new NotFoundException(`Không tìm thấy dự án với mã số ${id} `);
@@ -237,6 +270,8 @@ export class ProjectService {
             .where('project.id = :projectId', { projectId })
             .getMany();
         if (checkProjectHaveRegisterPitching.length > 0) {
+          const businessProject: UserProject =
+            await this.userProjectService.getBusinessOfProject(project.id);
           checkProjectHaveRegisterPitching.forEach(async (registerPitching) => {
             await this.groupService.changeGroupStatusToFree(
               registerPitching.group.id,
@@ -249,7 +284,7 @@ export class ProjectService {
             const createNotificationToLeaderDto: CreateNotificationDto =
               new CreateNotificationDto(
                 NotificationTypeEnum.DELETE_PROJECT,
-                `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
+                `${businessProject.user.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
                 this.configService.get('MAIL_USER'),
                 leader.user.email,
               );
@@ -266,7 +301,7 @@ export class ProjectService {
               const createNotificationToLecturerDto: CreateNotificationDto =
                 new CreateNotificationDto(
                   NotificationTypeEnum.DELETE_PROJECT,
-                  `${project.business.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
+                  `${businessProject.user.fullname} đã xóa dự án ${project.name_project} mà nhóm đã đăng ký pitching`,
                   this.configService.get('MAIL_USER'),
                   lecturer.user.email,
                 );
@@ -286,6 +321,7 @@ export class ProjectService {
           }
         }
       }
+      await this.userProjectService.removeAllUserProjectByProjectId(project.id);
       const result = await this.projectRepository.remove(project);
       if (!result) {
         throw new InternalServerErrorException('Có lỗi xảy ra khi xóa dự án');
@@ -303,29 +339,19 @@ export class ProjectService {
     //check if project already exists
     const project = await this.getProjectById(id);
 
-    //check Responsible Person
-    const responsiblePerson =
-      await this.responsiblePersonService.getResponsiblePerson(
-        updateProjectDto.email_responsible_person,
-      );
-    if (!responsiblePerson) {
-      throw new NotFoundException(
-        `Không tìm thấy người phụ trách với email ${updateProjectDto.email_responsible_person}`,
-      );
-    }
-
     try {
-      Object.assign(project, updateProjectDto, {
-        responsible_person: responsiblePerson,
-      });
+      Object.assign(project, updateProjectDto);
       project.project_status =
         project.project_status == ProjectStatusEnum.PENDING
           ? ProjectStatusEnum.PUBLIC
           : project.project_status;
       await this.projectRepository.save(project);
 
+      const businessProject: UserProject =
+        await this.userProjectService.getBusinessOfProject(project.id);
+
       await this.handleGetProjects();
-      await this.handleGetProjectsOfBusiness(project.business);
+      await this.handleGetProjectsOfBusiness(businessProject.user);
       return await this.getProjectById(id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -339,12 +365,15 @@ export class ProjectService {
         'Chỉ dự án đang chờ phê duyệt mới có thể phê duyệt',
       );
     }
+    const business = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.user_projects', 'user_project')
+      .leftJoinAndSelect('user_project.project', 'project')
+      .where('project.id = :projectId', { projectId: project.id })
+      .getOne();
     if (project.is_first_project) {
       project.is_first_project = false;
       try {
-        const business = await this.userRepository.findOne({
-          where: { email: project.business.email },
-        });
         business.isConfirmByAdmin = true;
         const result: User = await this.userRepository.save(business);
         if (!result) {
@@ -363,7 +392,7 @@ export class ProjectService {
         throw new InternalServerErrorException('Có lỗi khi phê duyệt dự án');
       }
       await this.handleGetProjects();
-      await this.handleGetProjectsOfBusiness(project.business);
+      await this.handleGetProjectsOfBusiness(business);
       return result;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -376,6 +405,12 @@ export class ProjectService {
     groupId: number,
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
+    const business = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.user_projects', 'user_project')
+      .leftJoinAndSelect('user_project.project', 'project')
+      .where('project.id = :projectId', { projectId: project.id })
+      .getOne();
     if (
       projectStatus !== ProjectStatusEnum.DONE &&
       projectStatus !== ProjectStatusEnum.END &&
@@ -397,7 +432,7 @@ export class ProjectService {
       try {
         const result: Project = await this.projectRepository.save(project);
         await this.handleGetProjects();
-        await this.handleGetProjectsOfBusiness(project.business);
+        await this.handleGetProjectsOfBusiness(business);
         return await this.getProjectById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -419,7 +454,7 @@ export class ProjectService {
         const result: Project = await this.projectRepository.save(project);
         await this.groupService.changeGroupStatusToFree(groupId);
         await this.handleGetProjects();
-        await this.handleGetProjectsOfBusiness(project.business);
+        await this.handleGetProjectsOfBusiness(business);
         return await this.getProjectById(result.id);
       } catch (error) {
         throw new InternalServerErrorException(
@@ -505,9 +540,7 @@ export class ProjectService {
 
   async handleGetProjects(): Promise<void> {
     try {
-      let projects = await this.projectRepository.find({
-        relations: ['business', 'responsible_person'],
-      });
+      let projects = await this.projectRepository.find();
       if (!projects || projects.length === 0) {
         SocketGateway.handleGetProjects({
           totalProjects: 0,
@@ -531,12 +564,14 @@ export class ProjectService {
 
   async handleGetProjectsOfBusiness(business: User): Promise<void> {
     try {
-      let projects = await this.projectRepository.find({
-        relations: ['business', 'responsible_person'],
-      });
-      projects = projects.filter(
-        (project) => project.business?.id === business.id,
-      );
+      const projects: Project[] = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.user_projects', 'user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('user.id = :businessId', {
+          businessId: business.id,
+        })
+        .getMany();
       if (!projects || projects.length === 0) {
         SocketGateway.handleGetProjectsOfBusiness({
           totalProjects: 0,

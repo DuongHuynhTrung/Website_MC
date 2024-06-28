@@ -11,8 +11,6 @@ import { UserService } from 'src/user/user.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { RegisterPitchingService } from 'src/register-pitching/register-pitching.service';
 import { ProjectService } from 'src/project/project.service';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
 
@@ -21,6 +19,8 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
@@ -31,9 +31,9 @@ import { ConfigService } from '@nestjs/config';
       RegisterPitching,
       Group,
       Project,
-      ResponsiblePerson,
       Notification,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [GroupController],
@@ -45,11 +45,11 @@ import { ConfigService } from '@nestjs/config';
     RegisterPitchingService,
     ProjectService,
     GroupService,
-    ResponsiblePersonService,
     NotificationService,
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class GroupModule {}

@@ -43,10 +43,10 @@ export class ProjectController {
   })
   @ApiBadRequestResponse({
     description:
-      'Có lỗi khi tạo Người chịu trách nhiệm. Vui lòng kiểm tra lại thông tin!',
+      'Có lỗi khi tạo Người phụ trách. Vui lòng kiểm tra lại thông tin!',
   })
   @ApiNotFoundResponse({
-    description: 'Không tìm thấy Người chịu trách nhiệm!',
+    description: 'Không tìm thấy Người phụ trách!',
   })
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
@@ -184,7 +184,7 @@ export class ProjectController {
     description: 'Không tìm thấy dự án với mã số ${id} ',
   })
   @ApiNotFoundResponse({
-    description: 'Không tìm thấy Người chịu trách nhiệm!',
+    description: 'Không tìm thấy Người phụ trách!',
   })
   @ApiInternalServerErrorResponse({
     description: 'Có lỗi khi công bố dự án',

@@ -9,8 +9,6 @@ import { ProjectService } from 'src/project/project.service';
 import { GroupService } from 'src/group/group.service';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
@@ -21,6 +19,8 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
@@ -29,10 +29,10 @@ import { ConfigService } from '@nestjs/config';
       Project,
       Group,
       UserGroup,
-      ResponsiblePerson,
       User,
       Notification,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [RegisterPitchingController],
@@ -42,12 +42,12 @@ import { ConfigService } from '@nestjs/config';
     ProjectService,
     GroupService,
     UserGroupService,
-    ResponsiblePersonService,
     UserService,
     NotificationService,
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class RegisterPitchingModule {}

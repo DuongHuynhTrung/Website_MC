@@ -2,7 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -10,11 +9,10 @@ import {
 } from 'typeorm';
 import { ProjectStatusEnum } from '../enum/project-status.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from 'src/user/entities/user.entity';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Entity()
 export class Project {
@@ -160,15 +158,6 @@ export class Project {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.projects)
-  business: User;
-
-  @ManyToOne(
-    () => ResponsiblePerson,
-    (responsible_person) => responsible_person.projects,
-  )
-  responsible_person: ResponsiblePerson;
-
   @OneToMany(
     () => RegisterPitching,
     (registerPitching) => registerPitching.group,
@@ -180,4 +169,7 @@ export class Project {
 
   @OneToOne(() => SummaryReport, (summary_report) => summary_report.project)
   summary_report: SummaryReport;
+
+  @OneToMany(() => UserProject, (user_project) => user_project.project)
+  user_projects: UserProject[];
 }

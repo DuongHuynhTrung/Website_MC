@@ -1,3 +1,4 @@
+import { UserProjectService } from 'src/user-project/user-project.service';
 import {
   Injectable,
   BadRequestException,
@@ -35,6 +36,9 @@ export class RegisterPitchingService {
     @InjectRepository(RegisterPitching)
     private readonly registerPitchingRepository: Repository<RegisterPitching>,
 
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
     private readonly groupService: GroupService,
 
     private readonly projectService: ProjectService,
@@ -44,6 +48,8 @@ export class RegisterPitchingService {
     private readonly userService: UserService,
 
     private readonly notificationService: NotificationService,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async registerPitching(
@@ -309,7 +315,14 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching> {
     const project: Project =
       await this.projectService.getProjectById(projectId);
-    if (project.business.id != user.id) {
+    const business = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.user_projects', 'user_project')
+      .leftJoinAndSelect('user_project.project', 'project')
+      .where('project.id = :projectId', { projectId: project.id })
+      .getOne();
+
+    if (business.id != user.id) {
       throw new ForbiddenException(
         'Chỉ có doanh nghiệp của dự án mới có thể chọn nhóm',
       );
@@ -343,8 +356,8 @@ export class RegisterPitchingService {
         const createNotificationDto: CreateNotificationDto =
           new CreateNotificationDto(
             NotificationTypeEnum.SELECTED_REGISTER_PITCHING,
-            `Doanh nghiệp ${project.business.fullname} đã chọn nhóm bạn tham gia dự án ${project.name_project}`,
-            project.business.email,
+            `Doanh nghiệp ${business.fullname} đã chọn nhóm bạn tham gia dự án ${project.name_project}`,
+            business.email,
             userGroup.user.email,
           );
 
@@ -362,8 +375,8 @@ export class RegisterPitchingService {
         const createNotificationDto: CreateNotificationDto =
           new CreateNotificationDto(
             NotificationTypeEnum.REJECTED_REGISTER_PITCHING,
-            `Doanh nghiệp ${project.business.fullname} đã không chọn nhóm bạn tham gia dự án ${project.name_project}`,
-            project.business.email,
+            `Doanh nghiệp ${business.fullname} đã không chọn nhóm bạn tham gia dự án ${project.name_project}`,
+            business.email,
             userGroup.user.email,
           );
 
@@ -445,14 +458,22 @@ export class RegisterPitchingService {
           email: user.email,
         });
       } else if (user.role.role_name == RoleEnum.BUSINESS) {
-        const result: RegisterPitching[] = [];
-        registerPitchings.forEach(async (registerPitching) => {
-          if (registerPitching.project.business.email == user.email) {
-            result.push(registerPitching);
-          }
-        });
+        // const result: RegisterPitching[] = [];
+        // registerPitchings.forEach(async (registerPitching) => {
+        //   if (registerPitching.project.business.email == user.email) {
+        //     result.push(registerPitching);
+        //   }
+        // });
+        const registerPitchings: RegisterPitching[] =
+          await this.registerPitchingRepository
+            .createQueryBuilder('register_pitching')
+            .leftJoinAndSelect('register_pitching.project', 'project')
+            .leftJoinAndSelect('project.user_projects', 'user_project')
+            .leftJoinAndSelect('user_project.user', 'user')
+            .where('user.email = :email', { email: user.email })
+            .getMany();
         SocketGateway.handleGetAllRegisterPitching({
-          registerPitchings: result,
+          registerPitchings: registerPitchings,
           email: user.email,
         });
       } else {

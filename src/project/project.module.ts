@@ -2,11 +2,9 @@ import { Module } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { UserService } from 'src/user/user.service';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { GroupService } from 'src/group/group.service';
 import { Group } from 'src/group/entities/group.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
@@ -20,18 +18,20 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { NotificationService } from 'src/notification/notification.service';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Project,
       User,
-      ResponsiblePerson,
       RegisterPitching,
       Group,
       UserGroup,
       Role,
       Notification,
+      UserProject,
     ]),
   ],
   controllers: [ProjectController],
@@ -39,13 +39,13 @@ import { NotificationService } from 'src/notification/notification.service';
     RoleService,
     ProjectService,
     UserService,
-    ResponsiblePersonService,
     GroupService,
     UserGroupService,
     EmailService,
     JwtService,
     ConfigService,
     NotificationService,
+    UserProjectService,
   ],
 })
 export class ProjectModule {}

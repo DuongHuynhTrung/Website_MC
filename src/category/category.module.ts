@@ -11,8 +11,6 @@ import { UserService } from 'src/user/user.service';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { Group } from 'src/group/entities/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { RegisterPitching } from 'src/register-pitching/entities/register-pitching.entity';
@@ -24,6 +22,8 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
@@ -33,11 +33,11 @@ import { ConfigService } from '@nestjs/config';
       User,
       UserGroup,
       Project,
-      ResponsiblePerson,
       Group,
       RegisterPitching,
       Notification,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [CategoryController],
@@ -48,13 +48,13 @@ import { ConfigService } from '@nestjs/config';
     UserService,
     UserGroupService,
     ProjectService,
-    ResponsiblePersonService,
     GroupService,
     RegisterPitchingService,
     NotificationService,
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class CategoryModule {}

@@ -24,7 +24,6 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from '../role/enum/role.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
 
 @ApiTags('User')
@@ -66,9 +65,7 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   @Get(':email')
-  getUserByEmail(
-    @Param('email') email: string,
-  ): Promise<{ user: User; responsiblePerson: ResponsiblePerson }> {
+  getUserByEmail(@Param('email') email: string): Promise<User> {
     return this.userService.getUserEmail(email);
   }
 
@@ -93,6 +90,23 @@ export class UserController {
       roleName,
       user,
     );
+  }
+
+  @ApiOperation({ summary: 'Search user who have email contain searchEmail' })
+  @ApiOkResponse({
+    description: 'The list user has been successfully retrieved.',
+    type: [User],
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @Get('/searchResponsible/:searchEmail')
+  searchResponsibleByEmail(
+    @Param('searchEmail') searchEmail?: string,
+  ): Promise<User[]> {
+    return this.userService.searchResponsibleByEmail(searchEmail);
   }
 
   @ApiOperation({ summary: 'Change User Name' })

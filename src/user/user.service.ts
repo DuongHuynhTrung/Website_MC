@@ -9,7 +9,6 @@ import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RoleEnum } from '../role/enum/role.enum';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
 import { Role } from 'src/role/entities/role.entity';
 import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
@@ -24,9 +23,6 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-
-    @InjectRepository(ResponsiblePerson)
-    private readonly responsiblePersonRepository: Repository<ResponsiblePerson>,
 
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
@@ -65,9 +61,7 @@ export class UserService {
     }
   }
 
-  async getUserEmail(
-    email: string,
-  ): Promise<{ user: User; responsiblePerson: ResponsiblePerson }> {
+  async getUserEmail(email: string): Promise<User> {
     try {
       const user = await this.userRepository.findOne({
         where: { email },
@@ -76,20 +70,7 @@ export class UserService {
       if (!user) {
         throw new Error(`Người dùng với email ${email} không tồn tại`);
       }
-      if (user.role_name == RoleEnum.BUSINESS) {
-        const responsiblePersons = await this.responsiblePersonRepository.find({
-          relations: ['business'],
-        });
-        if (responsiblePersons && responsiblePersons.length > 0) {
-          const responsiblePerson = responsiblePersons.find(
-            (p) => p.business.id == user.id,
-          );
-          if (responsiblePerson) {
-            return { user, responsiblePerson };
-          }
-        }
-      }
-      return { user, responsiblePerson: null };
+      return user;
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -331,18 +312,15 @@ export class UserService {
           }
         }
         case RoleEnum.BUSINESS: {
-          const projects = await this.projectRepository.find({
-            where: {
-              business: { id: user.id },
-            },
-          });
-          const responsiblePersons =
-            await this.responsiblePersonRepository.find({
-              where: {
-                business: { id: user.id },
-              },
-            });
-          // Check xem responsiblePersons.length == 0 thì có chạy đc ko
+          const projects: Project[] = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoinAndSelect('project.user_projects', 'user_project')
+            .leftJoinAndSelect('user_project.user', 'user')
+            .where('user.id = :businessId', {
+              businessId: user.id,
+            })
+            .getMany();
+
           if (!projects || projects.length == 0) {
             const notifications = await this.notificationRepository.find({
               relations: ['sender', 'receiver'],
@@ -355,8 +333,6 @@ export class UserService {
             );
             await this.notificationRepository.remove(notificationsOfSender);
             await this.notificationRepository.remove(notificationsOfReceiver);
-
-            await this.responsiblePersonRepository.remove(responsiblePersons);
 
             const result = await this.userRepository.remove(user);
             if (!result) {
@@ -389,8 +365,6 @@ export class UserService {
           }
 
           await this.projectRepository.remove(projectPending);
-
-          await this.responsiblePersonRepository.remove(responsiblePersons);
 
           const result = await this.userRepository.remove(user);
           if (!result) {
@@ -439,6 +413,30 @@ export class UserService {
         'Chỉ có thể tìm kiếm sinh viên hoặc giảng viên',
       );
     }
+  }
+
+  async searchResponsibleByEmail(searchEmail: string): Promise<User[]> {
+    let users: User[] = [];
+    try {
+      users = await this.userRepository.find({
+        where: {
+          email: Like(`%${searchEmail}%`),
+        },
+        relations: ['role'],
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Có lỗi xảy ra khi tìm kiếm người phụ trách`,
+      );
+    }
+    if (!users || users.length === 0) {
+      return [];
+    }
+
+    users = users.filter(
+      (user) => user.role.role_name == RoleEnum.RESPONSIBLE_PERSON,
+    );
+    return users;
   }
 
   async updateProfileNoAuth(

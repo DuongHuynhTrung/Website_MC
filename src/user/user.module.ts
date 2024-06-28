@@ -3,8 +3,6 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User } from './entities/user.entity';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 import { Project } from 'src/project/entities/project.entity';
@@ -20,24 +18,25 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       User,
-      ResponsiblePerson,
       Role,
       Project,
       RegisterPitching,
       Group,
       UserGroup,
       Notification,
+      UserProject,
     ]),
   ],
   controllers: [UserController],
   providers: [
     UserService,
-    ResponsiblePersonService,
     RoleService,
     ProjectService,
     RegisterPitchingService,
@@ -47,6 +46,7 @@ import { ConfigService } from '@nestjs/config';
     UserGroupService,
     NotificationService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class UserModule {}

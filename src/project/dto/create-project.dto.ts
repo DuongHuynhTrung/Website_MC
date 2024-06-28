@@ -89,7 +89,7 @@ export class CreateProjectDto {
 
   @ApiProperty({
     description: 'Document related link',
-    example: 'Friendly',
+    example: ['Friendly'],
     nullable: true,
   })
   @IsOptional()

@@ -11,8 +11,6 @@ import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { UserGroupService } from 'src/user-group/user-group.service';
 import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { Group } from 'src/group/entities/group.entity';
@@ -26,6 +24,8 @@ import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
@@ -35,12 +35,12 @@ import { ConfigService } from '@nestjs/config';
       Phase,
       UserGroup,
       Project,
-      ResponsiblePerson,
       User,
       Group,
       RegisterPitching,
       Notification,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [CostController],
@@ -51,7 +51,6 @@ import { ConfigService } from '@nestjs/config';
     PhaseService,
     UserGroupService,
     ProjectService,
-    ResponsiblePersonService,
     UserService,
     GroupService,
     RegisterPitchingService,
@@ -59,6 +58,7 @@ import { ConfigService } from '@nestjs/config';
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class CostModule {}

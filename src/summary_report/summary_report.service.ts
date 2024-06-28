@@ -1,3 +1,4 @@
+import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserGroup } from './../user-group/entities/user-group.entity';
 import {
   BadGatewayException,
@@ -25,6 +26,7 @@ import { ProjectTypeEnum } from 'src/project/enum/project-type.enum';
 import { PhaseService } from 'src/phase/phase.service';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { SocketGateway } from 'socket.gateway';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Injectable()
 export class SummaryReportService {
@@ -39,6 +41,8 @@ export class SummaryReportService {
     private readonly groupService: GroupService,
 
     private readonly phaseService: PhaseService,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async createSummaryReport(
@@ -64,7 +68,6 @@ export class SummaryReportService {
       createSummaryReportDto.projectId,
     );
     if (project.business_type == ProjectTypeEnum.PLAN) {
-      // TODO: upload summary report for business plan
       const summaryReport: SummaryReport = this.summaryReportRepository.create(
         createSummaryReportDto,
       );
@@ -88,7 +91,6 @@ export class SummaryReportService {
         throw new InternalServerErrorException(error.message);
       }
     } else {
-      // TODO: upload summary report for business project
       const canUpload: boolean = await this.phaseService.checkProjectCanBeDone(
         project.id,
       );
@@ -273,7 +275,9 @@ export class SummaryReportService {
       const project: Project = await this.projectService.getProjectById(
         confirmSummaryReportDto.project_id,
       );
-      if (project.business.id != user.id) {
+      const businessProject: UserProject =
+        await this.userProjectService.getBusinessOfProject(project.id);
+      if (businessProject.user.id != user.id) {
         throw new BadGatewayException(
           'Chỉ có doanh nghiệp sở hữu dự án mới có thể xác nhận báo cáo tổng hợp',
         );

@@ -4,4 +4,5 @@ export enum RoleEnum {
   BUSINESS = 'Business',
   STAFF = 'Staff',
   LECTURER = 'Lecturer',
+  RESPONSIBLE_PERSON = 'ResponsiblePerson',
 }

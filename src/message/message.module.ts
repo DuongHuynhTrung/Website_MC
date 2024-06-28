@@ -15,14 +15,14 @@ import { Project } from 'src/project/entities/project.entity';
 import { ProjectService } from 'src/project/project.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
-import { ResponsiblePersonService } from 'src/responsible_person/responsible_person.service';
 
 import { Role } from 'src/role/entities/role.entity';
 import { RoleService } from 'src/role/role.service';
 import { EmailService } from 'src/email/email.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Module({
   imports: [
@@ -34,8 +34,8 @@ import { ConfigService } from '@nestjs/config';
       User,
       Project,
       Notification,
-      ResponsiblePerson,
       Role,
+      UserProject,
     ]),
   ],
   controllers: [MessageController],
@@ -48,10 +48,10 @@ import { ConfigService } from '@nestjs/config';
     UserService,
     ProjectService,
     NotificationService,
-    ResponsiblePersonService,
     EmailService,
     JwtService,
     ConfigService,
+    UserProjectService,
   ],
 })
 export class MessageModule {}

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 
 export class ProvideAccountDto {
@@ -28,4 +34,12 @@ export class ProvideAccountDto {
   @IsNotEmpty()
   @IsEnum(RoleEnum)
   roleName: RoleEnum;
+
+  @ApiProperty({
+    description: 'Project Id of Responsible Person',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  projectId: number;
 }

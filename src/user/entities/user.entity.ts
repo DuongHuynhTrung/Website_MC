@@ -6,14 +6,12 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/role/entities/role.entity';
-import { Project } from 'src/project/entities/project.entity';
 import { UserGroup } from 'src/user-group/entities/user-group.entity';
 import { Notification } from 'src/notification/entities/notification.entity';
-import { ResponsiblePerson } from 'src/responsible_person/entities/responsible_person.entity';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Entity()
 export class User {
@@ -138,6 +136,22 @@ export class User {
   business_sector: string;
 
   @ApiProperty({
+    description: 'Position of Responsible Person Information',
+    example: 'Leader',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  position: string;
+
+  @ApiProperty({
+    description: 'Other Contact of Responsible Person Information',
+    example: 'Abc',
+    nullable: true,
+  })
+  @Column({ nullable: true })
+  other_contact: string;
+
+  @ApiProperty({
     description: 'Is Confirm By Admin',
     example: true,
     nullable: false,
@@ -181,21 +195,15 @@ export class User {
   @ManyToOne(() => Role, (role) => role.users)
   role: Role;
 
-  @OneToMany(() => Project, (project) => project.business)
-  projects: Project[];
-
   @OneToMany(() => UserGroup, (user_group) => user_group.user)
   user_groups: UserGroup[];
+
+  @OneToMany(() => UserProject, (user_project) => user_project.user)
+  user_projects: UserProject[];
 
   @OneToMany(() => Notification, (notification) => notification.sender)
   sender_notifications: Notification[];
 
   @OneToMany(() => Notification, (notification) => notification.receiver)
   receiver_notifications: Notification[];
-
-  @OneToOne(
-    () => ResponsiblePerson,
-    (responsible_person) => responsible_person.business,
-  )
-  responsible_person: ResponsiblePerson;
 }
