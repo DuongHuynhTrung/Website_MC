@@ -112,29 +112,24 @@ export class GroupService {
       );
     }
     const group: Group = await this.getGroupByGroupId(groupId);
-    const checkUserInGroup: UserGroup =
-      await this.userGroupService.checkUserInGroup(user.id, group.id);
-    if (!checkUserInGroup) {
-      throw new ForbiddenException(
-        `Học sinh ngoài nhóm không có quyền mời thành viên`,
-      );
-    } else {
-      if (checkUserInGroup.role_in_group != RoleInGroupEnum.LEADER) {
+
+    if (user.role_name !== RoleEnum.ADMIN) {
+      const checkUserInGroup: UserGroup =
+        await this.userGroupService.checkUserInGroup(user.id, group.id);
+      if (!checkUserInGroup) {
+        throw new ForbiddenException(
+          `Học sinh ngoài nhóm không có quyền mời thành viên`,
+        );
+      } else if (checkUserInGroup.role_in_group != RoleInGroupEnum.LEADER) {
         throw new ForbiddenException('Chỉ có leader mới được mời thành viên');
       }
     }
+
     const checkMemberInGroup: UserGroup =
       await this.userGroupService.checkUserInGroup(member.id, group.id);
     if (checkMemberInGroup) {
       throw new BadRequestException(
         'Sinh viên hoặc giảng viên đã trong nhóm hoặc đang chờ phản hồi',
-      );
-    }
-    const checkGroupHasLecturer: UserGroup[] =
-      await this.userGroupService.checkGroupHasLecturer(groupId);
-    if (checkGroupHasLecturer && checkGroupHasLecturer.length >= 2) {
-      throw new BadRequestException(
-        'Nhóm đã có 2 giáo viên hướng dẫn. Không thể mời thêm',
       );
     }
 
@@ -147,13 +142,20 @@ export class GroupService {
       });
       try {
         await this.userGroupService.createUserGroup(createUserGroupDto);
+        return 'Mời thành viên thành công!';
       } catch (error) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi mời thành viên',
         );
       }
-      return 'Mời thành viên thành công!';
     } else {
+      const checkGroupHasLecturer: UserGroup[] =
+        await this.userGroupService.checkGroupHasLecturer(groupId);
+      if (checkGroupHasLecturer && checkGroupHasLecturer.length >= 2) {
+        throw new BadRequestException(
+          'Nhóm đã có 2 giáo viên hướng dẫn. Không thể mời thêm',
+        );
+      }
       const isInviteLecturer = await this.userGroupService.checkUserInGroup(
         member.id,
         groupId,
@@ -175,12 +177,12 @@ export class GroupService {
       });
       try {
         await this.userGroupService.createUserGroup(createUserGroupDto);
+        return 'Mời giảng viên thành công!';
       } catch (error) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi mời giảng viên',
         );
       }
-      return 'Mời giảng viên thành công!';
     }
   }
 

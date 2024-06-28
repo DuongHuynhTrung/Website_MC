@@ -38,7 +38,6 @@ export class CreateRegisterPitchingDto {
   })
   @IsNotEmpty()
   @IsArray()
-  @IsString()
   lecturer_email: string[];
 
   @ApiProperty({

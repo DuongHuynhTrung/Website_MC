@@ -128,6 +128,27 @@ export class UserGroupService {
     }
   }
 
+  async checkUserInGroupByEmail(
+    email: string,
+    groupId: number,
+  ): Promise<UserGroup> {
+    try {
+      const user_group: UserGroup[] = await this.userGroupRepository.find({
+        relations: ['user', 'group'],
+      });
+      if (user_group.length === 0) {
+        throw new NotFoundException('Hệ thống hiện chưa có nhóm nào');
+      }
+      const userGroup = user_group.find(
+        (user_group) =>
+          user_group.group.id == groupId && user_group.user.email == email,
+      );
+      return userGroup;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
   async checkGroupHasLecturer(groupId: number): Promise<UserGroup[]> {
     try {
       const roleName = RoleInGroupEnum.LECTURER;

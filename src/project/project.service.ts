@@ -238,11 +238,14 @@ export class ProjectService {
             .getMany();
         if (checkProjectHaveRegisterPitching.length > 0) {
           checkProjectHaveRegisterPitching.forEach(async (registerPitching) => {
+            await this.groupService.changeGroupStatusToFree(
+              registerPitching.group.id,
+            );
+            //Send mail to Leader of group
             const leader: UserGroup =
               await this.userGroupService.getLeaderOfGroup(
                 registerPitching.group.id,
               );
-            //Send mail to Leader of group
             const createNotificationToLeaderDto: CreateNotificationDto =
               new CreateNotificationDto(
                 NotificationTypeEnum.DELETE_PROJECT,
@@ -315,9 +318,10 @@ export class ProjectService {
       Object.assign(project, updateProjectDto, {
         responsible_person: responsiblePerson,
       });
-      project.project_status = ProjectStatusEnum.PENDING
-        ? ProjectStatusEnum.PUBLIC
-        : project.project_status;
+      project.project_status =
+        project.project_status == ProjectStatusEnum.PENDING
+          ? ProjectStatusEnum.PUBLIC
+          : project.project_status;
       await this.projectRepository.save(project);
 
       await this.handleGetProjects();

@@ -51,7 +51,7 @@ export class GroupController {
   @ApiOperation({ summary: 'Leader invite Members' })
   @Get('invite-member/:groupId/:userEmail')
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.STUDENT)
+  @Roles(RoleEnum.STUDENT, RoleEnum.ADMIN)
   inviteMember(
     @Param('groupId') groupId: number,
     @Param('userEmail') userEmail: string,
