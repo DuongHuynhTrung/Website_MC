@@ -450,7 +450,7 @@ export class RegisterPitchingService {
     try {
       const registerPitchings: RegisterPitching[] =
         await this.registerPitchingRepository.find({
-          relations: ['group', 'project', 'project.business'],
+          relations: ['group', 'project'],
         });
       if (registerPitchings.length === 0) {
         SocketGateway.handleGetAllRegisterPitching({
@@ -458,18 +458,13 @@ export class RegisterPitchingService {
           email: user.email,
         });
       } else if (user.role.role_name == RoleEnum.BUSINESS) {
-        // const result: RegisterPitching[] = [];
-        // registerPitchings.forEach(async (registerPitching) => {
-        //   if (registerPitching.project.business.email == user.email) {
-        //     result.push(registerPitching);
-        //   }
-        // });
         const registerPitchings: RegisterPitching[] =
           await this.registerPitchingRepository
             .createQueryBuilder('register_pitching')
             .leftJoinAndSelect('register_pitching.project', 'project')
-            .leftJoinAndSelect('project.user_projects', 'user_project')
-            .leftJoinAndSelect('user_project.user', 'user')
+            .leftJoinAndSelect('register_pitching.group', 'group')
+            .leftJoin('project.user_projects', 'user_project')
+            .leftJoin('user_project.user', 'user')
             .where('user.email = :email', { email: user.email })
             .getMany();
         SocketGateway.handleGetAllRegisterPitching({

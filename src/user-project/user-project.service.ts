@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserProject } from './entities/user-project.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateUserProjectDto } from './dto/create-user-project.dto';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
@@ -21,14 +21,16 @@ export class UserProjectService {
 
   async createUserProject(
     createUserProjectDto: CreateUserProjectDto,
+    entityManager?: EntityManager,
   ): Promise<UserProject> {
+    const manager = entityManager || this.userProjectRepository.manager;
     const user_project =
       this.userProjectRepository.create(createUserProjectDto);
     if (!user_project) {
-      throw new BadRequestException('Có lỗi xảy ra khi tạo user_project');
+      throw new BadRequestException('Có lỗi xảy ra khi thêm người vào dự án');
     }
     try {
-      const result = await this.userProjectRepository.save(user_project);
+      const result = await manager.save(user_project);
       if (!result) {
         throw new InternalServerErrorException(
           'Something went wrong when saving user_project',
@@ -234,8 +236,12 @@ export class UserProjectService {
   async removeUserFromProject(
     projectId: number,
     userId: number,
+    user: User,
   ): Promise<UserProject> {
     try {
+      if (user.id == userId) {
+        throw new BadRequestException('Không thể tự xóa mình ra khỏi dự án');
+      }
       const userProject: UserProject = await this.userProjectRepository
         .createQueryBuilder('user_project')
         .leftJoinAndSelect('user_project.user', 'user')

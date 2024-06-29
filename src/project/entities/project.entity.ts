@@ -172,4 +172,34 @@ export class Project {
 
   @OneToMany(() => UserProject, (user_project) => user_project.project)
   user_projects: UserProject[];
+
+  constructor(
+    name_project: string,
+    business_type: string,
+    purpose: string,
+    target_object: string,
+    request: string,
+    project_start_date: string,
+    project_expected_end_date: string,
+    project_implement_time: string,
+    expected_budget: string,
+    note?: string,
+    document_related_link?: string[],
+    is_extent: boolean = false,
+    is_first_project: boolean = false,
+  ) {
+    this.name_project = name_project;
+    this.business_type = business_type;
+    this.purpose = purpose;
+    this.target_object = target_object;
+    this.request = request;
+    this.project_start_date = project_start_date;
+    this.project_expected_end_date = project_expected_end_date;
+    this.project_implement_time = project_implement_time;
+    this.expected_budget = expected_budget;
+    this.note = note;
+    this.document_related_link = document_related_link;
+    this.is_extent = is_extent;
+    this.is_first_project = is_first_project;
+  }
 }

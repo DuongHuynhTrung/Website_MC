@@ -25,6 +25,8 @@ import { RoleEnum } from '../role/enum/role.enum';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateProfileNoAuthDto } from './dto/update-profile-no-auth.dto';
+import { CheckBusinessInfoDto } from './dto/check-business-info.dto';
+import { CheckResponsibleInfoDto } from './dto/check-responsible-info.dto';
 
 @ApiTags('User')
 @Controller('users')
@@ -49,6 +51,38 @@ export class UserController {
   @Get()
   getAllUsers(): Promise<[{ totalUsers: number }, User[]]> {
     return this.userService.getUsers();
+  }
+
+  @ApiOperation({ summary: 'Check Business Info' })
+  @ApiOkResponse({
+    description: 'The business has been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi kiểm tra thông tin của doanh nghiệp',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @Get('/checkBusinessInfo')
+  checkBusinessInfo(
+    @Body() checkBusinessInfoDto: CheckBusinessInfoDto,
+  ): Promise<string[]> {
+    return this.userService.checkBusinessInfo(checkBusinessInfoDto);
+  }
+
+  @ApiOperation({ summary: 'Check Responsible Info' })
+  @ApiOkResponse({
+    description: 'The Responsible has been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi kiểm tra thông tin của người phụ trách',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @Get('/checkResponsibleInfo')
+  checkResponsibleInfo(
+    @Body() checkResponsibleInfoDto: CheckResponsibleInfoDto,
+  ): Promise<string[]> {
+    return this.userService.checkResponsibleInfo(checkResponsibleInfoDto);
   }
 
   @ApiOperation({ summary: 'Get a user by email' })
@@ -107,6 +141,26 @@ export class UserController {
     @Param('searchEmail') searchEmail?: string,
   ): Promise<User[]> {
     return this.userService.searchResponsibleByEmail(searchEmail);
+  }
+
+  @ApiOperation({ summary: 'Search user who have email contain searchEmail' })
+  @ApiOkResponse({
+    description: 'The list user has been successfully retrieved.',
+    type: [User],
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+  })
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @Get('/searchUserForAdmin/:searchEmail/:roleName')
+  searchUserByEmailForAdmin(
+    @Param('searchEmail') searchEmail?: string,
+    @Param('roleName') roleName?: RoleEnum,
+  ): Promise<User[]> {
+    return this.userService.searchUserByEmailForAdmin(searchEmail, roleName);
   }
 
   @ApiOperation({ summary: 'Change User Name' })

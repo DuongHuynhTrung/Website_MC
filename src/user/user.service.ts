@@ -1,3 +1,4 @@
+import { CheckBusinessInfoDto } from './dto/check-business-info.dto';
 import {
   BadRequestException,
   Injectable,
@@ -17,6 +18,7 @@ import { Project } from 'src/project/entities/project.entity';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 import { Notification } from 'src/notification/entities/notification.entity';
+import { CheckResponsibleInfoDto } from './dto/check-responsible-info.dto';
 
 @Injectable()
 export class UserService {
@@ -418,24 +420,41 @@ export class UserService {
   async searchResponsibleByEmail(searchEmail: string): Promise<User[]> {
     let users: User[] = [];
     try {
-      users = await this.userRepository.find({
-        where: {
-          email: Like(`%${searchEmail}%`),
-        },
-        relations: ['role'],
-      });
+      users = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('user.email LIKE :email', { email: `%${searchEmail}%` })
+        .andWhere('role.role_name = :roleName', {
+          roleName: RoleEnum.RESPONSIBLE_PERSON,
+        })
+        .getMany();
     } catch (error) {
       throw new InternalServerErrorException(
         `Có lỗi xảy ra khi tìm kiếm người phụ trách`,
       );
     }
-    if (!users || users.length === 0) {
-      return [];
-    }
+    return users;
+  }
 
-    users = users.filter(
-      (user) => user.role.role_name == RoleEnum.RESPONSIBLE_PERSON,
-    );
+  async searchUserByEmailForAdmin(
+    searchEmail: string,
+    roleName: RoleEnum,
+  ): Promise<User[]> {
+    let users: User[] = [];
+    try {
+      users = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('user.email LIKE :email', { email: `%${searchEmail}%` })
+        .andWhere('role.role_name = :roleName', {
+          roleName,
+        })
+        .getMany();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Có lỗi xảy ra khi tìm kiếm người phụ trách`,
+      );
+    }
     return users;
   }
 
@@ -671,6 +690,91 @@ export class UserService {
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi thống kê doanh nghiệp theo tỉnh/thành phố',
+      );
+    }
+  }
+
+  async checkBusinessInfo(
+    checkBusinessInfoDto: CheckBusinessInfoDto,
+  ): Promise<string[]> {
+    try {
+      const result: string[] = [];
+      const business: User = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('user.email = :email', {
+          email: checkBusinessInfoDto.businessEmail,
+        })
+        .andWhere('role.role_name = :roleName', {
+          roleName: RoleEnum.BUSINESS,
+        })
+        .getOne();
+      if (!business) {
+        return result;
+      }
+      if (business.fullname !== checkBusinessInfoDto.businessName) {
+        result.push(checkBusinessInfoDto.businessName);
+      }
+      if (
+        business.business_description !==
+        checkBusinessInfoDto.business_description
+      ) {
+        result.push(checkBusinessInfoDto.business_description);
+      }
+      if (business.business_sector !== checkBusinessInfoDto.business_sector) {
+        result.push(checkBusinessInfoDto.business_sector);
+      }
+      if (business.address !== checkBusinessInfoDto.address) {
+        result.push(checkBusinessInfoDto.address);
+      }
+      if (business.address_detail !== checkBusinessInfoDto.address_detail) {
+        result.push(checkBusinessInfoDto.address_detail);
+      }
+
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi kiểm tra thông tin của doanh nghiệp',
+      );
+    }
+  }
+
+  async checkResponsibleInfo(
+    checkResponsibleInfoDto: CheckResponsibleInfoDto,
+  ): Promise<string[]> {
+    try {
+      const result: string[] = [];
+      const responsible_person: User = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('user.email = :email', {
+          email: checkResponsibleInfoDto.email_responsible_person,
+        })
+        .andWhere('role.role_name = :roleName', {
+          roleName: RoleEnum.RESPONSIBLE_PERSON,
+        })
+        .getOne();
+
+      if (!responsible_person) {
+        return result;
+      }
+
+      if (responsible_person.fullname !== checkResponsibleInfoDto.fullname) {
+        result.push(checkResponsibleInfoDto.fullname);
+      }
+      if (
+        responsible_person.phone_number !== checkResponsibleInfoDto.phone_number
+      ) {
+        result.push(checkResponsibleInfoDto.phone_number);
+      }
+      if (responsible_person.position !== checkResponsibleInfoDto.position) {
+        result.push(checkResponsibleInfoDto.position);
+      }
+
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi kiểm tra thông tin của người phụ trách',
       );
     }
   }

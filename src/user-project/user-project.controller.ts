@@ -18,6 +18,8 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { RolesGuard } from 'src/auth/role.guard';
 
+@UseGuards(JwtGuard)
+@ApiBearerAuth()
 @ApiTags('User-Project')
 @Controller('user-project')
 export class UserProjectController {
@@ -61,15 +63,18 @@ export class UserProjectController {
     return this.userProjectService.getResponsibleOfProject(ProjectId);
   }
 
-  @UseGuards(JwtGuard)
-  @ApiBearerAuth()
   @Roles(RoleEnum.ADMIN, RoleEnum.BUSINESS)
   @UseGuards(RolesGuard)
   @Delete('removeUser/:ProjectId/:UserId')
   removeUserFromProject(
     @Param('ProjectId') ProjectId: number,
     @Param('UserId') UserId: number,
+    @GetUser() user: User,
   ): Promise<UserProject> {
-    return this.userProjectService.removeUserFromProject(ProjectId, UserId);
+    return this.userProjectService.removeUserFromProject(
+      ProjectId,
+      UserId,
+      user,
+    );
   }
 }

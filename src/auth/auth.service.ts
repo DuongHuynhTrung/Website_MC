@@ -27,6 +27,10 @@ import { MyFunctions } from 'src/utils/MyFunctions';
 import { CreateNewBusinessDto } from './dto/create-new-business.dto';
 import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
+import { ProvideAccountResponsibleDto } from './dto/provide-account-responsible.dto';
+import { ProjectService } from 'src/project/project.service';
+import { Project } from 'src/project/entities/project.entity';
+import { CreateUserProjectDto } from 'src/user-project/dto/create-user-project.dto';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +48,8 @@ export class AuthService {
     private readonly emailService: EmailService,
 
     private readonly userProjectService: UserProjectService,
+
+    private readonly projectService: ProjectService,
   ) {}
 
   async loginGoogleUser(token: string): Promise<{ accessToken: string }> {
@@ -293,7 +299,7 @@ export class AuthService {
     }
   }
 
-  async handleVerifyToken(token) {
+  async handleVerifyToken(token: string) {
     try {
       const payload = this.jwtService.verify(token);
       return payload['email'];
@@ -320,29 +326,70 @@ export class AuthService {
       const isExist = await this.userRepository.findOneBy({
         email: provideAccountDto.email,
       });
-      if (
-        isExist &&
-        provideAccountDto.roleName !== RoleEnum.RESPONSIBLE_PERSON
-      ) {
+      if (isExist) {
         throw new BadRequestException(
           `Email ${provideAccountDto.email} đã tồn tại trong hệ thống`,
         );
-      } else if (
-        isExist &&
-        provideAccountDto.roleName === RoleEnum.RESPONSIBLE_PERSON
-      ) {
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    const user = this.userRepository.create(provideAccountDto);
+    if (!user) {
+      throw new BadRequestException(
+        'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+      );
+    }
+    user.status = true;
+    user.isConfirmByAdmin = true;
+    user.role_name = provideAccountDto.roleName;
+    const role = await this.roleRepository.findOneByOrFail({
+      role_name: provideAccountDto.roleName,
+    });
+    user.role = role;
+    user.fullname = provideAccountDto.fullname;
+    try {
+      const passwordGenerated = await MyFunctions.generatePassword(12);
+      user.password = passwordGenerated.passwordEncoded;
+
+      const result: User = await this.userRepository.save(user);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
+        );
+      }
+      await this.emailService.provideAccount(
+        provideAccountDto.email,
+        provideAccountDto.fullname,
+        passwordGenerated.password,
+      );
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async provideAccountResponsibleByAdmin(
+    provideAccountResponsibleDto: ProvideAccountResponsibleDto,
+    admin: User,
+  ): Promise<User> {
+    if (admin.role.role_name != RoleEnum.ADMIN) {
+      throw new BadRequestException(
+        'Chỉ có Administration mới có quyền cấp tài khoản',
+      );
+    }
+    try {
+      const isExist = await this.userRepository.findOneBy({
+        email: provideAccountResponsibleDto.email,
+      });
+      if (isExist) {
         isExist.status = true;
         isExist.isConfirmByAdmin = true;
-        isExist.role_name = provideAccountDto.roleName;
-        const role = await this.roleRepository.findOneByOrFail({
-          role_name: provideAccountDto.roleName,
-        });
-        isExist.role = role;
 
         const checkUserInProject =
           await this.userProjectService.checkUserInProject(
             isExist.id,
-            provideAccountDto.projectId,
+            provideAccountResponsibleDto.projectId,
           );
         if (!checkUserInProject) {
           throw new NotFoundException(
@@ -373,33 +420,46 @@ export class AuthService {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
-    const user = this.userRepository.create(provideAccountDto);
-    if (!user) {
+    const responsiblePerson = this.userRepository.create(
+      provideAccountResponsibleDto,
+    );
+    if (!responsiblePerson) {
       throw new BadRequestException(
         'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
       );
     }
-    user.status = true;
-    user.isConfirmByAdmin = true;
-    user.role_name = provideAccountDto.roleName;
+    responsiblePerson.status = true;
+    responsiblePerson.isConfirmByAdmin = true;
+    responsiblePerson.role_name = RoleEnum.RESPONSIBLE_PERSON;
     const role = await this.roleRepository.findOneByOrFail({
-      role_name: provideAccountDto.roleName,
+      role_name: RoleEnum.RESPONSIBLE_PERSON,
     });
-    user.role = role;
-    user.fullname = provideAccountDto.fullname;
+    responsiblePerson.role = role;
+    responsiblePerson.fullname = provideAccountResponsibleDto.fullname;
     try {
       const passwordGenerated = await MyFunctions.generatePassword(12);
-      user.password = passwordGenerated.passwordEncoded;
+      responsiblePerson.password = passwordGenerated.passwordEncoded;
 
-      const result: User = await this.userRepository.save(user);
+      const result: User = await this.userRepository.save(responsiblePerson);
       if (!result) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
         );
       }
+      const project: Project = await this.projectService.getProjectById(
+        provideAccountResponsibleDto.projectId,
+      );
+      const userProjectDto: CreateUserProjectDto = new CreateUserProjectDto({
+        project: project,
+        user: result,
+        user_project_status: UserProjectStatusEnum.EDIT,
+      });
+
+      await this.userProjectService.createUserProject(userProjectDto);
+
       await this.emailService.provideAccount(
-        provideAccountDto.email,
-        provideAccountDto.fullname,
+        provideAccountResponsibleDto.email,
+        provideAccountResponsibleDto.fullname,
         passwordGenerated.password,
       );
       return result;

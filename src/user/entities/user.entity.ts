@@ -206,4 +206,42 @@ export class User {
 
   @OneToMany(() => Notification, (notification) => notification.receiver)
   receiver_notifications: Notification[];
+
+  // Factory method for Business Information
+  static createForBusiness(
+    fullname: string,
+    businessEmail: string,
+    business_sector: string,
+    business_description: string,
+    address: string,
+    address_detail: string,
+    link_web?: string,
+  ): User {
+    const user = new User();
+    user.fullname = fullname;
+    user.email = businessEmail;
+    user.business_sector = business_sector;
+    user.business_description = business_description;
+    user.address = address;
+    user.address_detail = address_detail;
+    user.link_web = link_web;
+    return user;
+  }
+
+  // Factory method for Responsible Person
+  static createForResponsiblePerson(
+    fullname: string,
+    phone_number: string,
+    position: string,
+    email: string,
+    other_contact?: string,
+  ): User {
+    const user = new User();
+    user.fullname = fullname;
+    user.phone_number = phone_number;
+    user.position = position;
+    user.email = email;
+    user.other_contact = other_contact;
+    return user;
+  }
 }

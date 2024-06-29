@@ -19,6 +19,8 @@ import { GroupService } from 'src/group/group.service';
 import { ConfigService } from '@nestjs/config';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectService } from 'src/user-project/user-project.service';
+import { EmailService } from 'src/email/email.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { UserProjectService } from 'src/user-project/user-project.service';
     GroupService,
     ConfigService,
     UserProjectService,
+    EmailService,
+    JwtService,
   ],
 })
 export class NotificationModule {}

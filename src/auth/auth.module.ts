@@ -21,6 +21,7 @@ import { NotificationService } from 'src/notification/notification.service';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { UserProject } from 'src/user-project/entities/user-project.entity';
     GroupService,
     NotificationService,
     UserProjectService,
+    RoleService,
   ],
 })
 export class AuthModule {}
