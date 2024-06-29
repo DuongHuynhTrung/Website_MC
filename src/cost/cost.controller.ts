@@ -71,7 +71,7 @@ export class CostController {
 
   @ApiOperation({ summary: 'Change Cost Status' })
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.STUDENT, RoleEnum.BUSINESS)
+  @Roles(RoleEnum.STUDENT, RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
   @Patch('changeStatus/:id/:costStatus')
   changeCostStatus(
     @Param('id') id: number,

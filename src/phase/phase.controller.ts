@@ -68,7 +68,7 @@ export class PhaseController {
   })
   @Patch('uploadFeedback')
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS, RoleEnum.LECTURER)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.LECTURER, RoleEnum.RESPONSIBLE_PERSON)
   uploadFeedback(
     @Body() uploadFeedbackDto: UploadFeedbackDto,
     @GetUser() user: User,

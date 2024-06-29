@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { UserProjectService } from './user-project.service';
 import { CreateUserProjectDto } from './dto/create-user-project.dto';
@@ -17,6 +18,7 @@ import { JwtGuard } from 'src/auth/jwt.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { RolesGuard } from 'src/auth/role.guard';
+import { UpdateUserProjectDto } from './dto/update-user-project.dto';
 
 @UseGuards(JwtGuard)
 @ApiBearerAuth()
@@ -74,6 +76,19 @@ export class UserProjectController {
     return this.userProjectService.removeUserFromProject(
       ProjectId,
       UserId,
+      user,
+    );
+  }
+
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(RolesGuard)
+  @Put('updateResponsibleStatus')
+  updateStatusOfResponsibleInProject(
+    @Body() updateUserProjectDto: UpdateUserProjectDto,
+    @GetUser() user: User,
+  ): Promise<UserProject> {
+    return this.userProjectService.updateStatusOfResponsibleInProject(
+      updateUserProjectDto,
       user,
     );
   }

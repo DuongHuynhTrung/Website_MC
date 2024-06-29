@@ -4,10 +4,11 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectStatusEnum } from './enum/project-status.enum';
@@ -59,6 +60,8 @@ export class ProjectService {
     private readonly roleService: RoleService,
 
     private readonly emailService: EmailService,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
@@ -144,9 +147,14 @@ export class ProjectService {
     createProjectWithTokenDto: CreateProjectWithTokenDto,
     user: User,
   ): Promise<Project> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      let business: User = await this.userRepository
-        .createQueryBuilder('user')
+      let business: User = await queryRunner.manager
+        .createQueryBuilder(User, 'user')
         .leftJoinAndSelect('user.role', 'role')
         .where('user.email = :email', {
           email: createProjectWithTokenDto.businessEmail,
@@ -155,6 +163,7 @@ export class ProjectService {
           role_name: RoleEnum.BUSINESS,
         })
         .getOne();
+
       if (business && createProjectWithTokenDto.is_change_business_info) {
         business.fullname = createProjectWithTokenDto.fullname;
         business.business_sector = createProjectWithTokenDto.business_sector;
@@ -163,7 +172,7 @@ export class ProjectService {
         business.address = createProjectWithTokenDto.address;
         business.address_detail = createProjectWithTokenDto.address_detail;
 
-        await this.userRepository.save(business);
+        await queryRunner.manager.save(business);
       } else if (!business) {
         const role: Role = await this.roleService.getRoleByRoleName(
           RoleEnum.BUSINESS,
@@ -184,7 +193,7 @@ export class ProjectService {
           isConfirmByAdmin: true,
         });
 
-        await this.userRepository.save(business);
+        await queryRunner.manager.save(business);
 
         await this.emailService.provideAccount(
           business.email,
@@ -193,8 +202,8 @@ export class ProjectService {
         );
       }
 
-      let responsiblePerson: User = await this.userRepository
-        .createQueryBuilder('user')
+      let responsiblePerson: User = await queryRunner.manager
+        .createQueryBuilder(User, 'user')
         .leftJoinAndSelect('user.role', 'role')
         .where('user.email = :email', {
           email: createProjectWithTokenDto.email_responsible_person,
@@ -203,6 +212,7 @@ export class ProjectService {
           role_name: RoleEnum.RESPONSIBLE_PERSON,
         })
         .getOne();
+
       if (
         responsiblePerson &&
         createProjectWithTokenDto.is_change_responsible_info
@@ -211,7 +221,7 @@ export class ProjectService {
         responsiblePerson.phone_number = createProjectWithTokenDto.phone_number;
         responsiblePerson.position = createProjectWithTokenDto.position;
 
-        await this.userRepository.save(responsiblePerson);
+        await queryRunner.manager.save(responsiblePerson);
       } else if (!responsiblePerson) {
         const role: Role = await this.roleService.getRoleByRoleName(
           RoleEnum.RESPONSIBLE_PERSON,
@@ -226,7 +236,7 @@ export class ProjectService {
           role_name: RoleEnum.RESPONSIBLE_PERSON,
         });
 
-        await this.userRepository.save(responsiblePerson);
+        await queryRunner.manager.save(responsiblePerson);
       }
 
       const project: Project = new Project(
@@ -252,7 +262,7 @@ export class ProjectService {
         project.project_status = ProjectStatusEnum.PUBLIC;
       }
 
-      await this.projectRepository.save(project);
+      await queryRunner.manager.save(project);
 
       const businessProjectDto: CreateUserProjectDto = new CreateUserProjectDto(
         {
@@ -261,28 +271,44 @@ export class ProjectService {
           user_project_status: UserProjectStatusEnum.OWNER,
         },
       );
-      await this.userProjectService.createUserProject(businessProjectDto);
+      await this.userProjectService.createUserProject(
+        businessProjectDto,
+        queryRunner.manager,
+      );
 
       const responsibleProjectDto: CreateUserProjectDto =
         new CreateUserProjectDto({
           project: project,
-          user: business,
+          user: responsiblePerson,
           user_project_status: UserProjectStatusEnum.VIEW,
         });
-      await this.userProjectService.createUserProject(responsibleProjectDto);
+      await this.userProjectService.createUserProject(
+        responsibleProjectDto,
+        queryRunner.manager,
+      );
 
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(business);
 
+      await queryRunner.commitTransaction();
+
       return project;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 
   async createProjectWithoutToken(
     createProjectWithoutTokenDto: CreateProjectWithoutTokenDto,
   ): Promise<Project> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
       const roleBusiness: Role = await this.roleService.getRoleByRoleName(
         RoleEnum.BUSINESS,
@@ -300,8 +326,7 @@ export class ProjectService {
         status: false,
         isConfirmByAdmin: false,
       });
-
-      await this.userRepository.save(business);
+      await queryRunner.manager.save(business);
 
       const roleResponsible: Role = await this.roleService.getRoleByRoleName(
         RoleEnum.RESPONSIBLE_PERSON,
@@ -315,8 +340,7 @@ export class ProjectService {
         role: roleResponsible,
         role_name: RoleEnum.RESPONSIBLE_PERSON,
       });
-
-      await this.userRepository.save(responsiblePerson);
+      await queryRunner.manager.save(responsiblePerson);
 
       const project: Project = new Project(
         createProjectWithoutTokenDto.name_project,
@@ -333,8 +357,7 @@ export class ProjectService {
         createProjectWithoutTokenDto.is_extent,
         true,
       );
-
-      await this.projectRepository.save(project);
+      await queryRunner.manager.save(project);
 
       const businessProjectDto: CreateUserProjectDto = new CreateUserProjectDto(
         {
@@ -343,22 +366,32 @@ export class ProjectService {
           user_project_status: UserProjectStatusEnum.OWNER,
         },
       );
-      await this.userProjectService.createUserProject(businessProjectDto);
+      await this.userProjectService.createUserProject(
+        businessProjectDto,
+        queryRunner.manager,
+      );
 
       const responsibleProjectDto: CreateUserProjectDto =
         new CreateUserProjectDto({
           project: project,
-          user: business,
+          user: responsiblePerson,
           user_project_status: UserProjectStatusEnum.VIEW,
         });
-      await this.userProjectService.createUserProject(responsibleProjectDto);
+      await this.userProjectService.createUserProject(
+        responsibleProjectDto,
+        queryRunner.manager,
+      );
 
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(business);
 
+      await queryRunner.commitTransaction();
       return project;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -438,7 +471,7 @@ export class ProjectService {
 
   async getProjectsOfBusiness(business: User): Promise<Project[]> {
     try {
-      const projects: Project[] = await this.projectRepository
+      let projects: Project[] = await this.projectRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.user_projects', 'user_project')
         .leftJoinAndSelect('user_project.user', 'user')
@@ -450,11 +483,55 @@ export class ProjectService {
       if (!projects || projects.length === 0) {
         return [];
       }
+      const projectIds: number[] = projects.map((project) => project.id);
+
+      projects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.user_projects', 'user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('project.id IN (:...projectIds)', { projectIds: projectIds })
+        .orderBy('project.createdAt', 'DESC')
+        .getMany();
+
       await this.handleGetProjectsOfBusiness(business);
       return projects;
     } catch (error) {
       throw new InternalServerErrorException(
-        'Something went wrong when trying to retrieve projects of business',
+        'Có lỗi xảy ra khi truy xuất tất cả dự án của doanh nghiệp',
+      );
+    }
+  }
+
+  async getProjectsOfResponsiblePerson(
+    responsiblePerson: User,
+  ): Promise<Project[]> {
+    try {
+      let projects: Project[] = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.user_projects', 'user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('user.id = :responsible_person_id', {
+          responsible_person_id: responsiblePerson.id,
+        })
+        .orderBy('project.createdAt', 'DESC')
+        .getMany();
+      if (!projects || projects.length === 0) {
+        return [];
+      }
+      const projectIds: number[] = projects.map((project) => project.id);
+
+      projects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.user_projects', 'user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('project.id IN (:...projectIds)', { projectIds: projectIds })
+        .orderBy('project.createdAt', 'DESC')
+        .getMany();
+
+      return projects;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Có lỗi xảy ra khi truy xuất tất cả dự án của người phụ trách',
       );
     }
   }
@@ -637,13 +714,32 @@ export class ProjectService {
     projectId: number,
     projectStatus: ProjectStatusEnum,
     groupId: number,
+    user: User,
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
-    const business = await this.userRepository
+
+    if (user.role.role_name != RoleEnum.LECTURER) {
+      const checkUserInProject: UserProject =
+        await this.userProjectService.checkUserInProject(user.id, projectId);
+      if (
+        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+      ) {
+        throw new ForbiddenException(
+          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể thay đổi trạng thái dự án',
+        );
+      }
+    }
+
+    // Business chỉ dùng để handleGetProjectsOfBusiness
+    const business: User = await this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.user_projects', 'user_project')
-      .leftJoinAndSelect('user_project.project', 'project')
+      .leftJoin('user.user_projects', 'user_project')
+      .leftJoin('user_project.project', 'project')
       .where('project.id = :projectId', { projectId: project.id })
+      .andWhere('user_project.user_project_status = :status', {
+        status: UserProjectStatusEnum.OWNER,
+      })
       .getOne();
     if (
       projectStatus !== ProjectStatusEnum.DONE &&
@@ -802,7 +898,7 @@ export class ProjectService {
 
   async handleGetProjectsOfBusiness(business: User): Promise<void> {
     try {
-      const projects: Project[] = await this.projectRepository
+      let projects: Project[] = await this.projectRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.user_projects', 'user_project')
         .leftJoinAndSelect('user_project.user', 'user')
@@ -817,6 +913,16 @@ export class ProjectService {
           emailBusiness: business.email,
         });
       } else {
+        const projectIds: number[] = projects.map((project) => project.id);
+
+        projects = await this.projectRepository
+          .createQueryBuilder('project')
+          .leftJoinAndSelect('project.user_projects', 'user_project')
+          .leftJoinAndSelect('user_project.user', 'user')
+          .where('project.id IN (:...projectIds)', { projectIds: projectIds })
+          .orderBy('project.createdAt', 'DESC')
+          .getMany();
+
         const totalProjects: number = projects.length;
         SocketGateway.handleGetProjectsOfBusiness({
           totalProjects: totalProjects,
@@ -826,7 +932,7 @@ export class ProjectService {
       }
     } catch (error) {
       throw new InternalServerErrorException(
-        'Something went wrong when trying to retrieve projects of business',
+        'Có lỗi xảy ra khi truy xuất tất cả dự án của doanh nghiệp',
       );
     }
   }

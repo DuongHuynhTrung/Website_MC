@@ -26,7 +26,6 @@ import { EmailService } from 'src/email/email.service';
 import { MyFunctions } from 'src/utils/MyFunctions';
 import { CreateNewBusinessDto } from './dto/create-new-business.dto';
 import { UserProjectService } from 'src/user-project/user-project.service';
-import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 import { ProvideAccountResponsibleDto } from './dto/provide-account-responsible.dto';
 import { ProjectService } from 'src/project/project.service';
 import { Project } from 'src/project/entities/project.entity';
@@ -397,7 +396,8 @@ export class AuthService {
           );
         }
 
-        checkUserInProject.user_project_status = UserProjectStatusEnum.EDIT;
+        checkUserInProject.user_project_status =
+          provideAccountResponsibleDto.user_project_status;
 
         await this.userProjectService.saveUserProject(checkUserInProject);
 
@@ -452,7 +452,7 @@ export class AuthService {
       const userProjectDto: CreateUserProjectDto = new CreateUserProjectDto({
         project: project,
         user: result,
-        user_project_status: UserProjectStatusEnum.EDIT,
+        user_project_status: provideAccountResponsibleDto.user_project_status,
       });
 
       await this.userProjectService.createUserProject(userProjectDto);

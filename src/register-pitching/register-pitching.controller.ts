@@ -171,7 +171,7 @@ export class RegisterPitchingController {
     description: 'Chỉ có dự án đang được công bố mới cần chọn nhóm làm',
   })
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
   @Patch('chooseGroup/:groupId/:projectId')
   update(
     @Param('groupId') groupId: number,

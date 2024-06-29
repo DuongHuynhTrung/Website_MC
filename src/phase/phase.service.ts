@@ -32,6 +32,9 @@ import { CreateNotificationDto } from 'src/notification/dto/create-notification.
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 import { SocketGateway } from 'socket.gateway';
 import { ConfigService } from '@nestjs/config';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 @Injectable()
 export class PhaseService {
@@ -50,6 +53,8 @@ export class PhaseService {
     private readonly notificationService: NotificationService,
 
     private configService: ConfigService,
+
+    private userProjectService: UserProjectService,
   ) {}
 
   async createPhase(
@@ -383,7 +388,23 @@ export class PhaseService {
           'Có lỗi xảy ra khi thêm feedback của giảng viên',
         );
       }
-    } else if (user.role.role_name == RoleEnum.BUSINESS) {
+    } else if (
+      user.role.role_name == RoleEnum.BUSINESS ||
+      user.role.role_name == RoleEnum.RESPONSIBLE_PERSON
+    ) {
+      const checkUserInProject: UserProject =
+        await this.userProjectService.checkUserInProject(
+          user.id,
+          phase.project.id,
+        );
+      if (
+        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+      ) {
+        throw new ForbiddenException(
+          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể tải lên feedback',
+        );
+      }
       phase.business_feeback = uploadFeedbackDto.feedback;
       try {
         await this.phaseRepository.save(phase);
@@ -454,15 +475,6 @@ export class PhaseService {
         // create notification for lecturer
         const group: Group = await this.groupService.getGroupByGroupId(
           leader.group.id,
-        );
-        const registerPitchigns: RegisterPitching[] =
-          await this.registerPitchingService.getAllRegisterPitchingByProjectId(
-            phase.project.id,
-          );
-        const selectedPitching: RegisterPitching = registerPitchigns.find(
-          (registerpitching) =>
-            registerpitching.register_pitching_status ==
-            RegisterPitchingStatusEnum.SELECTED,
         );
         //Send notification to lecturer
         const lecturerOfGroup =

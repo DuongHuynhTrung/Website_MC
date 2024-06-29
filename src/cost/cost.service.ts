@@ -20,6 +20,9 @@ import { RoleEnum } from 'src/role/enum/role.enum';
 import { PhaseService } from 'src/phase/phase.service';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { UpdateActualCostDto } from './dto/update-actual-cost.dto';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 @Injectable()
 export class CostService {
@@ -32,6 +35,8 @@ export class CostService {
     private readonly userService: UserService,
 
     private readonly phaseService: PhaseService,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async createCost(createCostDto: CreateCostDto): Promise<Cost> {
@@ -143,12 +148,25 @@ export class CostService {
     costStatus: CostStatusEnum,
     user: User,
   ): Promise<Cost> {
-    const cost: Cost = await this.getCostByID(costId);
+    const cost: Cost = await this.costRepository
+      .createQueryBuilder('cost')
+      .leftJoin('cost.category', 'category')
+      .leftJoin('category.phase', 'phase')
+      .leftJoin('phase.project', 'project')
+      .where('cost.id = :costId', { costId })
+      .getOne();
     if (costStatus === CostStatusEnum.TRANSFERRED) {
-      const business: User = await this.userService.getUserByEmail(user.email);
-      if (business.role.role_name != RoleEnum.BUSINESS) {
+      const checkUserInProject: UserProject =
+        await this.userProjectService.checkUserInProject(
+          user.id,
+          cost.category.phase.project.id,
+        );
+      if (
+        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT &&
+        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER
+      ) {
         throw new ForbiddenException(
-          'Chỉ có doanh nghiệp được quyền xác nhận đã chuyển tiền',
+          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận đã chuyển tiền',
         );
       }
       cost.cost_status = costStatus;

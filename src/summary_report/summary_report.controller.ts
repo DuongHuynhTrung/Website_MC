@@ -51,7 +51,7 @@ export class SummaryReportController {
 
   @ApiOperation({ summary: 'Business/Lecturer confirm summary report' })
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS, RoleEnum.LECTURER)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.LECTURER, RoleEnum.RESPONSIBLE_PERSON)
   @Patch('confirm')
   confirmSummaryReport(
     @Body() confirmSummaryReportDto: ConfirmSummaryReportDto,

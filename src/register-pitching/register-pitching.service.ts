@@ -29,6 +29,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
 import { NotificationTypeEnum } from 'src/notification/enum/notification-type.enum';
 import { SocketGateway } from 'socket.gateway';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 @Injectable()
 export class RegisterPitchingService {
@@ -315,18 +317,23 @@ export class RegisterPitchingService {
   ): Promise<RegisterPitching> {
     const project: Project =
       await this.projectService.getProjectById(projectId);
-    const business = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.user_projects', 'user_project')
-      .leftJoinAndSelect('user_project.project', 'project')
-      .where('project.id = :projectId', { projectId: project.id })
-      .getOne();
-
-    if (business.id != user.id) {
+    const checkUserInProject: UserProject =
+      await this.userProjectService.checkUserInProject(user.id, projectId);
+    if (
+      checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+      checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+    ) {
       throw new ForbiddenException(
-        'Chỉ có doanh nghiệp của dự án mới có thể chọn nhóm',
+        'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể chọn nhóm',
       );
     }
+    const businessOfProject: UserProject =
+      await this.userProjectService.getBusinessOfProject(projectId);
+
+    const business = await this.userService.getUserByEmail(
+      businessOfProject.user.email,
+    );
+
     if (project.project_status != ProjectStatusEnum.PUBLIC) {
       throw new BadRequestException(
         'Chỉ có dự án đang được công bố mới cần chọn nhóm làm',
@@ -391,6 +398,7 @@ export class RegisterPitchingService {
       project.id,
       ProjectStatusEnum.PROCESSING,
       groupId,
+      user,
     );
 
     await this.handleGetAllRegisterPitching(user);

@@ -1,11 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 export class ProvideAccountResponsibleDto {
   @ApiProperty({
@@ -58,4 +60,12 @@ export class ProvideAccountResponsibleDto {
   @IsNotEmpty()
   @IsNumber()
   projectId: number;
+
+  @ApiProperty({
+    description: 'Status of Responsible Person',
+    example: UserProjectStatusEnum.EDIT,
+  })
+  @IsNotEmpty()
+  @IsEnum(UserProjectStatusEnum)
+  user_project_status: UserProjectStatusEnum;
 }

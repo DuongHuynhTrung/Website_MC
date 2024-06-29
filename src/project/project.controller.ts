@@ -28,6 +28,8 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { Project } from './entities/project.entity';
 import { ProjectStatusEnum } from './enum/project-status.enum';
+import { CreateProjectWithTokenDto } from './dto/create-project-with-token.dto';
+import { CreateProjectWithoutTokenDto } from './dto/create-project-without-token.dto';
 
 @ApiTags('Project')
 @Controller('projects')
@@ -54,6 +56,64 @@ export class ProjectController {
   @Post()
   createProject(@Body() createProjectDto: CreateProjectDto): Promise<Project> {
     return this.projectService.createProject(createProjectDto);
+  }
+
+  @ApiOperation({
+    summary: 'Business/Admin create a new project',
+  })
+  @ApiOkResponse({
+    description: 'Project created successfully!',
+    type: Project,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Có lỗi khi tạo Người phụ trách. Vui lòng kiểm tra lại thông tin!',
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy Người phụ trách!',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
+  })
+  @Post('withAuthentication')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.BUSINESS)
+  @UseGuards(JwtGuard)
+  createProjectWithToken(
+    @Body() createProjectWithTokenDto: CreateProjectWithTokenDto,
+    @GetUser() user: User,
+  ): Promise<Project> {
+    return this.projectService.createProjectWithToken(
+      createProjectWithTokenDto,
+      user,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Business create a new project',
+  })
+  @ApiOkResponse({
+    description: 'Project created successfully!',
+    type: Project,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Có lỗi khi tạo Người phụ trách. Vui lòng kiểm tra lại thông tin!',
+  })
+  @ApiNotFoundResponse({
+    description: 'Không tìm thấy Người phụ trách!',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi khi tạo dự án. Vui lòng kiểm tra lại thông tin!',
+  })
+  @Post('withoutAuthentication')
+  createProjectWithoutToken(
+    @Body() createProjectWithoutTokenDto: CreateProjectWithoutTokenDto,
+  ): Promise<Project> {
+    return this.projectService.createProjectWithoutToken(
+      createProjectWithoutTokenDto,
+    );
   }
 
   @ApiOperation({
@@ -117,6 +177,29 @@ export class ProjectController {
   @UseGuards(JwtGuard)
   getProjectsOfBusiness(@GetUser() business: User): Promise<Project[]> {
     return this.projectService.getProjectsOfBusiness(business);
+  }
+
+  @ApiOperation({
+    summary: 'Get all projects for responsiblePerson',
+  })
+  @ApiOkResponse({
+    description: 'All projects have been retrieved',
+    type: [Project],
+  })
+  @ApiNotFoundResponse({
+    description: 'Hệ thống không có dự án nào!',
+  })
+  @Get('responsiblePerson')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.RESPONSIBLE_PERSON)
+  @UseGuards(JwtGuard)
+  getProjectsOfResponsiblePerson(
+    @GetUser() responsiblePerson: User,
+  ): Promise<Project[]> {
+    return this.projectService.getProjectsOfResponsiblePerson(
+      responsiblePerson,
+    );
   }
 
   @ApiOperation({
@@ -217,17 +300,19 @@ export class ProjectController {
   @Patch('changeStatus/:projectId/:projectStatus/:groupId')
   @ApiBearerAuth()
   @UseGuards(RolesGuard)
-  @Roles(RoleEnum.BUSINESS)
+  @Roles(RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
   @UseGuards(JwtGuard)
   async changeProjectStatus(
     @Param('projectId') projectId: number,
     @Param('projectStatus') projectStatus: ProjectStatusEnum,
     @Param('groupId') groupId: number,
+    @GetUser() user: User,
   ): Promise<Project> {
     return this.projectService.changeProjectStatus(
       projectId,
       projectStatus,
       groupId,
+      user,
     );
   }
 

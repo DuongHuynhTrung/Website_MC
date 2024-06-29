@@ -3,6 +3,7 @@ import { UserGroup } from './../user-group/entities/user-group.entity';
 import {
   BadGatewayException,
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -27,6 +28,7 @@ import { PhaseService } from 'src/phase/phase.service';
 import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { SocketGateway } from 'socket.gateway';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 
 @Injectable()
 export class SummaryReportService {
@@ -247,12 +249,24 @@ export class SummaryReportService {
           project.id,
           ProjectStatusEnum.DONE,
           group.id,
+          user,
         );
         await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
         return await this.getSummaryReportByProjectId(
           confirmSummaryReportDto.project_id,
         );
       } else {
+        const checkUserInProject: UserProject =
+          await this.userProjectService.checkUserInProject(user.id, project.id);
+        if (
+          checkUserInProject.user_project_status !=
+            UserProjectStatusEnum.OWNER &&
+          checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+        ) {
+          throw new ForbiddenException(
+            'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận báo cáo tổng hợp',
+          );
+        }
         summaryReport.isLecturerConfirmed = true;
         try {
           await this.summaryReportRepository.save(summaryReport);
@@ -265,6 +279,7 @@ export class SummaryReportService {
           project.id,
           ProjectStatusEnum.DONE,
           group.id,
+          user,
         );
         await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
         return await this.getSummaryReportByProjectId(

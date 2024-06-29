@@ -1,8 +1,11 @@
+import { UpdateUserProjectDto } from './dto/update-user-project.dto';
+import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserProject } from './entities/user-project.entity';
@@ -10,7 +13,6 @@ import { EntityManager, Repository } from 'typeorm';
 import { CreateUserProjectDto } from './dto/create-user-project.dto';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
-import { UserProjectStatusEnum } from './enum/user-project-status.enum';
 
 @Injectable()
 export class UserProjectService {
@@ -254,6 +256,44 @@ export class UserProjectService {
       if (!result) {
         throw new InternalServerErrorException(
           'Có lỗi xảy ra khi xóa người dùng khỏi dự án',
+        );
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async updateStatusOfResponsibleInProject(
+    updateUserProjectDto: UpdateUserProjectDto,
+    user: User,
+  ) {
+    try {
+      if (user.role_name !== RoleEnum.ADMIN) {
+        throw new UnauthorizedException(
+          'Chỉ admin có quyền chỉnh sửa quyền cho người phụ trách',
+        );
+      }
+      const userProject: UserProject = await this.userProjectRepository
+        .createQueryBuilder('user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .leftJoinAndSelect('user_project.project', 'project')
+        .where('user.id = :userId', { userId: updateUserProjectDto.userId })
+        .andWhere('project.id = :projectId', {
+          projectId: updateUserProjectDto.projectId,
+        })
+        .getOne();
+      if (!userProject) {
+        throw new NotFoundException(
+          'Không tìm thấy người phụ trách trong dự án',
+        );
+      }
+      userProject.user_project_status = updateUserProjectDto.status;
+      const result: UserProject =
+        await this.userProjectRepository.save(userProject);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi chỉnh sửa quyền cho người phụ trách',
         );
       }
       return result;
