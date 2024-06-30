@@ -301,4 +301,27 @@ export class UserProjectService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getAuthorityPersonInProject(projectId: number): Promise<UserProject[]> {
+    try {
+      const statusList: UserProjectStatusEnum[] = [
+        UserProjectStatusEnum.EDIT,
+        UserProjectStatusEnum.OWNER,
+      ];
+      const userProject: UserProject[] = await this.userProjectRepository
+        .createQueryBuilder('user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .leftJoin('user_project.project', 'project')
+        .where('project.id = :projectId', {
+          projectId,
+        })
+        .andWhere('user_project.user_project_status IN (:...projectStatus', {
+          projectStatus: statusList,
+        })
+        .getMany();
+      return userProject;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

@@ -35,6 +35,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class PhaseService {
@@ -55,6 +56,8 @@ export class PhaseService {
     private configService: ConfigService,
 
     private userProjectService: UserProjectService,
+
+    private emailService: EmailService,
   ) {}
 
   async createPhase(
@@ -314,6 +317,17 @@ export class PhaseService {
     }
     if (phaseStatus === PhaseStatusEnum.DONE) {
       phase.phase_actual_end_date = new Date();
+      const getAuthorityPersonOfProject: UserProject[] =
+        await this.userProjectService.getAuthorityPersonInProject(
+          phase.project.id,
+        );
+      getAuthorityPersonOfProject.forEach((userProject) => {
+        this.emailService.provideAccount(
+          userProject.user.email,
+          userProject.user.fullname,
+          '123',
+        );
+      });
     }
     phase.phase_status = phaseStatus;
     try {
