@@ -6,6 +6,7 @@ import {
   UseGuards,
   Body,
   Delete,
+  Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
@@ -62,7 +63,7 @@ export class UserController {
   })
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  @Get('/checkBusinessInfo')
+  @Post('/checkBusinessInfo')
   checkBusinessInfo(
     @Body() checkBusinessInfoDto: CheckBusinessInfoDto,
   ): Promise<string[]> {
@@ -78,7 +79,7 @@ export class UserController {
   })
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  @Get('/checkResponsibleInfo')
+  @Post('/checkResponsibleInfo')
   checkResponsibleInfo(
     @Body() checkResponsibleInfoDto: CheckResponsibleInfoDto,
   ): Promise<string[]> {
