@@ -155,14 +155,16 @@ export class ProjectService {
     try {
       let business: User = await queryRunner.manager
         .createQueryBuilder(User, 'user')
-        .leftJoinAndSelect('user.role', 'role')
         .where('user.email = :email', {
           email: createProjectWithTokenDto.businessEmail,
         })
-        .andWhere('role.role_name = :role_name', {
-          role_name: RoleEnum.BUSINESS,
-        })
         .getOne();
+
+      if (business && business.role_name != RoleEnum.BUSINESS) {
+        throw new BadRequestException(
+          `Email đã tồn tại trong hệ thống với vai trò không phải doanh nghiệp. Vui lòng liên hệ với Admin để giải quyết`,
+        );
+      }
 
       if (business && createProjectWithTokenDto.is_change_business_info) {
         business.fullname = createProjectWithTokenDto.fullname;
@@ -204,14 +206,19 @@ export class ProjectService {
 
       let responsiblePerson: User = await queryRunner.manager
         .createQueryBuilder(User, 'user')
-        .leftJoinAndSelect('user.role', 'role')
         .where('user.email = :email', {
           email: createProjectWithTokenDto.email_responsible_person,
         })
-        .andWhere('role.role_name = :role_name', {
-          role_name: RoleEnum.RESPONSIBLE_PERSON,
-        })
         .getOne();
+
+      if (
+        responsiblePerson &&
+        responsiblePerson.role_name != RoleEnum.RESPONSIBLE_PERSON
+      ) {
+        throw new BadRequestException(
+          `Email đã tồn tại trong hệ thống với vai trò không phải người phụ trách. Vui lòng liên hệ với Admin để giải quyết`,
+        );
+      }
 
       if (
         responsiblePerson &&

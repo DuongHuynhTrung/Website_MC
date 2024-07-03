@@ -713,22 +713,22 @@ export class UserService {
         return result;
       }
       if (business.fullname !== checkBusinessInfoDto.businessName) {
-        result.push(checkBusinessInfoDto.businessName);
+        result.push('Tên Doanh nghiệp/Hộ kinh doanh');
       }
       if (
         business.business_description !==
         checkBusinessInfoDto.business_description
       ) {
-        result.push(checkBusinessInfoDto.business_description);
+        result.push('Mô tả ngắn về Doanh nghiệp/Hộ kinh doanh và sản phẩm');
       }
       if (business.business_sector !== checkBusinessInfoDto.business_sector) {
-        result.push(checkBusinessInfoDto.business_sector);
+        result.push('Lĩnh vực kinh doanh');
       }
       if (business.address !== checkBusinessInfoDto.address) {
-        result.push(checkBusinessInfoDto.address);
+        result.push('Địa chỉ');
       }
       if (business.address_detail !== checkBusinessInfoDto.address_detail) {
-        result.push(checkBusinessInfoDto.address_detail);
+        result.push('Địa chỉ cụ thể');
       }
 
       return result;
@@ -760,15 +760,15 @@ export class UserService {
       }
 
       if (responsible_person.fullname !== checkResponsibleInfoDto.fullname) {
-        result.push(checkResponsibleInfoDto.fullname);
+        result.push('Họ và tên');
       }
       if (
         responsible_person.phone_number !== checkResponsibleInfoDto.phone_number
       ) {
-        result.push(checkResponsibleInfoDto.phone_number);
+        result.push('Số điện thoại');
       }
       if (responsible_person.position !== checkResponsibleInfoDto.position) {
-        result.push(checkResponsibleInfoDto.position);
+        result.push('Chức vụ');
       }
 
       return result;
