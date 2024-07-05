@@ -167,7 +167,7 @@ export class ProjectService {
       }
 
       if (business && createProjectWithTokenDto.is_change_business_info) {
-        business.fullname = createProjectWithTokenDto.fullname;
+        business.fullname = createProjectWithTokenDto.businessName;
         business.business_sector = createProjectWithTokenDto.business_sector;
         business.business_description =
           createProjectWithTokenDto.business_description;
