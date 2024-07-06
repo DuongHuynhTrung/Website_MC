@@ -1,3 +1,4 @@
+import { AddResponsiblePersonToProjectDto } from './dto/add-responsible-person-to-project.dto';
 import { User } from './../user/entities/user.entity';
 import {
   Injectable,
@@ -299,7 +300,7 @@ export class ProjectService {
 
       await queryRunner.commitTransaction();
 
-      return project;
+      return await this.getProjectById(project.id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(error.message);
@@ -399,6 +400,108 @@ export class ProjectService {
       throw new InternalServerErrorException(error.message);
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async addResponsiblePersonToProject(
+    addResponsiblePersonToProjectDto: AddResponsiblePersonToProjectDto,
+  ): Promise<UserProject> {
+    try {
+      if (
+        addResponsiblePersonToProjectDto.user_project_status ==
+        UserProjectStatusEnum.OWNER
+      ) {
+        throw new BadRequestException(
+          'Vai trò cần thêm vào dự án phải là người phụ trách',
+        );
+      }
+      const project: Project = await this.getProjectById(
+        addResponsiblePersonToProjectDto.projectId,
+      );
+      let responsiblePerson: User = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.email = :email', {
+          email: addResponsiblePersonToProjectDto.email_responsible_person,
+        })
+        .getOne();
+
+      if (
+        responsiblePerson &&
+        responsiblePerson.role_name != RoleEnum.RESPONSIBLE_PERSON
+      ) {
+        throw new BadRequestException(
+          `Email đã tồn tại trong hệ thống với vai trò không phải người phụ trách. Vui lòng liên hệ với Admin để giải quyết`,
+        );
+      }
+      if (
+        responsiblePerson &&
+        addResponsiblePersonToProjectDto.is_change_responsible_info
+      ) {
+        const checkExistInProject: UserProject =
+          await this.userProjectService.checkUserInProject(
+            responsiblePerson.id,
+            addResponsiblePersonToProjectDto.projectId,
+          );
+        if (checkExistInProject) {
+          throw new BadRequestException(
+            'Người phụ trách đã tồn tại trong dự án',
+          );
+        }
+
+        responsiblePerson.fullname = addResponsiblePersonToProjectDto.fullname;
+        responsiblePerson.phone_number =
+          addResponsiblePersonToProjectDto.phone_number;
+        responsiblePerson.position = addResponsiblePersonToProjectDto.position;
+
+        await this.userRepository.save(responsiblePerson);
+      } else if (!responsiblePerson) {
+        const role: Role = await this.roleService.getRoleByRoleName(
+          RoleEnum.RESPONSIBLE_PERSON,
+        );
+        responsiblePerson = this.userRepository.create({
+          fullname: addResponsiblePersonToProjectDto.fullname,
+          phone_number: addResponsiblePersonToProjectDto.phone_number,
+          position: addResponsiblePersonToProjectDto.position,
+          email: addResponsiblePersonToProjectDto.email_responsible_person,
+          other_contact: addResponsiblePersonToProjectDto?.other_contact,
+          role: role,
+          role_name: RoleEnum.RESPONSIBLE_PERSON,
+        });
+        if (addResponsiblePersonToProjectDto.is_create_account) {
+          const passwordGenerated = await MyFunctions.generatePassword(12);
+
+          responsiblePerson.password = passwordGenerated.passwordEncoded;
+          responsiblePerson.status = true;
+          responsiblePerson.isConfirmByAdmin = true;
+
+          await this.userRepository.save(responsiblePerson);
+
+          await this.emailService.provideAccount(
+            responsiblePerson.email,
+            responsiblePerson.fullname,
+            passwordGenerated.password,
+          );
+        } else {
+          await this.userRepository.save(responsiblePerson);
+        }
+      }
+      const responsibleProjectDto: CreateUserProjectDto =
+        new CreateUserProjectDto({
+          project: project,
+          user: responsiblePerson,
+          user_project_status:
+            addResponsiblePersonToProjectDto.user_project_status,
+        });
+      const result: UserProject =
+        await this.userProjectService.createUserProject(responsibleProjectDto);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thêm người phụ trách vào dự án',
+        );
+      }
+      return result;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 

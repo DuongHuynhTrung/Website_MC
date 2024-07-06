@@ -13,12 +13,19 @@ import { EntityManager, Repository } from 'typeorm';
 import { CreateUserProjectDto } from './dto/create-user-project.dto';
 import { User } from 'src/user/entities/user.entity';
 import { RoleEnum } from 'src/role/enum/role.enum';
+import { MyFunctions } from 'src/utils/MyFunctions';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class UserProjectService {
   constructor(
     @InjectRepository(UserProject)
     private readonly userProjectRepository: Repository<UserProject>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async createUserProject(
@@ -121,7 +128,7 @@ export class UserProjectService {
       const userProject: UserProject = await this.userProjectRepository
         .createQueryBuilder('user_project')
         .leftJoinAndSelect('user_project.user', 'user')
-        .leftJoinAndSelect('userProject.project', 'project')
+        .leftJoinAndSelect('user_project.project', 'project')
         .where('user.id = :userId', { userId })
         .andWhere('project.id = :projectId', { projectId })
         .getOne();
@@ -286,6 +293,24 @@ export class UserProjectService {
       if (!userProject) {
         throw new NotFoundException(
           'Không tìm thấy người phụ trách trong dự án',
+        );
+      }
+      const responsiblePerson: User = await this.userRepository.findOneBy({
+        id: userProject.user.id,
+      });
+      if (updateUserProjectDto.is_create_account) {
+        const passwordGenerated = await MyFunctions.generatePassword(12);
+
+        responsiblePerson.password = passwordGenerated.passwordEncoded;
+        responsiblePerson.status = true;
+        responsiblePerson.isConfirmByAdmin = true;
+
+        await this.userRepository.save(responsiblePerson);
+
+        await this.emailService.provideAccount(
+          responsiblePerson.email,
+          responsiblePerson.fullname,
+          passwordGenerated.password,
         );
       }
       userProject.user_project_status = updateUserProjectDto.status;

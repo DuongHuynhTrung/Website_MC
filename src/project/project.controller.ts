@@ -1,3 +1,4 @@
+import { AddResponsiblePersonToProjectDto } from './dto/add-responsible-person-to-project.dto';
 import {
   Controller,
   Get,
@@ -30,6 +31,7 @@ import { Project } from './entities/project.entity';
 import { ProjectStatusEnum } from './enum/project-status.enum';
 import { CreateProjectWithTokenDto } from './dto/create-project-with-token.dto';
 import { CreateProjectWithoutTokenDto } from './dto/create-project-without-token.dto';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @ApiTags('Project')
 @Controller('projects')
@@ -113,6 +115,26 @@ export class ProjectController {
   ): Promise<Project> {
     return this.projectService.createProjectWithoutToken(
       createProjectWithoutTokenDto,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Add Responsible Person to Project',
+  })
+  @ApiOkResponse({
+    description: 'Add successfully!',
+    type: Project,
+  })
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  @Post('addResponsiblePersonToProject')
+  addResponsiblePersonToProject(
+    @Body() addResponsiblePersonToProjectDto: AddResponsiblePersonToProjectDto,
+  ): Promise<UserProject> {
+    return this.projectService.addResponsiblePersonToProject(
+      addResponsiblePersonToProjectDto,
     );
   }
 
