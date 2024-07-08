@@ -25,6 +25,7 @@ import { NewMessageModule } from './new-message/new-message.module';
 import { SocketGateway } from 'socket.gateway';
 import { SupportModule } from './support/support.module';
 import { UserProjectModule } from './user-project/user-project.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { UserProjectModule } from './user-project/user-project.module';
     NewMessageModule,
     SupportModule,
     UserProjectModule,
+    PaymentModule,
     // MessageModule,
   ],
   providers: [SocketGateway],

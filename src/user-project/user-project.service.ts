@@ -242,6 +242,19 @@ export class UserProjectService {
     }
   }
 
+  async removeAllUserProjectByUserId(userId: number): Promise<void> {
+    try {
+      const userProjects: UserProject[] = await this.userProjectRepository
+        .createQueryBuilder('user_project')
+        .leftJoinAndSelect('user_project.user', 'user')
+        .where('user.id = :userId', { userId })
+        .getMany();
+      await this.userProjectRepository.remove(userProjects);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async removeUserFromProject(
     projectId: number,
     userId: number,
@@ -336,11 +349,11 @@ export class UserProjectService {
       const userProject: UserProject[] = await this.userProjectRepository
         .createQueryBuilder('user_project')
         .leftJoinAndSelect('user_project.user', 'user')
-        .leftJoin('user_project.project', 'project')
+        .leftJoinAndSelect('user_project.project', 'project')
         .where('project.id = :projectId', {
           projectId,
         })
-        .andWhere('user_project.user_project_status IN (:...projectStatus', {
+        .andWhere('user_project.user_project_status IN (:...projectStatus)', {
           projectStatus: statusList,
         })
         .getMany();

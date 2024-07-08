@@ -20,6 +20,7 @@ import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
 import { PhaseStatusEnum } from './enum/phase-status.enum';
 import { UploadFeedbackDto } from './dto/upload-feedback.dto';
+import { CostStatusEnum } from './enum/cost-status.enum';
 
 @ApiTags('Phase')
 @UseGuards(JwtGuard)
@@ -95,5 +96,17 @@ export class PhaseController {
     @Param('phaseStatus') phaseStatus: PhaseStatusEnum,
   ): Promise<Phase> {
     return this.phaseService.changePhaseStatus(phaseId, phaseStatus);
+  }
+
+  @ApiOperation({ summary: 'Change Cost Status' })
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT, RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
+  @Patch('changeCostStatus/:id/:costStatus')
+  changeCostStatus(
+    @Param('id') id: number,
+    @Param('costStatus') costStatus: CostStatusEnum,
+    @GetUser() user: User,
+  ): Promise<Phase> {
+    return this.phaseService.changeCostStatus(id, costStatus, user);
   }
 }

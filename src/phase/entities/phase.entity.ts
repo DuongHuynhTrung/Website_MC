@@ -10,6 +10,7 @@ import {
 import { PhaseStatusEnum } from '../enum/phase-status.enum';
 import { Project } from 'src/project/entities/project.entity';
 import { Category } from 'src/category/entities/category.entity';
+import { CostStatusEnum } from '../enum/cost-status.enum';
 
 @Entity()
 export class Phase {
@@ -30,6 +31,9 @@ export class Phase {
 
   @Column({ nullable: true })
   actual_cost_total: number;
+
+  @Column({ nullable: true })
+  cost_status: CostStatusEnum;
 
   @Column({ nullable: false, default: 1 })
   phase_number: number;

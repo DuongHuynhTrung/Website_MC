@@ -91,9 +91,12 @@ export class RegisterPitchingService {
     const checkGroupHasLecturer: UserGroup[] =
       await this.userGroupService.checkGroupHasLecturer(group.id);
 
-    if (checkGroupHasLecturer && checkGroupHasLecturer.length >= 2) {
+    if (
+      checkGroupHasLecturer.length == 0 &&
+      createRegisterPitchingDto.lecturer_email.length == 0
+    ) {
       throw new BadRequestException(
-        'Nhóm đã có 2 giáo viên hướng dẫn. Không thể mời thêm',
+        'Nhóm phải có ít nhất 1 giảng viên hướng dẫn dự án. Hãy mời thêm giảng viên!',
       );
     }
 
@@ -102,33 +105,49 @@ export class RegisterPitchingService {
       checkGroupHasLecturer.map((lecturer) => lecturer.user.email),
     );
 
+    let countNewLecturer: number = 0;
     for (const email of createRegisterPitchingDto.lecturer_email) {
       if (!existingLecturerEmails.has(email)) {
-        const lecturer: User = await this.userService.getUserByEmail(email);
-        if (lecturer.role.role_name != RoleEnum.LECTURER) {
-          throw new BadRequestException(
-            'Chỉ có thể mời giảng viên khi đăng ký pitching',
+        countNewLecturer++;
+      }
+    }
+    if (countNewLecturer + checkGroupHasLecturer.length > 2) {
+      throw new BadRequestException(
+        'Nhóm chỉ có tối đa 2 giáo viên hướng dẫn. Không thể mời nhiều hơn!',
+      );
+    }
+
+    if (countNewLecturer > 0) {
+      for (const email of createRegisterPitchingDto.lecturer_email) {
+        if (!existingLecturerEmails.has(email)) {
+          const lecturer: User = await this.userService.getUserByEmail(email);
+          if (lecturer.role.role_name != RoleEnum.LECTURER) {
+            throw new BadRequestException(
+              'Chỉ có thể mời giảng viên khi đăng ký pitching',
+            );
+          }
+          // Create UserGroup for Lecturer and Group
+          const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto(
+            {
+              group: group,
+              relationship_status: RelationshipStatusEnum.PENDING,
+              role_in_group: RoleInGroupEnum.LECTURER,
+              user: lecturer,
+            },
+          );
+          await this.userGroupService.createUserGroup(createUserGroupDto);
+          // Sent Notification to Lecturer
+          const createNotificationDto: CreateNotificationDto =
+            new CreateNotificationDto(
+              NotificationTypeEnum.INVITE_LECTURER,
+              `${group.group_name} đã gửi lời mời bạn làm Mentor cho dự án ${project.name_project}`,
+              user_group.user.email,
+              lecturer.email,
+            );
+          await this.notificationService.createNotification(
+            createNotificationDto,
           );
         }
-        // Create UserGroup for Lecturer and Group
-        const createUserGroupDto: CreateUserGroupDto = new CreateUserGroupDto({
-          group: group,
-          relationship_status: RelationshipStatusEnum.PENDING,
-          role_in_group: RoleInGroupEnum.LECTURER,
-          user: lecturer,
-        });
-        await this.userGroupService.createUserGroup(createUserGroupDto);
-        // Sent Notification to Lecturer
-        const createNotificationDto: CreateNotificationDto =
-          new CreateNotificationDto(
-            NotificationTypeEnum.INVITE_LECTURER,
-            `${group.group_name} đã gửi lời mời bạn làm Mentor cho dự án ${project.name_project}`,
-            user_group.user.email,
-            lecturer.email,
-          );
-        await this.notificationService.createNotification(
-          createNotificationDto,
-        );
       }
     }
 
@@ -319,6 +338,9 @@ export class RegisterPitchingService {
       await this.projectService.getProjectById(projectId);
     const checkUserInProject: UserProject =
       await this.userProjectService.checkUserInProject(user.id, projectId);
+    if (!checkUserInProject) {
+      throw new NotFoundException('Người dùng không thuộc dự án');
+    }
     if (
       checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
       checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
@@ -471,8 +493,8 @@ export class RegisterPitchingService {
             .createQueryBuilder('register_pitching')
             .leftJoinAndSelect('register_pitching.project', 'project')
             .leftJoinAndSelect('register_pitching.group', 'group')
-            .leftJoin('project.user_projects', 'user_project')
-            .leftJoin('user_project.user', 'user')
+            .leftJoinAndSelect('project.user_projects', 'user_project')
+            .leftJoinAndSelect('user_project.user', 'user')
             .where('user.email = :email', { email: user.email })
             .getMany();
         SocketGateway.handleGetAllRegisterPitching({

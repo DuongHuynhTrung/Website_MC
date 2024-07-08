@@ -36,6 +36,7 @@ import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 import { EmailService } from 'src/email/email.service';
+import { CostStatusEnum } from './enum/cost-status.enum';
 
 @Injectable()
 export class PhaseService {
@@ -164,18 +165,15 @@ export class PhaseService {
 
   async getAllPhaseOfProject(projectId: number): Promise<Phase[]> {
     try {
-      const phases: Phase[] = await this.phaseRepository.find({
-        relations: ['project'],
-      });
-      if (phases.length === 0) {
-        return [];
-      }
-      const result = phases.filter((phase) => phase.project.id == projectId);
-      result.sort(
-        (phase1, phase2) => phase1.phase_number - phase2.phase_number,
-      );
+      const phases: Phase[] = await this.phaseRepository
+        .createQueryBuilder('phase')
+        .leftJoinAndSelect('phase.categories', 'categories')
+        .leftJoinAndSelect('phase.project', 'project')
+        .where('project.id = :projectId', { projectId })
+        .orderBy('phase.phase_number', 'ASC')
+        .getMany();
       await this.handleGetPhases(projectId);
-      return result;
+      return phases;
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi truy xuất tất cả giai đoạn của project',
@@ -315,14 +313,16 @@ export class PhaseService {
         'Giai đoạn đã hoàn thành không thể chuyển sang trạng thái khác',
       );
     }
+    console.log('object');
     if (phaseStatus === PhaseStatusEnum.DONE) {
+      phase.cost_status = CostStatusEnum.NOT_TRANSFERRED;
       phase.phase_actual_end_date = new Date();
       const getAuthorityPersonOfProject: UserProject[] =
         await this.userProjectService.getAuthorityPersonInProject(
           phase.project.id,
         );
-      getAuthorityPersonOfProject.forEach((userProject) => {
-        this.emailService.provideAccount(
+      getAuthorityPersonOfProject.forEach(async (userProject) => {
+        await this.emailService.provideAccount(
           userProject.user.email,
           userProject.user.fullname,
           '123',
@@ -371,6 +371,86 @@ export class PhaseService {
     }
   }
 
+  async changeCostStatus(
+    phaseId: number,
+    costStatus: CostStatusEnum,
+    user: User,
+  ): Promise<Phase> {
+    const phase: Phase = await this.phaseRepository
+      .createQueryBuilder('phase')
+      .leftJoinAndSelect('phase.project', 'project')
+      .leftJoinAndSelect('project.register_pitchings', 'register_pitching')
+      .leftJoinAndSelect('register_pitching.group', 'group')
+      .where('phase.id = :phaseId', { phaseId })
+      .getOne();
+    if (costStatus === CostStatusEnum.TRANSFERRED) {
+      const checkUserInProject: UserProject =
+        await this.userProjectService.checkUserInProject(
+          user.id,
+          phase.project.id,
+        );
+      if (!checkUserInProject) {
+        throw new NotFoundException('Người dùng không thuộc dự án');
+      }
+      if (
+        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT &&
+        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER
+      ) {
+        throw new ForbiddenException(
+          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận đã chuyển tiền',
+        );
+      }
+      phase.cost_status = costStatus;
+      try {
+        const result: Phase = await this.phaseRepository.save(phase);
+        return await this.getPhaseById(result.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thay đổi trạng thái chi phí',
+        );
+      }
+    } else if (costStatus === CostStatusEnum.RECEIVED) {
+      const registerPitching: RegisterPitching =
+        phase.project.register_pitchings.find(
+          (registerPitching) =>
+            registerPitching.register_pitching_status ===
+            RegisterPitchingStatusEnum.SELECTED,
+        );
+
+      const checkUserInGroup: UserGroup =
+        await this.userGroupService.checkUserInGroup(
+          user.id,
+          registerPitching.group.id,
+        );
+      if (!checkUserInGroup) {
+        throw new ForbiddenException(
+          'Chỉ sinh viên trong nhóm có quyền thực hiện',
+        );
+      }
+      if (checkUserInGroup.role_in_group !== RoleInGroupEnum.LEADER) {
+        throw new ForbiddenException(
+          'Chỉ trưởng nhóm có quyền xác nhận đã chuyển tiền',
+        );
+      }
+      if (phase.cost_status != CostStatusEnum.TRANSFERRED) {
+        throw new BadRequestException(
+          'Chỉ có thể xác nhận đã nhận thì khi doanh nghiệp đã chuyển',
+        );
+      }
+      phase.cost_status = costStatus;
+      try {
+        const result: Phase = await this.phaseRepository.save(phase);
+        return await this.getPhaseById(result.id);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi thay đổi trạng thái chi phí',
+        );
+      }
+    } else {
+      throw new BadRequestException('Trạng thái không hợp lệ');
+    }
+  }
+
   async savePhase(phase: Phase): Promise<void> {
     try {
       await this.phaseRepository.save(phase);
@@ -411,6 +491,9 @@ export class PhaseService {
           user.id,
           phase.project.id,
         );
+      if (!checkUserInProject) {
+        throw new NotFoundException('Người dùng không thuộc dự án');
+      }
       if (
         checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
         checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
@@ -537,9 +620,13 @@ export class PhaseService {
 
   async handleGetPhases(projectId: number): Promise<void> {
     try {
-      const phases: Phase[] = await this.phaseRepository.find({
-        relations: ['project'],
-      });
+      const phases: Phase[] = await this.phaseRepository
+        .createQueryBuilder('phase')
+        .leftJoinAndSelect('phase.categories', 'categories')
+        .leftJoinAndSelect('phase.project', 'project')
+        .where('project.id = :projectId', { projectId })
+        .orderBy('phase.phase_number', 'DESC')
+        .getMany();
       if (phases.length === 0) {
         SocketGateway.handleGetPhases({
           totalPhases: 0,
@@ -547,14 +634,10 @@ export class PhaseService {
           projectId: projectId,
         });
       } else {
-        const result = phases.filter((phase) => phase.project.id == projectId);
-        const totalPhases: number = result.length;
-        result.sort(
-          (phase1, phase2) => phase1.phase_number - phase2.phase_number,
-        );
+        const totalPhases: number = phases.length;
         SocketGateway.handleGetPhases({
           totalPhases: totalPhases,
-          phases: result,
+          phases: phases,
           projectId: projectId,
         });
       }

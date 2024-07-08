@@ -16,9 +16,6 @@ import { Cost } from './entities/cost.entity';
 import { RolesGuard } from 'src/auth/role.guard';
 import { Roles } from 'src/auth/role.decorator';
 import { RoleEnum } from 'src/role/enum/role.enum';
-import { CostStatusEnum } from './enum/cost-status.enum';
-import { GetUser } from 'src/auth/get-user.decorator';
-import { User } from 'src/user/entities/user.entity';
 import { UpdateActualCostDto } from './dto/update-actual-cost.dto';
 
 @ApiTags('Cost')
@@ -67,17 +64,5 @@ export class CostController {
     @Body() updateCostDto: UpdateCostDto,
   ): Promise<Cost> {
     return this.costService.updateCost(id, updateCostDto);
-  }
-
-  @ApiOperation({ summary: 'Change Cost Status' })
-  @UseGuards(RolesGuard)
-  @Roles(RoleEnum.STUDENT, RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
-  @Patch('changeStatus/:id/:costStatus')
-  changeCostStatus(
-    @Param('id') id: number,
-    @Param('costStatus') costStatus: CostStatusEnum,
-    @GetUser() user: User,
-  ): Promise<Cost> {
-    return this.costService.changeCostStatus(id, costStatus, user);
   }
 }

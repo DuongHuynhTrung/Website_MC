@@ -258,6 +258,9 @@ export class SummaryReportService {
       } else {
         const checkUserInProject: UserProject =
           await this.userProjectService.checkUserInProject(user.id, project.id);
+        if (!checkUserInProject) {
+          throw new NotFoundException('Người dùng không thuộc dự án');
+        }
         if (
           checkUserInProject.user_project_status !=
             UserProjectStatusEnum.OWNER &&

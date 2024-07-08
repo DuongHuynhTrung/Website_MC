@@ -653,7 +653,6 @@ export class ProjectService {
         .leftJoinAndSelect('project.user_projects', 'user_project')
         .leftJoinAndSelect('user_project.user', 'user')
         .where('project.id = :projectId', { projectId: id })
-        .orderBy('project.createdAt', 'DESC')
         .getOne();
 
       if (!project) {
@@ -831,6 +830,9 @@ export class ProjectService {
     if (user.role.role_name != RoleEnum.LECTURER) {
       const checkUserInProject: UserProject =
         await this.userProjectService.checkUserInProject(user.id, projectId);
+      if (!checkUserInProject) {
+        throw new NotFoundException('Người dùng không thuộc dự án');
+      }
       if (
         checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
         checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
@@ -844,8 +846,8 @@ export class ProjectService {
     // Business chỉ dùng để handleGetProjectsOfBusiness
     const business: User = await this.userRepository
       .createQueryBuilder('user')
-      .leftJoin('user.user_projects', 'user_project')
-      .leftJoin('user_project.project', 'project')
+      .leftJoinAndSelect('user.user_projects', 'user_project')
+      .leftJoinAndSelect('user_project.project', 'project')
       .where('project.id = :projectId', { projectId: project.id })
       .andWhere('user_project.user_project_status = :status', {
         status: UserProjectStatusEnum.OWNER,

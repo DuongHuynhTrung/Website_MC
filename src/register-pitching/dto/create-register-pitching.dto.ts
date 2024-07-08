@@ -36,7 +36,7 @@ export class CreateRegisterPitchingDto {
     description: 'Lecturer Email',
     example: ['lecturer@gmail.com'],
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
   lecturer_email: string[];
 

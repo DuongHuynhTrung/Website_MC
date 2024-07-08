@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CostStatusEnum } from '../enum/cost-status.enum';
 import { Category } from 'src/category/entities/category.entity';
 
 @Entity()
@@ -22,9 +21,6 @@ export class Cost {
 
   @Column({ nullable: true })
   actual_cost: number;
-
-  @Column({ nullable: false, default: CostStatusEnum.NOT_TRANSFERRED })
-  cost_status: CostStatusEnum;
 
   @CreateDateColumn()
   createdAt: Date;

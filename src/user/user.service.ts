@@ -19,6 +19,8 @@ import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { RelationshipStatusEnum } from 'src/user-group/enum/relationship-status.enum';
 import { Notification } from 'src/notification/entities/notification.entity';
 import { CheckResponsibleInfoDto } from './dto/check-responsible-info.dto';
+import { UserProjectService } from 'src/user-project/user-project.service';
+import { UserProject } from 'src/user-project/entities/user-project.entity';
 
 @Injectable()
 export class UserService {
@@ -40,6 +42,8 @@ export class UserService {
 
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+
+    private readonly userProjectService: UserProjectService,
   ) {}
 
   async getUsers(): Promise<[{ totalUsers: number }, User[]]> {
@@ -342,18 +346,6 @@ export class UserService {
             }
             return result;
           }
-          const notifications = await this.notificationRepository.find({
-            relations: ['sender', 'receiver'],
-          });
-          const notificationsOfSender = notifications.filter(
-            (notification) => notification.sender.id == user.id,
-          );
-          const notificationsOfReceiver = notifications.filter(
-            (notification) => notification.receiver.id == user.id,
-          );
-          await this.notificationRepository.remove(notificationsOfSender);
-          await this.notificationRepository.remove(notificationsOfReceiver);
-
           const projectPending = projects.filter(
             (project) => project.project_status == ProjectStatusEnum.PENDING,
           );
@@ -367,6 +359,44 @@ export class UserService {
           }
 
           await this.projectRepository.remove(projectPending);
+
+          const notifications = await this.notificationRepository.find({
+            relations: ['sender', 'receiver'],
+          });
+          const notificationsOfSender = notifications.filter(
+            (notification) => notification.sender.id == user.id,
+          );
+          const notificationsOfReceiver = notifications.filter(
+            (notification) => notification.receiver.id == user.id,
+          );
+          await this.notificationRepository.remove(notificationsOfSender);
+          await this.notificationRepository.remove(notificationsOfReceiver);
+
+          const result = await this.userRepository.remove(user);
+          if (!result) {
+            throw new Error('Có lỗi xảy ra khi xóa tài khoản người dùng');
+          }
+          return result;
+        }
+        case RoleEnum.RESPONSIBLE_PERSON: {
+          const userProjects: UserProject[] =
+            await this.userProjectService.findAllUserProjectByUserId(user);
+
+          if (userProjects && userProjects.length > 0) {
+            await this.userProjectService.removeAllUserProjectByUserId(user.id);
+          }
+
+          const notifications = await this.notificationRepository.find({
+            relations: ['sender', 'receiver'],
+          });
+          const notificationsOfSender = notifications.filter(
+            (notification) => notification.sender.id == user.id,
+          );
+          const notificationsOfReceiver = notifications.filter(
+            (notification) => notification.receiver.id == user.id,
+          );
+          await this.notificationRepository.remove(notificationsOfSender);
+          await this.notificationRepository.remove(notificationsOfReceiver);
 
           const result = await this.userRepository.remove(user);
           if (!result) {

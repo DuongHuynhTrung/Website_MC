@@ -160,7 +160,7 @@ export class Project {
 
   @OneToMany(
     () => RegisterPitching,
-    (registerPitching) => registerPitching.group,
+    (registerPitching) => registerPitching.project,
   )
   register_pitchings: RegisterPitching[];
 
