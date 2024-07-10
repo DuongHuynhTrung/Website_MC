@@ -63,7 +63,7 @@ import { PaymentModule } from './payment/payment.module';
           },
         },
         defaults: {
-          from: `"MC" <${config.get('MAIL_FROM')}>`,
+          from: `"Kho dự án Truyền thông" <${config.get('MAIL_FROM')}>`,
         },
       }),
       inject: [ConfigService],

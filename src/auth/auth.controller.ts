@@ -34,6 +34,7 @@ import { EmailService } from 'src/email/email.service';
 import { ForgotPasswordOtpDto } from 'src/email/dto/forgot-password-otp.dto';
 import { VerifyOtpDto } from 'src/email/dto/verify-otp.dto';
 import { CreateNewBusinessDto } from './dto/create-new-business.dto';
+import { ProvideAccountResponsibleDto } from './dto/provide-account-responsible.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -139,7 +140,7 @@ export class AuthController {
     description: 'Không thể cung cấp tài khoản Administrator cho người dùng',
   })
   @ApiBadRequestResponse({
-    description: 'Email ${provideAccountDto.email} đã tồn tại trong hệ thống',
+    description: 'Email đã tồn tại trong hệ thống',
   })
   @ApiBadRequestResponse({
     description:
@@ -158,6 +159,42 @@ export class AuthController {
     @GetUser() admin: User,
   ): Promise<User> {
     return this.authService.provideAccountByAdmin(provideAccountDto, admin);
+  }
+
+  @ApiOperation({ summary: 'Provide Account For Responsible Person By Admin' })
+  @ApiOkResponse({
+    description: 'Provide Account Successfully',
+    type: User,
+  })
+  @ApiBadRequestResponse({
+    description: 'Chỉ có Administration mới có quyền cấp tài khoản',
+  })
+  @ApiBadRequestResponse({
+    description: 'Không thể cung cấp tài khoản Administrator cho người dùng',
+  })
+  @ApiBadRequestResponse({
+    description: 'Email đã tồn tại trong hệ thống',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Có lỗi xảy ra khi tạo người dùng mới. Vui lòng kiểm tra lại thông tin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Có lỗi xảy ra khi cấp tài khoản cho người dùng',
+  })
+  @Post('provideAccountResponsible/admin')
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN)
+  @UseGuards(JwtGuard)
+  provideAccountResponsibleByAdmin(
+    @Body() provideAccountResponsibleDto: ProvideAccountResponsibleDto,
+    @GetUser() admin: User,
+  ): Promise<User> {
+    return this.authService.provideAccountResponsibleByAdmin(
+      provideAccountResponsibleDto,
+      admin,
+    );
   }
 
   @ApiOperation({ summary: 'UpRole Account For User By Admin' })

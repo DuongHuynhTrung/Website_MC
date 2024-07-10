@@ -168,6 +168,8 @@ export class PhaseService {
       const phases: Phase[] = await this.phaseRepository
         .createQueryBuilder('phase')
         .leftJoinAndSelect('phase.categories', 'categories')
+        .leftJoinAndSelect('categories.cost', 'cost')
+        .leftJoinAndSelect('cost.evidences', 'evidences')
         .leftJoinAndSelect('phase.project', 'project')
         .where('project.id = :projectId', { projectId })
         .orderBy('phase.phase_number', 'ASC')
@@ -313,7 +315,6 @@ export class PhaseService {
         'Giai đoạn đã hoàn thành không thể chuyển sang trạng thái khác',
       );
     }
-    console.log('object');
     if (phaseStatus === PhaseStatusEnum.DONE) {
       phase.cost_status = CostStatusEnum.NOT_TRANSFERRED;
       phase.phase_actual_end_date = new Date();
@@ -623,9 +624,11 @@ export class PhaseService {
       const phases: Phase[] = await this.phaseRepository
         .createQueryBuilder('phase')
         .leftJoinAndSelect('phase.categories', 'categories')
+        .leftJoinAndSelect('categories.cost', 'cost')
+        .leftJoinAndSelect('cost.evidences', 'evidences')
         .leftJoinAndSelect('phase.project', 'project')
         .where('project.id = :projectId', { projectId })
-        .orderBy('phase.phase_number', 'DESC')
+        .orderBy('phase.phase_number', 'ASC')
         .getMany();
       if (phases.length === 0) {
         SocketGateway.handleGetPhases({
