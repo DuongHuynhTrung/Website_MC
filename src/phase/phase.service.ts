@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { CreatePhaseDto } from './dto/create-phase.dto';
 import { UpdatePhaseDto } from './dto/update-phase.dto';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Phase } from './entities/phase.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectService } from 'src/project/project.service';
@@ -37,12 +37,24 @@ import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 import { EmailService } from 'src/email/email.service';
 import { CostStatusEnum } from './enum/cost-status.enum';
+import { Category } from 'src/category/entities/category.entity';
+import { Evidence } from 'src/evidence/entities/evidence.entity';
+import { Cost } from 'src/cost/entities/cost.entity';
 
 @Injectable()
 export class PhaseService {
   constructor(
     @InjectRepository(Phase)
     private readonly phaseRepository: Repository<Phase>,
+
+    @InjectRepository(Cost)
+    private readonly costRepository: Repository<Cost>,
+
+    @InjectRepository(Evidence)
+    private readonly evidenceRepository: Repository<Evidence>,
+
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
 
     private readonly projectService: ProjectService,
 
@@ -59,6 +71,8 @@ export class PhaseService {
     private userProjectService: UserProjectService,
 
     private emailService: EmailService,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async createPhase(
@@ -269,6 +283,74 @@ export class PhaseService {
       return await this.getPhaseById(result.id);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async deletePhase(phaseId: number): Promise<Phase> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const phase: Phase = await queryRunner.manager
+        .createQueryBuilder(Phase, 'phase')
+        .leftJoinAndSelect('phase.categories', 'categories')
+        .leftJoinAndSelect('categories.cost', 'cost')
+        .leftJoinAndSelect('cost.evidences', 'evidences')
+        .where('phase.id = :phaseId', { phaseId })
+        .getOne();
+      if (!phase) {
+        throw new NotFoundException('Không tìm thấy giai đoạn');
+      }
+      if (phase.phase_status !== PhaseStatusEnum.PENDING) {
+        throw new BadRequestException(
+          'Chỉ có thể xóa Giai đoạn đang chờ triển khai',
+        );
+      }
+      const categories: Category[] = phase.categories;
+      if (categories.length > 0) {
+        for (const category of categories) {
+          const evidences: Evidence[] = category.cost.evidences;
+          if (evidences && evidences.length > 0) {
+            const deleteEvidences = await queryRunner.manager.remove(evidences);
+            if (!deleteEvidences) {
+              throw new InternalServerErrorException(
+                'Có lỗi xảy ra khi xóa bằng chứng chi phí của hạng mục',
+              );
+            }
+          }
+          const cost: Cost = category.cost;
+          if (cost) {
+            const deleteCost = await queryRunner.manager.remove(cost);
+            if (!deleteCost) {
+              throw new InternalServerErrorException(
+                'Có lỗi xảy ra khi xóa chi phí của hạng mục',
+              );
+            }
+          }
+        }
+      }
+      const deleteCategories = await queryRunner.manager.remove(categories);
+      if (!deleteCategories) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi xóa hạng mục',
+        );
+      }
+      const result: Phase = await queryRunner.manager.remove(phase);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi xóa giai đoạn',
+        );
+      }
+
+      await queryRunner.commitTransaction();
+      return result;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 

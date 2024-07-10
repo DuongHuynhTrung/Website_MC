@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { PhaseService } from './phase.service';
 import { CreatePhaseDto } from './dto/create-phase.dto';
@@ -85,6 +86,14 @@ export class PhaseController {
     @GetUser() user: User,
   ) {
     return this.phaseService.updatePhase(id, updatePhaseDto, user);
+  }
+
+  @ApiOperation({ summary: 'Delete Phase' })
+  @Delete(':phaseId')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  deletePhase(@Param('phaseId') phaseId: number): Promise<Phase> {
+    return this.phaseService.deletePhase(phaseId);
   }
 
   @ApiOperation({ summary: 'Change Phase Status' })

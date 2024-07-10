@@ -26,6 +26,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserProjectService } from 'src/user-project/user-project.service';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { Evidence } from 'src/evidence/entities/evidence.entity';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UserProject } from 'src/user-project/entities/user-project.entity';
       Notification,
       Role,
       UserProject,
+      Evidence,
     ]),
   ],
   controllers: [CostController],

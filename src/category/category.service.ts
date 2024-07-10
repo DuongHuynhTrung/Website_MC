@@ -8,7 +8,7 @@ import {
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PhaseService } from 'src/phase/phase.service';
@@ -20,6 +20,8 @@ import { RoleInGroupEnum } from 'src/user-group/enum/role-in-group.enum';
 import { PhaseStatusEnum } from 'src/phase/enum/phase-status.enum';
 import { UpdateActualResultDto } from './dto/update-actual-result.dto';
 import { SocketGateway } from 'socket.gateway';
+import { Cost } from 'src/cost/entities/cost.entity';
+import { Evidence } from 'src/evidence/entities/evidence.entity';
 
 @Injectable()
 export class CategoryService {
@@ -27,9 +29,17 @@ export class CategoryService {
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
 
+    @InjectRepository(Cost)
+    private readonly costRepository: Repository<Cost>,
+
+    @InjectRepository(Evidence)
+    private readonly evidenceRepository: Repository<Evidence>,
+
     private readonly phaseService: PhaseService,
 
     private readonly userGroupService: UserGroupService,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async createCategory(
@@ -109,6 +119,60 @@ export class CategoryService {
       return category;
     } catch (error) {
       throw new NotFoundException(error.message);
+    }
+  }
+
+  async deleteCategoryById(id: number): Promise<Category> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const category: Category = await queryRunner.manager
+        .createQueryBuilder(Category, 'category')
+        .leftJoinAndSelect('category.cost', 'cost')
+        .leftJoinAndSelect('cost.evidences', 'evidences')
+        .where('category.id = :categoryId', { categoryId: id })
+        .getOne();
+      if (!category) {
+        throw new NotFoundException('Không tìm thấy hạng mục');
+      }
+      if (category.category_status == CategoryStatusEnum.DONE) {
+        throw new BadRequestException('Không thể xóa hạng mục đã hoàn thành');
+      }
+      const evidences: Evidence[] = category.cost.evidences;
+      if (evidences && evidences.length > 0) {
+        const deleteEvidences = await queryRunner.manager.remove(evidences);
+        if (!deleteEvidences) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xóa bằng chứng chi phí của hạng mục',
+          );
+        }
+      }
+      const cost: Cost = category.cost;
+      if (cost) {
+        const deleteCost = await queryRunner.manager.remove(cost);
+        if (!deleteCost) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi xóa chi phí của hạng mục',
+          );
+        }
+      }
+      const result: Category = await queryRunner.manager.remove(category);
+      if (!result) {
+        throw new InternalServerErrorException(
+          'Có lỗi xảy ra khi xóa hạng mục',
+        );
+      }
+
+      await queryRunner.commitTransaction();
+      return result;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 

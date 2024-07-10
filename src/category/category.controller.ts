@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -75,6 +76,14 @@ export class CategoryController {
     @GetUser() user: User,
   ) {
     return this.categoryService.updateCategory(id, updateCategoryDto, user);
+  }
+
+  @ApiOperation({ summary: 'Update Category Information' })
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.STUDENT)
+  deleteCategoryById(@Param('id') id: number) {
+    return this.categoryService.deleteCategoryById(id);
   }
 
   @ApiOperation({ summary: 'Change Category Status' })
