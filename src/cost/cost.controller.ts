@@ -51,7 +51,7 @@ export class CostController {
   @Patch('update-actual-cost')
   updateActualCost(
     @Body() updateActualCostDto: UpdateActualCostDto,
-  ): Promise<Cost> {
+  ): Promise<{ cost: Cost; actualCostOfPhase: number }> {
     return this.costService.updateActualCost(updateActualCostDto);
   }
 

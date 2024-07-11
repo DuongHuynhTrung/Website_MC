@@ -135,7 +135,7 @@ export class CostService {
 
   async updateActualCost(
     updateActualCostDto: UpdateActualCostDto,
-  ): Promise<Cost> {
+  ): Promise<{ cost: Cost; actualCostOfPhase: number }> {
     const cost: Cost = await this.getCostByID(updateActualCostDto.costId);
     const category: Category = await this.categorySErvice.getCategoryById(
       updateActualCostDto.categoryId,
@@ -168,6 +168,9 @@ export class CostService {
     phase.actual_cost_total += updateActualCostDto.actual_cost;
     await this.phaseService.savePhase(phase);
 
-    return await this.getCostByID(cost.id);
+    return {
+      cost: await this.getCostByID(cost.id),
+      actualCostOfPhase: phase.actual_cost_total,
+    };
   }
 }
