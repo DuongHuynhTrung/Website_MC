@@ -29,6 +29,7 @@ import { ProjectStatusEnum } from 'src/project/enum/project-status.enum';
 import { SocketGateway } from 'socket.gateway';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class SummaryReportService {
@@ -45,6 +46,8 @@ export class SummaryReportService {
     private readonly phaseService: PhaseService,
 
     private readonly userProjectService: UserProjectService,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async createSummaryReport(
@@ -87,6 +90,17 @@ export class SummaryReportService {
             'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
           );
         }
+
+        const authorityPerson: UserProject[] =
+          await this.userProjectService.getAuthorityPersonInProject(project.id);
+        authorityPerson.forEach(async (person) => {
+          await this.emailService.announceSummaryReport(
+            person.user.email,
+            person.user.fullname,
+            project.name_project,
+          );
+        });
+
         await this.handleGetSummaryReports(result.project.id);
         return await this.getSummaryReportByProjectId(result.project.id);
       } catch (error) {

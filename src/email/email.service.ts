@@ -286,9 +286,7 @@ export class EmailService {
                                   <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
                                   <p
                                       style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
-                                      Hoàng
-                                      Vũ Quốc
-                                      Anh</p>
+                                      Kho dự án truyền thông</p>
                               </td>
                           </tr>
                       </tbody>
@@ -450,9 +448,7 @@ export class EmailService {
                             <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
                             <p
                                 style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
-                                Hoàng
-                                Vũ Quốc
-                                Anh</p>
+                                Kho dự án truyền thông</p>
                         </td>
                     </tr>
                 </tbody>
@@ -653,9 +649,7 @@ export class EmailService {
                                     <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
                                     <p
                                         style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
-                                        Hoàng
-                                        Vũ Quốc
-                                        Anh</p>
+                                        Kho dự án truyền thông</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -716,6 +710,359 @@ export class EmailService {
                     </table>
                 </div>
               </body>`,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async approvalProject(
+    businessEmail: string,
+    businessName: string,
+    projectName: string,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        to: businessEmail,
+        subject: 'Thông tin Tài khoản và Mật khẩu đăng nhập',
+        html: `<body style="background-color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe
+                UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif">
+                <div style="width:50vw; margin: 0 auto">
+                    <div style="width: 100%; height: 200px; margin: 0 auto;">
+                        <img src="https://live.staticflickr.com/65535/53614111501_d7d80942ac_w.jpg"
+                            style="width: auto;height:200px;object-fit: cover; margin-left: 35%;">
+                    </div>
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;margin-bottom: 25px;">
+                                        Xin chào
+                                        <a style="font-size:16px;line-height:22px;margin:16px 0;font-weight: bold;">${businessName},</a>
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúng tôi gửi email này để thông báo rằng dự án
+                                        <span style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            ${projectName}
+                                        </span> của bạn đã được phê duyệt.
+                                    </p>
+
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Để hoàn tất quy trình, vui lòng đăng nhập vào hệ thống để xác nhận lại những thông tin
+                                        mà bạn đã đăng
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Nếu cần hỗ trợ hoặc có thắc mắc gì, xin đừng ngần ngại liên hệ với chúng tôi. Chúng tôi rất
+                                        cảm ơn sự hợp tác của bạn.
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúc bạn một ngày tốt lành!
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
+                                    <p
+                                        style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
+                                        Kho dự án truyền thông</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+
+
+                                    <footer style="background-color: rgb(73, 97, 121); padding: 16px">
+                                        <div style="color: white;">
+                                            <h5 style="color: white; margin: 0;width: 12.5rem;  font-weight: 500;">
+                                                LIÊN HỆ NHANH
+                                            </h5>
+                                            <div>
+                                                <div style="padding: 10px 0px; border-color: white; border-top-width: 1px;">
+                                                    <div style="display:inline;">
+                                                        <img alt="logo" loading="lazy" width="100" height="100" decoding="async"
+                                                            src="https://firebasestorage.googleapis.com/v0/b/website-for-mc.appspot.com/o/khoduan%2Flogo.png?alt=media&token=07e0dbe7-8844-4c2b-9f34-19ad64c87c19"
+                                                            style="color: transparent; display:inline-block;">
+                                                        <p
+                                                            style="height: 100px;margin-bottom: 0px;margin-top: 0px; font-size: 15px; vertical-align: middle;margin-left: 15px;font-weight: 500; display:inline-block;">
+                                                            Kho Dự án
+                                                            Truyền thông - Quảng bá
+                                                            <br>Sản phẩm Văn hóa Bản địa Việt Nam
+                                                        </p>
+                                                    </div>
+                                                    <div style="">
+                                                        <p style="font-weight: 500; color: white; margin: 0;">Hoàng Vũ Quốc Anh
+                                                            (Mr.) </p>
+                                                        <p style="font-size: 12px; font-style: italic; color: white; margin: 0;">
+                                                            Quản lý dự án</p>
+                                                        <div style="height: 5px;"></div>
+                                                        <p style=" color: white; margin: 0;">Hotline: <span
+                                                                style="font-weight: 500;">0367082493</span>
+                                                        </p>
+                                                        <p style=" color: white; margin: 0;">Email:
+                                                            <span
+                                                                style="text-decoration: none; color: white; font-weight: 500; color: white;">
+                                                                <a href="mailto:anhhvq@fe.edu.vn" target="_blank"
+                                                                    style="text-decoration: none; color: white;">anhhvq@fe.edu.vn</a>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </footer>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </body>`,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async announceSummaryReport(
+    businessEmail: string,
+    businessName: string,
+    projectName: string,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        to: businessEmail,
+        subject: 'Thông tin Tài khoản và Mật khẩu đăng nhập',
+        html: `<body style="background-color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe
+                UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif">
+                <div style="width:50vw; margin: 0 auto">
+                    <div style="width: 100%; height: 200px; margin: 0 auto;">
+                        <img src="https://live.staticflickr.com/65535/53614111501_d7d80942ac_w.jpg"
+                            style="width: auto;height:200px;object-fit: cover; margin-left: 35%;">
+                    </div>
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;margin-bottom: 25px;">
+                                        Xin chào
+                                        <a style="font-size:16px;line-height:22px;margin:16px 0;font-weight: bold;">${businessName},</a>
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúng tôi gửi email này để thông báo rằng hệ thống
+                                        <span style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            Kho dự án truyền thông
+                                        </span> ghi nhận dự án <span
+                                            style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            ${projectName}
+                                        </span> của bạn đã được sinh viên nộp báo cáo tổng kết.
+                                    </p>
+
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Để hoàn tất dự án, vui lòng vào hệ thống của chúng tôi để xác nhận lại báo cáo.
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Nếu cần hỗ trợ hoặc có thắc mắc gì, xin đừng ngần ngại liên hệ với chúng tôi. Chúng tôi rất
+                                        cảm ơn sự hợp tác của bạn.
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúc bạn một ngày tốt lành!
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
+                                    <p
+                                        style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
+                                        Kho dự án truyền thông</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+
+
+                                    <footer style="background-color: rgb(73, 97, 121); padding: 16px">
+                                        <div style="color: white;">
+                                            <h5 style="color: white; margin: 0;width: 12.5rem;  font-weight: 500;">
+                                                LIÊN HỆ NHANH
+                                            </h5>
+                                            <div>
+                                                <div style="padding: 10px 0px; border-color: white; border-top-width: 1px;">
+                                                    <div style="display:inline;">
+                                                        <img alt="logo" loading="lazy" width="100" height="100" decoding="async"
+                                                            src="https://firebasestorage.googleapis.com/v0/b/website-for-mc.appspot.com/o/khoduan%2Flogo.png?alt=media&token=07e0dbe7-8844-4c2b-9f34-19ad64c87c19"
+                                                            style="color: transparent; display:inline-block;">
+                                                        <p
+                                                            style="height: 100px;margin-bottom: 0px;margin-top: 0px; font-size: 15px; vertical-align: middle;margin-left: 15px;font-weight: 500; display:inline-block;">
+                                                            Kho Dự án
+                                                            Truyền thông - Quảng bá
+                                                            <br>Sản phẩm Văn hóa Bản địa Việt Nam
+                                                        </p>
+                                                    </div>
+                                                    <div style="">
+                                                        <p style="font-weight: 500; color: white; margin: 0;">Hoàng Vũ Quốc Anh
+                                                            (Mr.) </p>
+                                                        <p style="font-size: 12px; font-style: italic; color: white; margin: 0;">
+                                                            Quản lý dự án</p>
+                                                        <div style="height: 5px;"></div>
+                                                        <p style=" color: white; margin: 0;">Hotline: <span
+                                                                style="font-weight: 500;">0367082493</span>
+                                                        </p>
+                                                        <p style=" color: white; margin: 0;">Email:
+                                                            <span
+                                                                style="text-decoration: none; color: white; font-weight: 500; color: white;">
+                                                                <a href="mailto:anhhvq@fe.edu.vn" target="_blank"
+                                                                    style="text-decoration: none; color: white;">anhhvq@fe.edu.vn</a>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </footer>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </body>`,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async announceWarningChoose(
+    businessEmail: string,
+    businessName: string,
+    projectName: string,
+    numberOfDate: number,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        to: businessEmail,
+        subject: 'Thông tin Tài khoản và Mật khẩu đăng nhập',
+        html: `<body style="background-color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe
+                UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif">
+                <div style="width:50vw; margin: 0 auto">
+                    <div style="width: 100%; height: 200px; margin: 0 auto;">
+                        <img src="https://live.staticflickr.com/65535/53614111501_d7d80942ac_w.jpg"
+                            style="width: auto;height:200px;object-fit: cover; margin-left: 35%;">
+                    </div>
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;margin-bottom: 25px;">
+                                        Xin chào
+                                        <a style="font-size:16px;line-height:22px;margin:16px 0;font-weight: bold;">${businessName},</a>
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúng tôi gửi email này thông báo rằng hệ thống
+                                        <span style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            Kho dự án truyền thông
+                                        </span> ghi nhận dự án <span
+                                            style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            ${projectName}
+                                        </span> của bạn còn <span
+                                            style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
+                                            ${numberOfDate} ngày
+                                        </span> để chọn nhóm tham gia pitching và thực hiện dự án.
+                                    </p>
+
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Vui lòng đăng nhập vào hệ thống của chúng tôi để chọn nhóm mà bạn ưng ý nhất!
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Nếu cần hỗ trợ hoặc có thắc mắc gì, xin đừng ngần ngại liên hệ với chúng tôi. Chúng tôi rất
+                                        cảm ơn sự hợp tác của bạn.
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
+                                        Chúc bạn một ngày tốt lành!
+                                    </p>
+                                    <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043">Trân trọng,</p>
+                                    <p
+                                        style="font-weight:bold;font-size:16px;line-height:22px;margin:16px 0px 0px 0px;color:#3c4043">
+                                        Kho dự án truyền thông</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table style="padding:0 40px" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation"
+                        width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <hr
+                                        style="width:100%;border:none;border-top:1px solid black;border-color:black;margin:20px 0" />
+
+
+                                    <footer style="background-color: rgb(73, 97, 121); padding: 16px">
+                                        <div style="color: white;">
+                                            <h5 style="color: white; margin: 0;width: 12.5rem;  font-weight: 500;">
+                                                LIÊN HỆ NHANH
+                                            </h5>
+                                            <div>
+                                                <div style="padding: 10px 0px; border-color: white; border-top-width: 1px;">
+                                                    <div style="display:inline;">
+                                                        <img alt="logo" loading="lazy" width="100" height="100" decoding="async"
+                                                            src="https://firebasestorage.googleapis.com/v0/b/website-for-mc.appspot.com/o/khoduan%2Flogo.png?alt=media&token=07e0dbe7-8844-4c2b-9f34-19ad64c87c19"
+                                                            style="color: transparent; display:inline-block;">
+                                                        <p
+                                                            style="height: 100px;margin-bottom: 0px;margin-top: 0px; font-size: 15px; vertical-align: middle;margin-left: 15px;font-weight: 500; display:inline-block;">
+                                                            Kho Dự án
+                                                            Truyền thông - Quảng bá
+                                                            <br>Sản phẩm Văn hóa Bản địa Việt Nam
+                                                        </p>
+                                                    </div>
+                                                    <div style="">
+                                                        <p style="font-weight: 500; color: white; margin: 0;">Hoàng Vũ Quốc Anh
+                                                            (Mr.) </p>
+                                                        <p style="font-size: 12px; font-style: italic; color: white; margin: 0;">
+                                                            Quản lý dự án</p>
+                                                        <div style="height: 5px;"></div>
+                                                        <p style=" color: white; margin: 0;">Hotline: <span
+                                                                style="font-weight: 500;">0367082493</span>
+                                                        </p>
+                                                        <p style=" color: white; margin: 0;">Email:
+                                                            <span
+                                                                style="text-decoration: none; color: white; font-weight: 500; color: white;">
+                                                                <a href="mailto:anhhvq@fe.edu.vn" target="_blank"
+                                                                    style="text-decoration: none; color: white;">anhhvq@fe.edu.vn</a>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </footer>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </body>`,
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);

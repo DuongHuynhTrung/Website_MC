@@ -405,10 +405,11 @@ export class PhaseService {
           phase.project.id,
         );
       getAuthorityPersonOfProject.forEach(async (userProject) => {
-        await this.emailService.provideAccount(
+        await this.emailService.announceProjectDone(
           userProject.user.email,
           userProject.user.fullname,
-          '123',
+          userProject.project.name_project,
+          phase.phase_number,
         );
       });
     }

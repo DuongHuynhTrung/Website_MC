@@ -3,14 +3,6 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateEvidenceDto {
   @ApiProperty({
-    description: 'Evidence Description',
-    example: 'Hóa đơn book KOL',
-  })
-  @IsString()
-  @IsNotEmpty()
-  description: string;
-
-  @ApiProperty({
     description: 'Evidence Image URL',
     example: 'abc',
   })

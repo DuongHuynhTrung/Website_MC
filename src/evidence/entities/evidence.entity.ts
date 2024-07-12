@@ -14,9 +14,6 @@ export class Evidence {
   id: number;
 
   @Column({ nullable: false })
-  description: string;
-
-  @Column({ nullable: false })
   evidence_url: string;
 
   @CreateDateColumn()

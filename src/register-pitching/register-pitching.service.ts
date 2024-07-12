@@ -539,13 +539,14 @@ export class RegisterPitchingService {
     if (userGroup.relationship_status != RelationshipStatusEnum.JOINED) {
       return false;
     }
-    const registerPitching = await this.registerPitchingRepository
-      .createQueryBuilder('registerPitching')
-      .leftJoinAndSelect('registerPitching.group', 'group')
-      .leftJoinAndSelect('registerPitching.project', 'project')
-      .where('group.id = :groupId', { groupId })
-      .andWhere('project.id = :projectId', { projectId })
-      .getOne();
+    const registerPitching: RegisterPitching =
+      await this.registerPitchingRepository
+        .createQueryBuilder('registerPitching')
+        .leftJoinAndSelect('registerPitching.group', 'group')
+        .leftJoinAndSelect('registerPitching.project', 'project')
+        .where('group.id = :groupId', { groupId })
+        .andWhere('project.id = :projectId', { projectId })
+        .getOne();
     if (!registerPitching) {
       return false;
     }

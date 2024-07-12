@@ -47,13 +47,12 @@ export class EvidenceController {
   }
 
   @ApiOperation({ summary: 'Update Evidence Information' })
-  @Patch(':id')
+  @Patch()
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.STUDENT)
   updateEvidence(
-    @Param('id') id: number,
     @Body() updateEvidenceDto: UpdateEvidenceDto,
-  ): Promise<Evidence> {
-    return this.evidenceService.updateEvidence(id, updateEvidenceDto);
+  ): Promise<Evidence[]> {
+    return this.evidenceService.updateEvidence(updateEvidenceDto);
   }
 }

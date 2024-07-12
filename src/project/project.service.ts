@@ -757,14 +757,22 @@ export class ProjectService {
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
     //check if project already exists
-    const project = await this.getProjectById(id);
-
+    const project: Project = await this.getProjectById(id);
+    const authorityPerson: UserProject[] =
+      await this.userProjectService.getAuthorityPersonInProject(project.id);
     try {
       Object.assign(project, updateProjectDto);
-      project.project_status =
-        project.project_status == ProjectStatusEnum.PENDING
-          ? ProjectStatusEnum.PUBLIC
-          : project.project_status;
+
+      if (project.project_status == ProjectStatusEnum.PENDING) {
+        project.project_status = ProjectStatusEnum.PUBLIC;
+        authorityPerson.forEach(async (person) => {
+          await this.emailService.approvalProject(
+            person.user.email,
+            person.user.fullname,
+            project.name_project,
+          );
+        });
+      }
       await this.projectRepository.save(project);
 
       const businessProject: UserProject =
@@ -811,6 +819,17 @@ export class ProjectService {
       if (!result) {
         throw new InternalServerErrorException('Có lỗi khi phê duyệt dự án');
       }
+      //Send mail
+      const authorityPerson: UserProject[] =
+        await this.userProjectService.getAuthorityPersonInProject(project.id);
+      authorityPerson.forEach(async (person) => {
+        await this.emailService.approvalProject(
+          person.user.email,
+          person.user.fullname,
+          project.name_project,
+        );
+      });
+
       await this.handleGetProjects();
       await this.handleGetProjectsOfBusiness(business);
       return result;

@@ -79,19 +79,31 @@ export class EvidenceService {
   }
 
   async updateEvidence(
-    id: number,
     updateEvidenceDto: UpdateEvidenceDto,
-  ): Promise<Evidence> {
-    const evidence: Evidence = await this.getEvidenceById(id);
-    evidence.description = updateEvidenceDto.description;
-    evidence.evidence_url = updateEvidenceDto.evidence_url;
+  ): Promise<Evidence[]> {
     try {
-      await this.evidenceRepository.save(evidence);
+      const evidences: Evidence[] = await this.evidenceRepository
+        .createQueryBuilder('evidence')
+        .leftJoinAndSelect('evidence.cost', 'cost')
+        .where('cost.id = :costId', { costId: updateEvidenceDto.costId })
+        .getMany();
+      if (evidences.length > 0) {
+        await this.evidenceRepository.remove(evidences);
+      }
+
+      const newEvidences: Evidence[] = [];
+      for (const evidence_url of updateEvidenceDto.evidence_url) {
+        const evidence: Evidence = this.evidenceRepository.create({
+          evidence_url: evidence_url,
+          cost: { id: updateEvidenceDto.costId } as Cost,
+        });
+        newEvidences.push(await this.evidenceRepository.save(evidence));
+      }
+      return newEvidences;
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi cập nhật thông tin chi phí',
       );
     }
-    return await this.getEvidenceById(id);
   }
 }
