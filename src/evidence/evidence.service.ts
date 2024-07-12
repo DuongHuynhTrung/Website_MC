@@ -80,29 +80,36 @@ export class EvidenceService {
 
   async updateEvidence(
     updateEvidenceDto: UpdateEvidenceDto,
-  ): Promise<Evidence[]> {
+  ): Promise<number[]> {
     try {
       const evidences: Evidence[] = await this.evidenceRepository
         .createQueryBuilder('evidence')
         .leftJoinAndSelect('evidence.cost', 'cost')
         .where('cost.id = :costId', { costId: updateEvidenceDto.costId })
         .getMany();
+      const result: number[] = [];
       if (evidences.length > 0) {
+        evidences.forEach((evidence) => result.push(evidence.id));
         await this.evidenceRepository.remove(evidences);
       }
 
-      const newEvidences: Evidence[] = [];
-      for (const evidence_url of updateEvidenceDto.evidence_url) {
-        const evidence: Evidence = this.evidenceRepository.create({
-          evidence_url: evidence_url,
-          cost: { id: updateEvidenceDto.costId } as Cost,
-        });
-        newEvidences.push(await this.evidenceRepository.save(evidence));
+      if (
+        updateEvidenceDto.evidence_url &&
+        updateEvidenceDto.evidence_url.length > 0
+      ) {
+        for (const evidence_url of updateEvidenceDto.evidence_url) {
+          const evidence: Evidence = this.evidenceRepository.create({
+            evidence_url: evidence_url,
+            cost: { id: updateEvidenceDto.costId } as Cost,
+          });
+          await this.evidenceRepository.save(evidence);
+        }
       }
-      return newEvidences;
+      return result;
     } catch (error) {
+      console.log(error.message);
       throw new InternalServerErrorException(
-        'Có lỗi xảy ra khi cập nhật thông tin chi phí',
+        'Có lỗi xảy ra khi cập nhật bằng chứng chi phí',
       );
     }
   }

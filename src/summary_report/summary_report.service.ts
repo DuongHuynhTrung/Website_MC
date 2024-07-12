@@ -132,6 +132,16 @@ export class SummaryReportService {
             'Có lỗi xảy ra khi lưu báo cáo tổng hợp',
           );
         }
+        const authorityPerson: UserProject[] =
+          await this.userProjectService.getAuthorityPersonInProject(project.id);
+        authorityPerson.forEach(async (person) => {
+          await this.emailService.announceSummaryReport(
+            person.user.email,
+            person.user.fullname,
+            project.name_project,
+          );
+        });
+
         await this.handleGetSummaryReports(result.project.id);
         return await this.getSummaryReportByProjectId(result.project.id);
       } catch (error) {

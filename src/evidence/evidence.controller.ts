@@ -52,7 +52,7 @@ export class EvidenceController {
   @Roles(RoleEnum.STUDENT)
   updateEvidence(
     @Body() updateEvidenceDto: UpdateEvidenceDto,
-  ): Promise<Evidence[]> {
+  ): Promise<number[]> {
     return this.evidenceService.updateEvidence(updateEvidenceDto);
   }
 }

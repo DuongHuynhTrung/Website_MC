@@ -31,15 +31,13 @@ import { NotificationTypeEnum } from 'src/notification/enum/notification-type.en
 import { SocketGateway } from 'socket.gateway';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class RegisterPitchingService {
   constructor(
     @InjectRepository(RegisterPitching)
     private readonly registerPitchingRepository: Repository<RegisterPitching>,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
 
     private readonly groupService: GroupService,
 
@@ -52,6 +50,8 @@ export class RegisterPitchingService {
     private readonly notificationService: NotificationService,
 
     private readonly userProjectService: UserProjectService,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async registerPitching(
@@ -159,6 +159,16 @@ export class RegisterPitchingService {
     let result: RegisterPitching = null;
     try {
       result = await this.registerPitchingRepository.save(registerPitching);
+      //Send mail
+      const authorityPerson: UserProject[] =
+        await this.userProjectService.getAuthorityPersonInProject(project.id);
+      authorityPerson.forEach(async (person) => {
+        await this.emailService.announceRegisterPitching(
+          person.user.email,
+          person.user.fullname,
+          project.name_project,
+        );
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi lưu thông tin đăng ký pitching',

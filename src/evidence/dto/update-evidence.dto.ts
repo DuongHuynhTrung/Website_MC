@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  ArrayMinSize,
-  ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -14,8 +13,7 @@ export class UpdateEvidenceDto {
     example: ['abc'],
   })
   @IsArray()
-  @ArrayNotEmpty()
-  @ArrayMinSize(1)
+  @IsOptional()
   @IsString({ each: true })
   evidence_url: string[];
 

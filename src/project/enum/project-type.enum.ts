@@ -1,4 +1,4 @@
 export enum ProjectTypeEnum {
-  PLAN = 'Plan',
-  PROJECT = 'Project',
+  PLAN = 'Lên ý tưởng',
+  PROJECT = 'Triển khai thực tế',
 }

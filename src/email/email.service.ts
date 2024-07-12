@@ -948,11 +948,10 @@ export class EmailService {
     }
   }
 
-  async announceWarningChoose(
+  async announceRegisterPitching(
     businessEmail: string,
     businessName: string,
     projectName: string,
-    numberOfDate: number,
   ) {
     try {
       await this.mailerService.sendMail({
@@ -983,10 +982,7 @@ export class EmailService {
                                         </span> ghi nhận dự án <span
                                             style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
                                             ${projectName}
-                                        </span> của bạn còn <span
-                                            style="font-weight:bold;text-decoration:none;font-size:14px;line-height:22px">
-                                            ${numberOfDate} ngày
-                                        </span> để chọn nhóm tham gia pitching và thực hiện dự án.
+                                        </span> của bạn có 1 nhóm đăng kí tham gia pitching dự án.
                                     </p>
 
                                     <p style="font-size:14px;line-height:22px;margin:16px 0;color:#3c4043;text-align: justify">
