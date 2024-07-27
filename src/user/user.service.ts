@@ -557,16 +557,16 @@ export class UserService {
       if (!users || users.length === 0) {
         return null;
       }
-      const tmpCountData: { [key: string]: number } = {
-        Lecturer: 0,
-        Business: 0,
-        Student: 0,
-      };
+      const tmpCountData: { [key: string]: number } = {};
 
       users.forEach((user: User) => {
         const role_name = user.role_name;
         if (role_name) {
-          tmpCountData[role_name] = tmpCountData[role_name] + 1;
+          if (!isNaN(tmpCountData[role_name])) {
+            tmpCountData[role_name] = tmpCountData[role_name] + 1;
+          } else {
+            tmpCountData[role_name] = 0;
+          }
         }
       });
 
@@ -587,9 +587,12 @@ export class UserService {
     { key: string; value: number }[]
   > {
     try {
-      const users: User[] = await this.userRepository.find({
-        relations: ['role'],
-      });
+      const users: User[] = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('role.role_name = :roleName', { roleName: RoleEnum.BUSINESS })
+        .getMany();
+
       if (!users || users.length === 0) {
         return null;
       }
@@ -603,22 +606,19 @@ export class UserService {
       users.forEach((user: User) => {
         const business_sector = user.business_sector;
         if (business_sector) {
-          Object.keys(tmpCountData).forEach((key) => {
-            if (key.includes(business_sector)) {
-              tmpCountData[business_sector] = tmpCountData[business_sector] + 1;
-            } else {
-              tmpCountData['Khác'] = tmpCountData['Khác'] + 1;
-            }
-          });
+          if (Object.keys(tmpCountData).includes(business_sector)) {
+            tmpCountData[business_sector] = tmpCountData[business_sector] + 1;
+          } else {
+            tmpCountData['Khác'] = tmpCountData['Khác'] + 1;
+          }
         }
       });
 
       const result: { key: string; value: number }[] = Object.keys(
         tmpCountData,
       ).map((key) => ({ key, value: tmpCountData[key] }));
-      return result.filter(
-        (value) => value.key != 'Admin' && value.key != 'Staff',
-      );
+
+      return result;
     } catch (error) {
       throw new InternalServerErrorException(
         'Có lỗi xảy ra khi thống kê tài khoản',
