@@ -56,7 +56,9 @@ export class UserService {
         where: { role_name: RoleEnum.ADMIN },
       });
       const adminEmail: string[] = admins.map((admin) => admin.email);
-      users = users.filter((user) => !adminEmail.includes(user.email));
+      users = users.filter(
+        (user) => !adminEmail.includes(user.email) && user.role_name,
+      );
       const totalUsers = users.length;
       return [
         { totalUsers },
@@ -565,7 +567,7 @@ export class UserService {
           if (!isNaN(tmpCountData[role_name])) {
             tmpCountData[role_name] = tmpCountData[role_name] + 1;
           } else {
-            tmpCountData[role_name] = 0;
+            tmpCountData[role_name] = 1;
           }
         }
       });
@@ -630,7 +632,11 @@ export class UserService {
     { key: string; value: number }[]
   > {
     try {
-      const users: User[] = await this.userRepository.find();
+      const users: User[] = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.role', 'role')
+        .where('role.role_name = :roleName', { roleName: RoleEnum.BUSINESS })
+        .getMany();
       if (!users || users.length == 0) {
         return null;
       }
@@ -641,7 +647,6 @@ export class UserService {
         'Đà Nẵng': 0,
         'Biên Hòa': 0,
         'Nha Trang': 0,
-        Huế: 0,
         'Cần Thơ': 0,
         'An Giang': 0,
         'Bà Rịa - Vũng Tàu': 0,
@@ -701,7 +706,7 @@ export class UserService {
       };
 
       users.forEach((user: User) => {
-        if (user.role_name == RoleEnum.BUSINESS && user.address) {
+        if (user.address) {
           const province = user.address.split(',')[2];
           if (province) {
             Object.keys(tmpCountData).forEach((key) => {
