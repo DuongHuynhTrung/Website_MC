@@ -280,20 +280,6 @@ export class SummaryReportService {
           confirmSummaryReportDto.project_id,
         );
       } else {
-        const checkUserInProject: UserProject =
-          await this.userProjectService.checkUserInProject(user.id, project.id);
-        if (!checkUserInProject) {
-          throw new NotFoundException('Người dùng không thuộc dự án');
-        }
-        if (
-          checkUserInProject.user_project_status !=
-            UserProjectStatusEnum.OWNER &&
-          checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
-        ) {
-          throw new ForbiddenException(
-            'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận báo cáo tổng hợp',
-          );
-        }
         summaryReport.isLecturerConfirmed = true;
         try {
           await this.summaryReportRepository.save(summaryReport);
@@ -317,11 +303,17 @@ export class SummaryReportService {
       const project: Project = await this.projectService.getProjectById(
         confirmSummaryReportDto.project_id,
       );
-      const businessProject: UserProject =
-        await this.userProjectService.getBusinessOfProject(project.id);
-      if (businessProject.user.id != user.id) {
-        throw new BadGatewayException(
-          'Chỉ có doanh nghiệp sở hữu dự án mới có thể xác nhận báo cáo tổng hợp',
+      const checkUserInProject: UserProject =
+        await this.userProjectService.checkUserInProject(user.id, project.id);
+      if (!checkUserInProject) {
+        throw new NotFoundException('Người dùng không thuộc dự án');
+      }
+      if (
+        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+      ) {
+        throw new ForbiddenException(
+          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận báo cáo tổng hợp',
         );
       }
       if (project.business_type == ProjectTypeEnum.PROJECT) {

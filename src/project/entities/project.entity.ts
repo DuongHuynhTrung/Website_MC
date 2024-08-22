@@ -13,6 +13,7 @@ import { RegisterPitching } from 'src/register-pitching/entities/register-pitchi
 import { Phase } from 'src/phase/entities/phase.entity';
 import { SummaryReport } from 'src/summary_report/entities/summary_report.entity';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
+import { Feedback } from 'src/feedback/entities/feedback.entity';
 
 @Entity()
 export class Project {
@@ -169,6 +170,9 @@ export class Project {
 
   @OneToOne(() => SummaryReport, (summary_report) => summary_report.project)
   summary_report: SummaryReport;
+
+  @OneToOne(() => Feedback, (feedback) => feedback.project)
+  feedback: Feedback;
 
   @OneToMany(() => UserProject, (user_project) => user_project.project)
   user_projects: UserProject[];

@@ -12,11 +12,9 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryService } from 'src/category/category.service';
 import { CategoryStatusEnum } from 'src/category/enum/category-status.enum';
-import { UserService } from 'src/user/user.service';
 import { PhaseService } from 'src/phase/phase.service';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { UpdateActualCostDto } from './dto/update-actual-cost.dto';
-import { UserProjectService } from 'src/user-project/user-project.service';
 
 @Injectable()
 export class CostService {
@@ -26,11 +24,7 @@ export class CostService {
 
     private readonly categorySErvice: CategoryService,
 
-    private readonly userService: UserService,
-
     private readonly phaseService: PhaseService,
-
-    private readonly userProjectService: UserProjectService,
   ) {}
 
   async createCost(createCostDto: CreateCostDto): Promise<Cost> {

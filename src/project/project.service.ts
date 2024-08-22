@@ -547,13 +547,18 @@ export class ProjectService {
 
   async getProjects(): Promise<[{ totalProjects: number }, Project[]]> {
     try {
-      let projects = await this.projectRepository
+      const statusList: ProjectStatusEnum[] = [
+        ProjectStatusEnum.PUBLIC,
+        ProjectStatusEnum.PROCESSING,
+        ProjectStatusEnum.DONE,
+      ];
+      const projects = await this.projectRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.user_projects', 'user_project')
         .leftJoinAndSelect('user_project.user', 'user')
         .where('project.is_first_project = false')
-        .andWhere('project.project_status = :status', {
-          status: ProjectStatusEnum.PUBLIC,
+        .andWhere('project.project_status IN (:...statusList)', {
+          statusList,
         })
         .orderBy('project.createdAt', 'DESC')
         .getMany();
@@ -561,16 +566,16 @@ export class ProjectService {
       if (!projects || projects.length === 0) {
         return [{ totalProjects: 0 }, []];
       }
-      projects = projects.filter((project) => {
-        const parts = this.extractProjectDates(
-          project.project_implement_time,
-        ).project_expected_end_date.split('/');
-        const month = parseInt(parts[0], 10);
-        const year = parseInt(parts[1], 10);
-        const currentDate = new Date();
-        const projectImplementTime = new Date(year, month - 1);
-        if (currentDate <= projectImplementTime) return project;
-      });
+      // projects = projects.filter((project) => {
+      //   const parts = this.extractProjectDates(
+      //     project.project_implement_time,
+      //   ).project_expected_end_date.split('/');
+      //   const month = parseInt(parts[0], 10);
+      //   const year = parseInt(parts[1], 10);
+      //   const currentDate = new Date();
+      //   const projectImplementTime = new Date(year, month - 1);
+      //   if (currentDate <= projectImplementTime) return project;
+      // });
       const totalProjects = projects.length;
       await this.handleGetProjects();
       return [{ totalProjects }, projects];
@@ -846,20 +851,18 @@ export class ProjectService {
   ): Promise<Project> {
     const project: Project = await this.getProjectById(projectId);
 
-    if (user.role.role_name != RoleEnum.LECTURER) {
-      const checkUserInProject: UserProject =
-        await this.userProjectService.checkUserInProject(user.id, projectId);
-      if (!checkUserInProject) {
-        throw new NotFoundException('Người dùng không thuộc dự án');
-      }
-      if (
-        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
-        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
-      ) {
-        throw new ForbiddenException(
-          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể thay đổi trạng thái dự án',
-        );
-      }
+    const checkUserInProject: UserProject =
+      await this.userProjectService.checkUserInProject(user.id, projectId);
+    if (!checkUserInProject) {
+      throw new NotFoundException('Người dùng không thuộc dự án');
+    }
+    if (
+      checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+      checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+    ) {
+      throw new ForbiddenException(
+        'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể thay đổi trạng thái dự án',
+      );
     }
 
     // Business chỉ dùng để handleGetProjectsOfBusiness
