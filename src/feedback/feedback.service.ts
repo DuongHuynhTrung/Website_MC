@@ -76,12 +76,9 @@ export class FeedbackService {
         'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể tạo đánh giá',
       );
     }
-    const checkExist: Feedback = await this.feedbackRepository
-      .createQueryBuilder('feedback')
-      .leftJoinAndSelect('feedback.project', 'project')
-      .where('project.id = :projectId', { projectId: project.id })
-      .getOne();
-    if (checkExist) {
+    const checkProjectExistFeedback: boolean =
+      await this.checkProjectExistFeedback(project.id);
+    if (checkProjectExistFeedback) {
       throw new BadRequestException(
         'Dự án đã có đánh giá. Không thể tạo thêm!',
       );
@@ -145,6 +142,22 @@ export class FeedbackService {
       throw new InternalServerErrorException(error.message);
     }
     return feedback;
+  }
+
+  async checkProjectExistFeedback(projectId: number): Promise<boolean> {
+    try {
+      const checkExist: Feedback = await this.feedbackRepository
+        .createQueryBuilder('feedback')
+        .leftJoinAndSelect('feedback.project', 'project')
+        .where('project.id = :projectId', { projectId })
+        .getOne();
+      if (checkExist) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async getFeedbacks(): Promise<Feedback[]> {
@@ -217,10 +230,6 @@ export class FeedbackService {
       );
     }
     try {
-      Object.assign(feedback, updateFeedbackDto);
-      await this.feedbackRepository.save(feedback);
-
-      // Send notification
       const project: Project = await this.projectRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.register_pitchings', 'register_pitchings')
@@ -229,7 +238,19 @@ export class FeedbackService {
           projectId: feedback.project.id,
         })
         .getOne();
+      if (!project) {
+        throw new NotFoundException('Không tìm thấy dự án');
+      }
+      if (project.project_status !== ProjectStatusEnum.PROCESSING) {
+        throw new BadRequestException(
+          'Chỉ dự án đang triển khai có thể chỉnh sửa đánh giá',
+        );
+      }
 
+      Object.assign(feedback, updateFeedbackDto);
+      await this.feedbackRepository.save(feedback);
+
+      // Send notification
       const registerPitching: RegisterPitching =
         project.register_pitchings.find(
           (registerPitching) =>

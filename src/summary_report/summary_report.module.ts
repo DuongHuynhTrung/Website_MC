@@ -28,6 +28,8 @@ import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { Cost } from 'src/cost/entities/cost.entity';
 import { Evidence } from 'src/evidence/entities/evidence.entity';
 import { Category } from 'src/category/entities/category.entity';
+import { Feedback } from 'src/feedback/entities/feedback.entity';
+import { FeedbackService } from 'src/feedback/feedback.service';
 
 @Module({
   imports: [
@@ -45,6 +47,7 @@ import { Category } from 'src/category/entities/category.entity';
       Cost,
       Evidence,
       Category,
+      Feedback,
     ]),
   ],
   controllers: [SummaryReportController],
@@ -62,6 +65,7 @@ import { Category } from 'src/category/entities/category.entity';
     JwtService,
     ConfigService,
     UserProjectService,
+    FeedbackService,
   ],
 })
 export class SummaryReportModule {}

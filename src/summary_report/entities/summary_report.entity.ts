@@ -15,6 +15,9 @@ export class SummaryReport {
   id: number;
 
   @Column({ nullable: false })
+  summary_report_name: string;
+
+  @Column({ nullable: false })
   summary_report_url: string;
 
   @Column({ nullable: true })

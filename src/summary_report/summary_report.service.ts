@@ -30,6 +30,7 @@ import { SocketGateway } from 'socket.gateway';
 import { UserProject } from 'src/user-project/entities/user-project.entity';
 import { UserProjectStatusEnum } from 'src/user-project/enum/user-project-status.enum';
 import { EmailService } from 'src/email/email.service';
+import { FeedbackService } from 'src/feedback/feedback.service';
 
 @Injectable()
 export class SummaryReportService {
@@ -48,6 +49,8 @@ export class SummaryReportService {
     private readonly userProjectService: UserProjectService,
 
     private readonly emailService: EmailService,
+
+    private readonly feedbackService: FeedbackService,
   ) {}
 
   async createSummaryReport(
@@ -314,6 +317,13 @@ export class SummaryReportService {
       ) {
         throw new ForbiddenException(
           'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể xác nhận báo cáo tổng hợp',
+        );
+      }
+      const checkProjectExistFeedback: boolean =
+        await this.feedbackService.checkProjectExistFeedback(project.id);
+      if (!checkProjectExistFeedback) {
+        throw new BadGatewayException(
+          'Dự án phải có đánh giá trước khi xác nhận báo cáo tổng hợp',
         );
       }
       if (project.business_type == ProjectTypeEnum.PROJECT) {
