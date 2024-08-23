@@ -76,7 +76,11 @@ export class FeedbackService {
         'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể tạo đánh giá',
       );
     }
-    const checkExist: Feedback = await this.getFeedbackByProjectId(project.id);
+    const checkExist: Feedback = await this.feedbackRepository
+      .createQueryBuilder('feedback')
+      .leftJoinAndSelect('feedback.project', 'project')
+      .where('project.id = :projectId', { projectId: project.id })
+      .getOne();
     if (checkExist) {
       throw new BadRequestException(
         'Dự án đã có đánh giá. Không thể tạo thêm!',

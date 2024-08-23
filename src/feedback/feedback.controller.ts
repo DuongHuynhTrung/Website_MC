@@ -50,6 +50,12 @@ export class FeedbackController {
     return this.feedbackService.getFeedbackById(id);
   }
 
+  @ApiOperation({ summary: 'Get Feedback By ProjectId' })
+  @Get('project/:id')
+  getFeedbackByProjectId(@Param('id') id: number): Promise<Feedback> {
+    return this.feedbackService.getFeedbackByProjectId(id);
+  }
+
   @ApiOperation({ summary: 'Update Feedback' })
   @UseGuards(RolesGuard)
   @Roles(RoleEnum.BUSINESS, RoleEnum.RESPONSIBLE_PERSON)
