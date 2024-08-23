@@ -199,25 +199,26 @@ export class FeedbackService {
     updateFeedbackDto: UpdateFeedbackDto,
     user: User,
   ): Promise<Feedback> {
+    const feedback: Feedback = await this.getFeedbackById(id);
+    const checkUserInProject: UserProject =
+      await this.userProjectService.checkUserInProject(
+        user.id,
+        feedback.project.id,
+      );
+    if (!checkUserInProject) {
+      throw new NotFoundException('Người dùng không thuộc dự án');
+    }
+    if (
+      checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
+      checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
+    ) {
+      throw new ForbiddenException(
+        'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể chỉnh sửa đánh giá',
+      );
+    }
     try {
-      const feedback: Feedback = await this.getFeedbackById(id);
-      const checkUserInProject: UserProject =
-        await this.userProjectService.checkUserInProject(
-          user.id,
-          feedback.project.id,
-        );
-      if (!checkUserInProject) {
-        throw new NotFoundException('Người dùng không thuộc dự án');
-      }
-      if (
-        checkUserInProject.user_project_status != UserProjectStatusEnum.OWNER &&
-        checkUserInProject.user_project_status != UserProjectStatusEnum.EDIT
-      ) {
-        throw new ForbiddenException(
-          'Chỉ có doanh nghiệp và người phụ trách được cấp quyền có thể chỉnh sửa đánh giá',
-        );
-      }
       Object.assign(feedback, updateFeedbackDto);
+      await this.feedbackRepository.save(feedback);
 
       // Send notification
       const project: Project = await this.projectRepository

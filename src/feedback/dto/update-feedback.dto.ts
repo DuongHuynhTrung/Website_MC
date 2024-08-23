@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateFeedbackDto {
   @ApiProperty({
@@ -30,7 +30,7 @@ export class UpdateFeedbackDto {
     description: 'Suggest Improvement',
     example: 'string',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   suggest_improvement: string;
 
