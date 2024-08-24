@@ -8,14 +8,6 @@ export class CreateSummaryReportDto {
   })
   @IsNotEmpty()
   @IsString()
-  summary_report_name: string;
-
-  @ApiProperty({
-    description: 'Summary report url',
-    example: 'abc',
-  })
-  @IsNotEmpty()
-  @IsString()
   summary_report_url: string;
 
   @ApiProperty({
