@@ -301,12 +301,18 @@ export class SummaryReportService {
             'Có lỗi xảy ra khi xác nhận báo cáo tổng hợp',
           );
         }
-        await this.projectService.changeProjectStatus(
-          project.id,
-          ProjectStatusEnum.DONE,
-          group.id,
-          user,
-        );
+        // Update status to Done
+        project.project_status = ProjectStatusEnum.DONE;
+        const currentDate: string = moment().format('DD/MM/YYYY');
+        project.project_actual_end_date = currentDate;
+        try {
+          await this.projectRepository.save(project);
+          await this.groupService.changeGroupStatusToFree(group.id);
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Có lỗi xảy ra khi thay đổi trạng thái dự án sang hoàn thành/kết thúc',
+          );
+        }
         await this.handleGetSummaryReports(confirmSummaryReportDto.project_id);
         return await this.getSummaryReportByProjectId(
           confirmSummaryReportDto.project_id,
