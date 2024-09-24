@@ -2,6 +2,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Post,
   UploadedFile,
   UseGuards,
@@ -42,13 +43,17 @@ export class BusinessInformationController {
   })
   @UseInterceptors(FileInterceptor('file'))
   async importBusinesses(@UploadedFile() file: Express.Multer.File) {
-    if (!file || !file.buffer) {
-      return { message: 'No file uploaded' };
+    try {
+      if (!file || !file.buffer) {
+        throw new NotFoundException('No file uploaded');
+      }
+      await this.businessInformationService.importBusinessesFromExcel(
+        file.buffer,
+      );
+      return { message: 'Businesses imported successfully' };
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
-    await this.businessInformationService.importBusinessesFromExcel(
-      file.buffer,
-    );
-    return { message: 'Businesses imported successfully' };
   }
 
   @Get()
