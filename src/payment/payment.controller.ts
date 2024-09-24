@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { Roles } from 'src/auth/role.decorator';
 import { RolesGuard } from 'src/auth/role.guard';
@@ -17,6 +17,7 @@ import { JwtGuard } from 'src/auth/jwt.guard';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
 
+@ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}

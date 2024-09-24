@@ -27,6 +27,7 @@ import { SupportModule } from './support/support.module';
 import { UserProjectModule } from './user-project/user-project.module';
 import { PaymentModule } from './payment/payment.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { BusinessInformationModule } from './business-information/business-information.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { FeedbackModule } from './feedback/feedback.module';
     UserProjectModule,
     PaymentModule,
     FeedbackModule,
+    BusinessInformationModule,
     // MessageModule,
   ],
   providers: [SocketGateway],
