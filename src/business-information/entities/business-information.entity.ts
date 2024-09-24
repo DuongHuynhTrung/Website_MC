@@ -8,13 +8,13 @@ export class BusinessInformation {
   @Column()
   businessName: string;
 
-  @Column()
+  @Column({ nullable: true })
   businessField: string;
 
   @Column({ nullable: true })
   shortIntro: string;
 
-  @Column()
+  @Column({ nullable: true })
   address: string;
 
   @Column({ nullable: true })
@@ -26,7 +26,7 @@ export class BusinessInformation {
   @Column({ nullable: true })
   position: string;
 
-  @Column()
+  @Column({ nullable: true })
   phoneNumber: string;
 
   @Column({ nullable: true })

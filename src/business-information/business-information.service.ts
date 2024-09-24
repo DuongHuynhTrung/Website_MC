@@ -31,6 +31,7 @@ export class BusinessInformationService {
     // Iterate through the data starting from the 3rd row
     for (const row of data) {
       const [
+        STT,
         businessName, // Tên Doanh nghiệp/Hộ kinh doanh
         businessField, // Lĩnh vực kinh doanh
         shortIntro, // Giới thiệu ngắn
@@ -42,6 +43,7 @@ export class BusinessInformationService {
         email, // Email
         otherContactInfo, // Thông tin liên hệ khác (nếu có)
       ] = row as [
+        string,
         string,
         string,
         string,
